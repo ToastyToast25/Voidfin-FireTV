@@ -27,7 +27,7 @@ Moonfin for Android TV builds on the solid foundation of Jellyfin with targeted 
 ### 🧭 Dynamic Navigation Toolbar
 - Quick access home button (house icon) and search (magnifying glass)
 - Shuffle button for instant random movie/TV show discovery
-- Dynamic library buttons automatically populate based on your Jellyfin libraries
+- Dynamic library buttons automatically populate based on your Jellyfin libraries and scroll if there is more than 5
 - One-click navigation to any library or collection directly from the toolbar
 - Cleaner icon-based design for frequently used actions
 
@@ -38,6 +38,7 @@ Moonfin for Android TV builds on the solid foundation of Jellyfin with targeted 
 - Fits more useful information on screen without feeling cramped
 
 ### 🏠 Improved Home Screen
+- Created a Genres menu to see all of your media in their respective genre in one place
 - Item details show up right in the row, no need to open every title to see what it is
 - Content is laid out more clearly so it's easier to find what you want
 - Buttons look better when not focused (transparent instead of distracting)
@@ -49,14 +50,16 @@ Moonfin for Android TV builds on the solid foundation of Jellyfin with targeted 
 - Transitions and animations feel responsive
 
 ## Screenshots
+<img width="1920" height="1080" alt="Screenshot_20251121_212941" src="https://github.com/user-attachments/assets/9984c400-950e-4954-b32b-bbea59fa7bf6" />
+<img width="1920" height="1080" alt="Screenshot_20251121_212910" src="https://github.com/user-attachments/assets/3bd52558-6bc9-41ca-a091-3bc22b87544d" />
+<img width="1920" height="1080" alt="Screenshot_20251121_212922" src="https://github.com/user-attachments/assets/9cb2fd75-c336-4721-9842-d614d106b38a" />
+<img width="1920" height="1080" alt="Screenshot_20251121_212955" src="https://github.com/user-attachments/assets/d7c7d13f-501c-4ca1-9441-8e9294124302" />
 
-<img width="1920" height="1080" alt="Screenshot_20251121_001408" src="https://github.com/user-attachments/assets/4f244266-f945-467d-be78-267d34c33256" />
+## Videos
+https://github.com/user-attachments/assets/5d89961b-8067-4af4-9757-b4de51474fcf
 
-<img width="1920" height="1080" alt="Screenshot_20251121_001419" src="https://github.com/user-attachments/assets/47e60727-608d-4b24-a03f-cf836d3fca76" />
+https://github.com/user-attachments/assets/0414ffca-60f4-470a-94b9-6b3405b3570c
 
-<img width="1920" height="1080" alt="Screenshot_20251120_191533" src="https://github.com/user-attachments/assets/02fdbb8f-a109-4bcd-81b6-fe0c3a9bf3e9" />
-
-<img width="1920" height="1080" alt="Screenshot_20251120_191600" src="https://github.com/user-attachments/assets/49eefda8-a882-4371-8b4f-531d07ed7c94" />
 
 ---
 
