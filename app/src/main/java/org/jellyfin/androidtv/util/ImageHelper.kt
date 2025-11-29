@@ -40,8 +40,20 @@ class ImageHelper(
 	}
 
 	fun getImageAspectRatio(item: BaseItemDto, preferParentThumb: Boolean): Double {
-		if (preferParentThumb && (item.parentThumbItemId != null || item.seriesThumbImageTag != null)) {
-			return ASPECT_RATIO_16_9
+		// When preferParentThumb is enabled, use wide aspect for episodes, series, and movies with backdrops
+		if (preferParentThumb) {
+			if (item.type == BaseItemKind.EPISODE && (item.parentThumbItemId != null || item.seriesThumbImageTag != null)) {
+				return ASPECT_RATIO_16_9
+			}
+			if ((item.type == BaseItemKind.MOVIE || item.type == BaseItemKind.VIDEO) && 
+				(!item.backdropImageTags.isNullOrEmpty() || item.imageTags?.containsKey(ImageType.THUMB) == true)) {
+				return ASPECT_RATIO_16_9
+			}
+			// Series: use wide aspect if thumb or backdrop is available
+			if (item.type == BaseItemKind.SERIES && 
+				(!item.backdropImageTags.isNullOrEmpty() || item.imageTags?.containsKey(ImageType.THUMB) == true)) {
+				return ASPECT_RATIO_16_9
+			}
 		}
 
 		val primaryAspectRatio = item.primaryImageAspectRatio;

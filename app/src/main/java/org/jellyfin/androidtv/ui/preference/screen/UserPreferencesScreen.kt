@@ -18,47 +18,54 @@ class UserPreferencesScreen : OptionsFragment() {
 				withFragment<AuthPreferencesScreen>()
 			}
 
-			link {
-				setTitle(R.string.pref_customization)
-				setContent(R.string.pref_customization_description)
-				icon = R.drawable.ic_adjust
-				withFragment<CustomizationPreferencesScreen>()
-			}
+		link {
+			setTitle(R.string.pref_customization)
+			setContent(R.string.pref_customization_description)
+			icon = R.drawable.ic_adjust
+			withFragment<CustomizationPreferencesScreen>()
+		}
 
-			link {
-				setTitle(R.string.jellyseerr_settings)
-				setContent(R.string.jellyseerr_enabled_description)
-				icon = R.drawable.ic_jellyseerr_jellyfish
-				withFragment<JellyseerrPreferencesScreen>()
-			}
+		link {
+			setTitle(R.string.jellyseerr_settings)
+			setContent(R.string.jellyseerr_enabled_description)
+			icon = R.drawable.ic_jellyseerr_jellyfish
+			withFragment<JellyseerrPreferencesScreen>()
+		}
 
-			link {
-				setTitle(R.string.pref_playback)
-				setContent(R.string.pref_playback_description)
-				icon = R.drawable.ic_next
-				withFragment<PlaybackPreferencesScreen>()
-			}
+		link {
+			setTitle(R.string.moonfin_settings)
+			setContent(R.string.moonfin_settings_description)
+			icon = R.drawable.ic_moonfin_white
+			withFragment<MoonfinPreferencesScreen>()
+		}
 
-			link {
-				setTitle(R.string.pref_telemetry_category)
-				setContent(R.string.pref_telemetry_description)
-				icon = R.drawable.ic_error
-				withFragment<CrashReportingPreferencesScreen>()
-			}
+		link {
+			setTitle(R.string.pref_playback)
+			setContent(R.string.pref_playback_description)
+			icon = R.drawable.ic_next
+			withFragment<PlaybackPreferencesScreen>()
+		}
 
-			link {
-				setTitle(R.string.pref_developer_link)
-				setContent(R.string.pref_developer_link_description)
-				icon = R.drawable.ic_flask
-				withFragment<DeveloperPreferencesScreen>()
-			}
+		link {
+			setTitle(R.string.pref_telemetry_category)
+			setContent(R.string.pref_telemetry_description)
+			icon = R.drawable.ic_error
+			withFragment<CrashReportingPreferencesScreen>()
+		}
 
-			link {
-				setTitle(R.string.pref_updates_title)
-				setContent(R.string.pref_check_for_updates_description)
-				icon = R.drawable.ic_get_app
-				withFragment<UpdatePreferencesScreen>()
-			}
+		link {
+			setTitle(R.string.pref_developer_link)
+			setContent(R.string.pref_developer_link_description)
+			icon = R.drawable.ic_flask
+			withFragment<DeveloperPreferencesScreen>()
+		}
+
+		link {
+			setTitle(R.string.pref_updates_title)
+			setContent(R.string.pref_check_for_updates_description)
+			icon = R.drawable.ic_get_app
+			withFragment<UpdatePreferencesScreen>()
+		}
 		}
 
 		aboutCategory()

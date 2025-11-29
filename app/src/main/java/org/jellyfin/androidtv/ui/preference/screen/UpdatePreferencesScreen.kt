@@ -67,7 +67,7 @@ class UpdatePreferencesScreen : OptionsFragment() {
 						} else if (!updateInfo.isNewer) {
 							toast(getString(R.string.msg_no_updates_available))
 						} else {
-							showUpdateDialog(updateInfo)
+							showUpdateAvailableDialog(updateInfo)
 						}
 					},
 					onFailure = { error ->
@@ -81,7 +81,24 @@ class UpdatePreferencesScreen : OptionsFragment() {
 		}
 	}
 
-	private fun showUpdateDialog(updateInfo: UpdateCheckerService.UpdateInfo) {
+	private fun showUpdateAvailableDialog(updateInfo: UpdateCheckerService.UpdateInfo) {
+		val sizeMB = updateInfo.apkSize / (1024.0 * 1024.0)
+		val message = "New version ${updateInfo.version} is available!\n\nSize: ${String.format("%.1f", sizeMB)} MB"
+
+		androidx.appcompat.app.AlertDialog.Builder(requireContext())
+			.setTitle(R.string.title_update_available)
+			.setMessage(message)
+			.setPositiveButton(R.string.btn_download) { _, _ ->
+				downloadAndInstall(updateInfo)
+			}
+			.setNegativeButton(R.string.btn_later, null)
+			.setNeutralButton(R.string.btn_view_release_notes) { _, _ ->
+				showReleaseNotesDialog(updateInfo)
+			}
+			.show()
+	}
+
+	private fun showReleaseNotesDialog(updateInfo: UpdateCheckerService.UpdateInfo) {
 		val sizeMB = updateInfo.apkSize / (1024.0 * 1024.0)
 		
 		// Create WebView for HTML content
@@ -152,7 +169,7 @@ class UpdatePreferencesScreen : OptionsFragment() {
 		androidx.appcompat.app.AlertDialog.Builder(requireContext())
 			.setTitle(R.string.title_update_available)
 			.setView(container)
-			.setPositiveButton(R.string.btn_download_and_install) { _, _ ->
+			.setPositiveButton(R.string.btn_download) { _, _ ->
 				downloadAndInstall(updateInfo)
 			}
 			.setNegativeButton(R.string.btn_later, null)

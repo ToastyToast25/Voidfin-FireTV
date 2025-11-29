@@ -252,6 +252,11 @@
     <string name="pref_theme_dark">Dark (Default)</string>
     <string name="pref_theme_emerald">Classic emerald</string>
     <string name="pref_about_title">About</string>
+    <string name="pref_donate_title">Support Moonfin</string>
+    <string name="pref_donate_description">Help keep this project alive</string>
+    <string name="donate_dialog_title">Support Moonfin Development</string>
+    <string name="donate_dialog_message">Thank you for considering a donation! Your support helps keep Moonfin alive and enables continued development of new features and improvements.\n\nScan the QR code below to donate:</string>
+    <string name="donate_dialog_thanks">Every contribution makes a difference. Thank you!</string>
     <string name="pref_external_player">Use external player</string>
     <string name="pref_next_up_timeout_summary">How long to wait before playing the next item</string>
     <string name="pref_next_up_timeout_title">Next up timer duration</string>
@@ -615,6 +620,32 @@
     <string name="pref_media_bar_title">Media Bar</string>
     <string name="pref_media_bar_enable">Enable Media Bar slideshow on home screen</string>
     <string name="pref_media_bar_enable_summary">Display a featured content slideshow at the top of the home screen</string>
+    <string name="pref_media_bar_item_count">Number of carousel items</string>
+    <string name="pref_media_bar_item_count_summary">How many featured items to display in the carousel</string>
+    <string name="pref_media_bar_5_items">5 items</string>
+    <string name="pref_media_bar_10_items">10 items</string>
+    <string name="pref_media_bar_15_items">15 items</string>
+    <string name="pref_media_bar_overlay_opacity">Overlay opacity</string>
+    <string name="pref_media_bar_overlay_opacity_summary">Transparency level for info box, arrows, and dots</string>
+    <string name="pref_media_bar_opacity_30">30% - Light</string>
+    <string name="pref_media_bar_opacity_40">40%</string>
+    <string name="pref_media_bar_opacity_50">50% - Default</string>
+    <string name="pref_media_bar_opacity_60">60%</string>
+    <string name="pref_media_bar_opacity_70">70% - Dark</string>
+    <string name="pref_media_bar_overlay_color">Overlay color</string>
+    <string name="pref_media_bar_overlay_color_summary">Background color for overlays</string>
+    <string name="pref_media_bar_color_black">Black</string>
+    <string name="pref_media_bar_color_gray">Gray</string>
+    <string name="pref_media_bar_color_dark_blue">Dark Blue</string>
+    <string name="pref_media_bar_color_purple">Purple</string>
+    <string name="pref_media_bar_color_teal">Teal</string>
+    <string name="pref_media_bar_color_navy">Navy</string>
+    <string name="pref_media_bar_color_charcoal">Charcoal</string>
+    <string name="pref_media_bar_color_brown">Brown</string>
+    <string name="pref_media_bar_color_dark_red">Dark Red</string>
+    <string name="pref_media_bar_color_dark_green">Dark Green</string>
+    <string name="pref_media_bar_color_slate">Slate</string>
+    <string name="pref_media_bar_color_indigo">Indigo</string>
     <string name="lbl_media_bar_loading">Loading featured content…</string>
     <string name="lbl_media_bar_error">Failed to load featured content</string>
     <string name="lbl_media_bar_previous">Previous slide</string>
@@ -646,13 +677,18 @@
     <string name="jellyseerr_setup_info">Enter your Jellyseerr server URL and Jellyfin password above. Test the connection to authenticate and save your session.</string>
     <string name="jellyseerr_show_in_toolbar">Show Jellyseerr in Toolbar</string>
     <string name="jellyseerr_show_in_toolbar_description">Display Jellyseerr button in the main navigation toolbar</string>
-    <string name="jellyseerr_fetch_limit_title">Items per Page</string>
-    <string name="jellyseerr_fetch_limit_description">Number of movies/series to fetch each time</string>
+    <string name="jellyseerr_fetch_limit_title">Items per Row (3 pages loaded per category)</string>
+    <string name="jellyseerr_fetch_limit_description">Number of items to fetch per API request (3 pages are loaded at once)</string>
     <string name="jellyseerr_fetch_limit_25">25 items</string>
     <string name="jellyseerr_fetch_limit_50">50 items</string>
     <string name="jellyseerr_fetch_limit_75">75 items</string>
     <string name="jellyseerr_block_nsfw">Block Adult Content</string>
     <string name="jellyseerr_block_nsfw_description">Hide content tagged as adult/NSFW from Jellyseerr results</string>
+
+    <!-- Moonfin Settings -->
+    <string name="moonfin_settings">Moonfin Settings</string>
+    <string name="moonfin_settings_description">Customize Moonfin-specific features</string>
+    <string name="moonfin_general_settings">General</string>
     
     <!-- Jellyseerr Authentication -->
     <string name="jellyseerr_auth_method">Authentication Method</string>
@@ -722,6 +758,8 @@
     <string name="msg_update_size">Size: %s MB</string>
     <string name="msg_release_notes">Release notes:</string>
     <string name="title_update_available">Update Available</string>
+    <string name="btn_download">Download</string>
+    <string name="btn_view_release_notes">View Release Notes</string>
     <string name="btn_download_and_install">Download &amp; Install</string>
     <string name="btn_later">Later</string>
     <string name="btn_view_on_github">View on GitHub</string>

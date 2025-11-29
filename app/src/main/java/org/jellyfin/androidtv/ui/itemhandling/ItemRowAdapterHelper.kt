@@ -82,9 +82,12 @@ fun ItemRowAdapter.retrieveResumeItems(api: ApiClient, query: GetResumeItemsRequ
 				items = response.items,
 				transform = { item, _ ->
 					BaseItemDtoBaseRowItem(
-						item,
-						preferParentThumb,
-						isStaticHeight
+						item = item,
+						// Continue Watching ignores seriesThumbnailsEnabled setting
+						// Episodes use primary image, movies use thumb/backdrop via preferThumbForMovies
+						preferParentThumb = false,
+						staticHeight = isStaticHeight,
+						preferThumbForMovies = true
 					)
 				}
 			)
@@ -123,26 +126,30 @@ fun ItemRowAdapter.retrieveNextUpItems(api: ApiClient, query: GetNextUpRequest) 
 					addAll(episodesResponse.items)
 				}
 
-				setItems(
-					items = items,
-					transform = { item, _ ->
-						BaseItemDtoBaseRowItem(
-							item,
-							preferParentThumb,
-							false
-						)
-					}
-				)
+			setItems(
+				items = items,
+				transform = { item, _ ->
+					BaseItemDtoBaseRowItem(
+						item = item,
+						// When seriesThumbnailsEnabled is true, use wide thumbnails; otherwise use series poster
+						preferParentThumb = preferParentThumb,
+						staticHeight = false,
+						preferSeriesPoster = !preferParentThumb
+					)
+				}
+			)
 
-				if (items.isEmpty()) removeRow()
+			if (items.isEmpty()) removeRow()
 			} else {
 				setItems(
 					items = response.items,
 					transform = { item, _ ->
 						BaseItemDtoBaseRowItem(
-							item,
-							preferParentThumb,
-							isStaticHeight
+							item = item,
+							// When seriesThumbnailsEnabled is true, use wide thumbnails; otherwise use series poster
+							preferParentThumb = preferParentThumb,
+							staticHeight = isStaticHeight,
+							preferSeriesPoster = !preferParentThumb
 						)
 					}
 				)
@@ -167,11 +174,12 @@ fun ItemRowAdapter.retrieveLatestMedia(api: ApiClient, query: GetLatestMediaRequ
 				items = response,
 				transform = { item, _ ->
 					BaseItemDtoBaseRowItem(
-						item,
-						preferParentThumb,
-						isStaticHeight,
-						BaseRowItemSelectAction.ShowDetails,
-						preferParentThumb,
+						item = item,
+						preferParentThumb = preferParentThumb,
+						staticHeight = isStaticHeight,
+						selectAction = BaseRowItemSelectAction.ShowDetails,
+						preferSeriesPoster = false,
+						preferThumbForMovies = false,
 					)
 				}
 			)
@@ -721,7 +729,8 @@ fun ItemRowAdapter.refreshItem(
 						preferParentThumb = currentBaseRowItem.preferParentThumb,
 						staticHeight = currentBaseRowItem.staticHeight,
 						selectAction = currentBaseRowItem.selectAction,
-						preferSeriesPoster = currentBaseRowItem.preferSeriesPoster
+						preferSeriesPoster = currentBaseRowItem.preferSeriesPoster,
+						preferThumbForMovies = currentBaseRowItem.preferThumbForMovies
 					)
 				)
 			},

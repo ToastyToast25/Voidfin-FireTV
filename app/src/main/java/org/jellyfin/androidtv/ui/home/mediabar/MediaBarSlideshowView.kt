@@ -14,8 +14,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -27,13 +29,16 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import org.jellyfin.androidtv.R
+import org.jellyfin.androidtv.preference.UserSettingPreferences
 import org.jellyfin.androidtv.ui.base.Text
+import org.koin.compose.koinInject
 
 /**
  * Media Bar Slideshow Compose component
@@ -47,10 +52,36 @@ fun MediaBarSlideshowView(
 ) {
 	val state by viewModel.state.collectAsState()
 	val playbackState by viewModel.playbackState.collectAsState()
+	val isFocused by viewModel.isFocused.collectAsState()
+	val userSettingPreferences = koinInject<UserSettingPreferences>()
+	
+	// Get overlay preferences
+	val overlayOpacity = (userSettingPreferences[UserSettingPreferences.mediaBarOverlayOpacity].toIntOrNull() ?: 50) / 100f
+	val overlayColor = when (userSettingPreferences[UserSettingPreferences.mediaBarOverlayColor]) {
+		"black" -> Color.Black
+		"dark_blue" -> Color(0xFF1A2332)
+		"purple" -> Color(0xFF4A148C)
+		"teal" -> Color(0xFF00695C)
+		"navy" -> Color(0xFF0D1B2A)
+		"charcoal" -> Color(0xFF36454F)
+		"brown" -> Color(0xFF3E2723)
+		"dark_red" -> Color(0xFF8B0000)
+		"dark_green" -> Color(0xFF0B4F0F)
+		"slate" -> Color(0xFF475569)
+		"indigo" -> Color(0xFF1E3A8A)
+		else -> Color.Gray
+	}
 
 	DisposableEffect(Unit) {
 		onDispose {
 			viewModel.setFocused(false)
+		}
+	}
+	
+	// When focus returns to Media Bar and it's empty, trigger a reload
+	LaunchedEffect(isFocused) {
+		if (isFocused && state is MediaBarState.Loading) {
+			// Content will load automatically from state
 		}
 	}
 
@@ -102,16 +133,18 @@ fun MediaBarSlideshowView(
 			}
 			is MediaBarState.Ready -> {
 				// Logo and backdrop are managed by HomeFragment
-				// Media info overlay (with padding)
+				// Media info overlay (with padding, raised to avoid clipping with indicator dots)
 				Box(
 					modifier = Modifier
 						.align(Alignment.BottomStart)
-						.padding(horizontal = 43.dp, vertical = 5.dp)
+						.padding(start = 43.dp, end = 43.dp, bottom = 30.dp)
 				) {
 					val item = currentState.items.getOrNull(playbackState.currentIndex)
 					if (item != null) {
 						MediaInfoOverlay(
-							item = item
+							item = item,
+							overlayColor = overlayColor,
+							overlayOpacity = overlayOpacity
 						)
 					}
 				}
@@ -124,13 +157,14 @@ fun MediaBarSlideshowView(
 							.align(Alignment.TopStart)
 							.padding(start = 16.dp, top = 0.dp)
 							.size(48.dp)
-							.background(Color.Gray.copy(alpha = 0.5f), CircleShape),
+							.background(overlayColor.copy(alpha = overlayOpacity), CircleShape),
 						contentAlignment = Alignment.Center
 					) {
-						Text(
-							text = "◀",
-							color = Color.White.copy(alpha = 0.9f),
-							fontSize = 24.sp
+						Icon(
+							painter = painterResource(id = R.drawable.chevron_left),
+							contentDescription = "Previous",
+							tint = Color.White.copy(alpha = 0.9f),
+							modifier = Modifier.size(24.dp)
 						)
 					}
 					
@@ -140,13 +174,28 @@ fun MediaBarSlideshowView(
 							.align(Alignment.TopEnd)
 							.padding(end = 16.dp, top = 0.dp)
 							.size(48.dp)
-							.background(Color.Gray.copy(alpha = 0.5f), CircleShape),
+							.background(overlayColor.copy(alpha = overlayOpacity), CircleShape),
 						contentAlignment = Alignment.Center
 					) {
-						Text(
-							text = "▶",
-							color = Color.White.copy(alpha = 0.9f),
-							fontSize = 24.sp
+						Icon(
+							painter = painterResource(id = R.drawable.chevron_right),
+							contentDescription = "Next",
+							tint = Color.White.copy(alpha = 0.9f),
+							modifier = Modifier.size(24.dp)
+						)
+					}
+					
+					// Indicator dots - centered at bottom
+					Box(
+						modifier = Modifier
+							.align(Alignment.BottomCenter)
+							.padding(bottom = 8.dp)
+					) {
+						CarouselIndicatorDots(
+							totalItems = currentState.items.size,
+							currentIndex = playbackState.currentIndex,
+							overlayColor = overlayColor,
+							overlayOpacity = overlayOpacity
 						)
 					}
 				}
@@ -164,6 +213,8 @@ fun MediaBarSlideshowView(
 @Composable
 private fun MediaInfoOverlay(
 	item: MediaBarSlideItem,
+	overlayColor: Color,
+	overlayOpacity: Float,
 	modifier: Modifier = Modifier,
 ) {
 	Box(
@@ -172,8 +223,8 @@ private fun MediaInfoOverlay(
 			.background(
 				brush = Brush.verticalGradient(
 					colors = listOf(
-						Color.Gray.copy(alpha = 0.5f),
-						Color.Gray.copy(alpha = 0.5f)
+						overlayColor.copy(alpha = overlayOpacity),
+						overlayColor.copy(alpha = overlayOpacity)
 					)
 				),
 				shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
@@ -262,6 +313,41 @@ private fun MediaInfoOverlay(
 				lineHeight = 20.sp
 			)
 		}
+		}
+	}
+}
+
+@Composable
+private fun CarouselIndicatorDots(
+	totalItems: Int,
+	currentIndex: Int,
+	overlayColor: Color,
+	overlayOpacity: Float,
+	modifier: Modifier = Modifier,
+) {
+	Row(
+		modifier = modifier
+			.padding(top = 80.dp) // Push dots down much lower
+			.background(
+				color = overlayColor.copy(alpha = overlayOpacity * 0.6f),
+				shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+			)
+			.padding(horizontal = 12.dp, vertical = 6.dp),
+		horizontalArrangement = Arrangement.spacedBy(8.dp),
+		verticalAlignment = Alignment.CenterVertically
+	) {
+		repeat(totalItems) { index ->
+			Box(
+				modifier = Modifier
+					.size(if (index == currentIndex) 10.dp else 8.dp)
+					.background(
+						color = if (index == currentIndex) 
+							Color.White.copy(alpha = 0.9f)
+						else 
+							Color.White.copy(alpha = 0.4f),
+						shape = CircleShape
+					)
+			)
 		}
 	}
 }

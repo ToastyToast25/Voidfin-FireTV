@@ -22,6 +22,7 @@ open class BaseItemDtoBaseRowItem @JvmOverloads constructor(
 	staticHeight: Boolean = false,
 	selectAction: BaseRowItemSelectAction = BaseRowItemSelectAction.ShowDetails,
 	val preferSeriesPoster: Boolean = false,
+	val preferThumbForMovies: Boolean = false,
 ) : BaseRowItem(
 	baseRowType = when (item.type) {
 		BaseItemKind.TV_CHANNEL,

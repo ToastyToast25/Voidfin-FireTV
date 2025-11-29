@@ -77,25 +77,25 @@ class SearchViewModel(
 				}
 			}.awaitAll()
 
-			// Add Jellyseerr results if enabled
-			val allResults = if (jellyseerrPreferences[JellyseerrPreferences.enabled]) {
-				try {
-					val jellyseerrResult = jellyseerrRepository.search(trimmed)
-					val jellyseerrItems = jellyseerrResult.getOrNull()?.results?.map { it.toBaseItemDto() } ?: emptyList()
-					if (jellyseerrItems.isNotEmpty()) {
-						listOf(SearchResultGroup(R.string.jellyseerr_search_results, jellyseerrItems)) + jellyfinResults
-					} else {
-						jellyfinResults
-					}
-				} catch (e: Exception) {
-					Timber.w(e, "Failed to search Jellyseerr")
+		// Add Jellyseerr results if enabled (displayed last)
+		val allResults = if (jellyseerrPreferences[JellyseerrPreferences.enabled]) {
+			try {
+				val jellyseerrResult = jellyseerrRepository.search(trimmed)
+				val jellyseerrItems = jellyseerrResult.getOrNull()?.results?.map { it.toBaseItemDto() } ?: emptyList()
+				if (jellyseerrItems.isNotEmpty()) {
+					jellyfinResults + listOf(SearchResultGroup(R.string.jellyseerr_search_results, jellyseerrItems))
+				} else {
 					jellyfinResults
 				}
-			} else {
+			} catch (e: Exception) {
+				Timber.w(e, "Failed to search Jellyseerr")
 				jellyfinResults
 			}
+		} else {
+			jellyfinResults
+		}
 
-			_searchResultsFlow.value = allResults
+		_searchResultsFlow.value = allResults
 		}
 
 		return true

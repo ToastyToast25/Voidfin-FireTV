@@ -8,7 +8,7 @@ import java.util.UUID
 data class MediaBarConfig(
 	val shuffleIntervalMs: Long = 7000,
 	val fadeTransitionDurationMs: Long = 500,
-	val maxItems: Int = 15,
+	val maxItems: Int,
 	val enableKenBurnsAnimation: Boolean = true,
 	val preloadCount: Int = 3,
 )

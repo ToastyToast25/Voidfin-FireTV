@@ -4,11 +4,21 @@ import android.os.Build
 import org.jellyfin.androidtv.BuildConfig
 import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.ui.preference.dsl.OptionsScreen
+import org.jellyfin.androidtv.ui.preference.dsl.action
 import org.jellyfin.androidtv.ui.preference.dsl.link
 import org.jellyfin.androidtv.ui.preference.screen.LicensesScreen
 
 fun OptionsScreen.aboutCategory() = category {
 	setTitle(R.string.pref_about_title)
+
+	action {
+		setTitle(R.string.pref_donate_title)
+		setContent(R.string.pref_donate_description)
+		icon = R.drawable.ic_heart
+		onActivate = {
+			showDonateDialog(this@category.context)
+		}
+	}
 
 	link {
 		// Hardcoded strings for troubleshooting purposes

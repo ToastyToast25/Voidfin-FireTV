@@ -1,10 +1,14 @@
 package org.jellyfin.androidtv.data.repository
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
+import org.jellyfin.androidtv.auth.repository.UserRepository
 import org.jellyfin.androidtv.data.service.jellyseerr.JellyseerrBlacklistPageDto
 import org.jellyfin.androidtv.data.service.jellyseerr.JellyseerrCreateRequestDto
 import org.jellyfin.androidtv.data.service.jellyseerr.JellyseerrDiscoverItemDto
@@ -220,6 +224,7 @@ interface JellyseerrRepository {
 class JellyseerrRepositoryImpl(
 	private val context: android.content.Context,
 	private val preferences: JellyseerrPreferences,
+	private val userRepository: UserRepository,
 ) : JellyseerrRepository {
 	private var httpClient: JellyseerrHttpClient? = null
 	private val _isAvailable = MutableStateFlow(false)
@@ -228,6 +233,8 @@ class JellyseerrRepositoryImpl(
 
 	/**
 	 * Auto-initialize from saved preferences if available
+	 * Waits for user to be set before initializing to ensure correct cookie storage is used
+	 * Will attempt to re-authenticate if session is invalid and credentials are saved
 	 */
 	override suspend fun ensureInitialized() {
 		// Reset initialization if client is no longer available
@@ -246,16 +253,60 @@ class JellyseerrRepositoryImpl(
 				val serverUrl = preferences[JellyseerrPreferences.serverUrl]
 				val enabled = preferences[JellyseerrPreferences.enabled]
 				val storedApiKey = preferences[JellyseerrPreferences.apiKey] ?: ""
+				val authMethod = preferences[JellyseerrPreferences.authMethod] ?: ""
+
+				// For cookie-based auth, wait for user to be set so correct cookie storage is used
+				if (enabled && !serverUrl.isNullOrEmpty() && storedApiKey.isEmpty()) {
+					// Wait up to 5 seconds for user to be available
+					val user = withTimeoutOrNull(5000L) {
+						userRepository.currentUser.first { it != null }
+					}
+					if (user != null) {
+						Timber.d("Jellyseerr: User '${user.name}' detected, switching cookie storage before init")
+						JellyseerrHttpClient.switchCookieStorage(user.id.toString())
+					} else {
+						Timber.w("Jellyseerr: No user available after timeout, cookies may not be loaded correctly")
+					}
+				}
 
 				// Initialize with stored API key or cookie-based auth
 				if (enabled && !serverUrl.isNullOrEmpty()) {
 					Timber.d("Jellyseerr: Auto-initializing from saved preferences (API key: ${if (storedApiKey.isNotEmpty()) "present" else "absent, using cookies"})")
 					httpClient = JellyseerrHttpClient(context, serverUrl, storedApiKey)
 				
-					val connectionTest = httpClient?.testConnection()?.getOrNull() == true
-					_isAvailable.emit(connectionTest)
+					// Verify the session is actually valid by calling getCurrentUser
+					val sessionValid = httpClient?.getCurrentUser()?.isSuccess == true
+					
+					if (!sessionValid && storedApiKey.isEmpty() && authMethod == "jellyfin") {
+						// Cookie-based auth failed, try to re-authenticate with saved password
+						val savedPassword = preferences[JellyseerrPreferences.password] ?: ""
+						if (savedPassword.isNotEmpty()) {
+							Timber.i("Jellyseerr: Session expired, attempting auto-re-login with saved credentials")
+							val jellyfinUser = userRepository.currentUser.value
+							if (jellyfinUser != null) {
+								val username = jellyfinUser.name ?: ""
+								// Get Jellyfin server URL from the API client
+								val jellyfinUrl = org.koin.core.context.GlobalContext.get().get<org.jellyfin.sdk.api.client.ApiClient>().baseUrl ?: ""
+								if (username.isNotEmpty() && jellyfinUrl.isNotEmpty()) {
+									val reloginResult = httpClient?.loginJellyfin(username, savedPassword, jellyfinUrl)
+									if (reloginResult?.isSuccess == true) {
+										Timber.i("Jellyseerr: Auto-re-login successful")
+										_isAvailable.emit(true)
+										initialized = true
+										return@withContext
+									} else {
+										Timber.w("Jellyseerr: Auto-re-login failed")
+									}
+								}
+							}
+						} else {
+							Timber.w("Jellyseerr: Session expired but no saved password for auto-re-login")
+						}
+					}
+					
+					_isAvailable.emit(sessionValid)
 					initialized = true
-					Timber.d("Jellyseerr: Auto-initialized - Available: $connectionTest")
+					Timber.d("Jellyseerr: Auto-initialized - Session valid: $sessionValid")
 				} else {
 					Timber.w("Jellyseerr: Jellyseerr is disabled or not configured")
 					_isAvailable.emit(false)
@@ -341,6 +392,9 @@ class JellyseerrRepositoryImpl(
 			// Successfully logged in with Jellyfin (cookie-based auth)
 			Timber.d("Jellyseerr: Jellyfin login successful, user: ${user.username}")
 			
+			// Save password for auto-re-login when cookies expire
+			preferences[JellyseerrPreferences.password] = password
+			
 			// Check if auto API key generation is enabled
 			val autoGenerateApiKey = preferences[JellyseerrPreferences.autoGenerateApiKey]
 			
@@ -357,10 +411,12 @@ class JellyseerrRepositoryImpl(
 					// Save the API key to preferences
 					preferences[JellyseerrPreferences.apiKey] = apiKey
 					preferences[JellyseerrPreferences.authMethod] = "jellyfin-apikey"
+					// Clear password since we have API key now
+					preferences[JellyseerrPreferences.password] = ""
 				}.onFailure { error ->
 					Timber.w(error, "Jellyseerr: Failed to auto-generate API key - This requires ADMIN permissions")
-					Timber.w("Jellyseerr: Falling back to cookie-based auth (30-day expiration)")
-					// Keep using cookie-based auth
+					Timber.w("Jellyseerr: Falling back to cookie-based auth with saved password for auto-re-login")
+					// Keep using cookie-based auth with saved password
 					preferences[JellyseerrPreferences.authMethod] = "jellyfin"
 				}
 			} else {

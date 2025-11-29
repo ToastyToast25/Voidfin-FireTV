@@ -5,6 +5,7 @@ import androidx.preference.PreferenceManager
 import org.jellyfin.androidtv.constant.HomeSectionType
 import org.jellyfin.preference.enumPreference
 import org.jellyfin.preference.intPreference
+import org.jellyfin.preference.stringPreference
 import org.jellyfin.preference.store.SharedPreferenceStore
 
 class UserSettingPreferences(
@@ -15,6 +16,9 @@ class UserSettingPreferences(
 	companion object {
 		val skipBackLength = intPreference("skipBackLength", 10_000)
 		val skipForwardLength = intPreference("skipForwardLength", 30_000)
+		val mediaBarItemCount = stringPreference("mediaBarItemCount", "10")
+		val mediaBarOverlayOpacity = stringPreference("mediaBarOverlayOpacity", "50")
+		val mediaBarOverlayColor = stringPreference("mediaBarOverlayColor", "gray")
 
 		val homesection0 = enumPreference("homesection0", HomeSectionType.MEDIA_BAR)
 		val homesection1 = enumPreference("homesection1", HomeSectionType.RESUME)

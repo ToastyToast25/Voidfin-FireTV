@@ -152,26 +152,6 @@ class CustomizationPreferencesScreen : OptionsFragment() {
 					default { UserPreferences.screensaverAgeRatingMax.defaultValue.toString() }
 				}
 			}
-
-			list {
-				setTitle(R.string.pref_screensaver_mode)
-				
-				entries = mapOf(
-					"library" to getString(R.string.pref_screensaver_mode_library),
-					"logo" to getString(R.string.pref_screensaver_mode_logo)
-				)
-				
-				bind(userPreferences, UserPreferences.screensaverMode)
-			}
-
-			checkbox {
-				setTitle(R.string.pref_screensaver_dimming)
-				setContent(R.string.pref_screensaver_dimming_description)
-
-				bind(userPreferences, UserPreferences.screensaverDimming)
-
-				depends { userPreferences[UserPreferences.screensaverInAppEnabled] }
-			}
 		}
 
 		category {

@@ -173,6 +173,23 @@ private fun MainToolbar(
 		focusedContainerColor = JellyfinTheme.colorScheme.buttonFocused,
 		focusedContentColor = JellyfinTheme.colorScheme.onButtonFocused,
 	)
+	
+	// Get overlay preferences for toolbar styling
+	val overlayOpacity = (userSettingPreferences[UserSettingPreferences.mediaBarOverlayOpacity].toIntOrNull() ?: 50) / 100f
+	val overlayColor = when (userSettingPreferences[UserSettingPreferences.mediaBarOverlayColor]) {
+		"black" -> Color.Black
+		"dark_blue" -> Color(0xFF1A2332)
+		"purple" -> Color(0xFF4A148C)
+		"teal" -> Color(0xFF00695C)
+		"navy" -> Color(0xFF0D1B2A)
+		"charcoal" -> Color(0xFF36454F)
+		"brown" -> Color(0xFF3E2723)
+		"dark_red" -> Color(0xFF8B0000)
+		"dark_green" -> Color(0xFF0B4F0F)
+		"slate" -> Color(0xFF475569)
+		"indigo" -> Color(0xFF1E3A8A)
+		else -> Color.Gray
+	}
 
 	Toolbar(
 		modifier = Modifier
@@ -220,7 +237,10 @@ private fun MainToolbar(
 					)
 				}
 
-				ToolbarButtons {
+				ToolbarButtons(
+					backgroundColor = overlayColor,
+					alpha = overlayOpacity
+				) {
 					NowPlayingComposable(
 						onFocusableChange = {},
 					)
@@ -230,7 +250,9 @@ private fun MainToolbar(
 		center = {
 			ToolbarButtons(
 				modifier = Modifier
-					.focusRequester(focusRequester)
+					.focusRequester(focusRequester),
+				backgroundColor = overlayColor,
+				alpha = overlayOpacity
 			) {
 				IconButton(
 					onClick = {

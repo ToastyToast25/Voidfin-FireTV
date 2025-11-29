@@ -110,6 +110,8 @@ fun ToolbarLayout(
 @Composable
 fun ToolbarButtons(
 	modifier: Modifier = Modifier,
+	backgroundColor: Color = Color.Gray,
+	alpha: Float = 0.5f,
 	content: @Composable RowScope.() -> Unit,
 ) {
 	val scrollState = rememberScrollState()
@@ -121,8 +123,8 @@ fun ToolbarButtons(
 			.background(
 				brush = Brush.verticalGradient(
 					colors = listOf(
-						Color.Gray.copy(alpha = 0.5f),
-						Color.Gray.copy(alpha = 0.5f)
+						backgroundColor.copy(alpha = alpha),
+						backgroundColor.copy(alpha = alpha)
 					)
 				),
 				shape = pillShape

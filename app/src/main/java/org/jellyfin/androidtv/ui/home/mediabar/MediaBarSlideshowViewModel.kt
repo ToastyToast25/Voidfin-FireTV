@@ -32,7 +32,9 @@ class MediaBarSlideshowViewModel(
 	private val itemMutationRepository: ItemMutationRepository,
 	private val userRepository: UserRepository,
 ) : ViewModel() {
-	private val config = MediaBarConfig()
+	private fun getConfig() = MediaBarConfig(
+		maxItems = userSettingPreferences[UserSettingPreferences.mediaBarItemCount].toIntOrNull() ?: 10
+	)
 
 	private val _state = MutableStateFlow<MediaBarState>(MediaBarState.Loading)
 	val state: StateFlow<MediaBarState> = _state.asStateFlow()
@@ -46,6 +48,8 @@ class MediaBarSlideshowViewModel(
 	private var items: List<MediaBarSlideItem> = emptyList()
 	private var autoAdvanceJob: Job? = null
 	private var currentUserId: UUID? = null
+	private var isInitialLoad = true
+	private var lastLoadTimestamp: Long = 0
 
 	init {
 		loadSlideshowItems()
@@ -66,6 +70,16 @@ class MediaBarSlideshowViewModel(
 
 	fun setFocused(focused: Boolean) {
 		_isFocused.value = focused
+		
+		// When losing focus, stop auto-advance
+		if (!focused) {
+			autoAdvanceJob?.cancel()
+		} else {
+			// When gaining focus, restart auto-advance if not paused
+			if (!_playbackState.value.isPaused) {
+				resetAutoAdvanceTimer()
+			}
+		}
 	}
 
 	/**
@@ -73,16 +87,17 @@ class MediaBarSlideshowViewModel(
 	 */
 	private fun loadSlideshowItems() {
 		viewModelScope.launch {
-			try {
-				_state.value = MediaBarState.Loading
+		try {
+			_state.value = MediaBarState.Loading
+			val config = getConfig()
 
-				// Fetch movies and shows randomly on IO dispatcher
-				val (moviesResponse, showsResponse) = withContext(Dispatchers.IO) {
-					val movies by api.itemsApi.getItems(
-						includeItemTypes = setOf(BaseItemKind.MOVIE),
-						recursive = true,
-						sortBy = setOf(org.jellyfin.sdk.model.api.ItemSortBy.RANDOM),
-						limit = config.maxItems * 2, // Get more items to filter from
+			// Fetch movies and shows randomly on IO dispatcher
+			val (moviesResponse, showsResponse) = withContext(Dispatchers.IO) {
+				val movies by api.itemsApi.getItems(
+					includeItemTypes = setOf(BaseItemKind.MOVIE),
+					recursive = true,
+					sortBy = setOf(org.jellyfin.sdk.model.api.ItemSortBy.RANDOM),
+					limit = config.maxItems * 2, // Get more items to filter from
 						filters = setOf(ItemFilter.IS_NOT_FOLDER),
 						fields = setOf(
 							ItemFields.OVERVIEW,
@@ -151,6 +166,8 @@ class MediaBarSlideshowViewModel(
 				if (items.isNotEmpty()) {
 					_state.value = MediaBarState.Ready(items)
 					startAutoPlay()
+					// Mark as loaded after successful initial load
+					isInitialLoad = false
 				} else {
 					_state.value = MediaBarState.Error("No items found")
 				}
@@ -166,9 +183,14 @@ class MediaBarSlideshowViewModel(
 	 */
 	private fun startAutoPlay() {
 		autoAdvanceJob?.cancel()
+		
+		// Only start auto-play if the media bar is focused
+		if (!_isFocused.value) return
+		
+		val config = getConfig()
 		autoAdvanceJob = viewModelScope.launch {
 			delay(config.shuffleIntervalMs)
-			if (!_playbackState.value.isPaused && !_playbackState.value.isTransitioning) {
+			if (!_playbackState.value.isPaused && !_playbackState.value.isTransitioning && _isFocused.value) {
 				nextSlide()
 			}
 		}
@@ -195,6 +217,29 @@ class MediaBarSlideshowViewModel(
 	}
 
 	/**
+	 * Load content on first HomeFragment creation, ensuring fresh random items each app launch
+	 */
+	fun loadInitialContent() {
+		if (isInitialLoad) {
+			Timber.d("MediaBar: Loading fresh random items for new session")
+			isInitialLoad = false
+			lastLoadTimestamp = System.currentTimeMillis()
+			loadSlideshowItems()
+		} else {
+			Timber.d("MediaBar: Using existing content from this session")
+		}
+	}
+	
+	/**
+	 * Force reload with fresh random items (e.g., user manually requests refresh)
+	 */
+	fun forceRefresh() {
+		Timber.d("MediaBar: Force refreshing with new random items")
+		lastLoadTimestamp = System.currentTimeMillis()
+		reloadContent()
+	}
+
+	/**
 	 * Navigate to the next slide
 	 */
 	fun nextSlide() {
@@ -208,6 +253,7 @@ class MediaBarSlideshowViewModel(
 			isTransitioning = true
 		)
 
+		val config = getConfig()
 		viewModelScope.launch {
 			delay(config.fadeTransitionDurationMs)
 			_playbackState.value = _playbackState.value.copy(isTransitioning = false)
@@ -230,6 +276,7 @@ class MediaBarSlideshowViewModel(
 			isTransitioning = true
 		)
 
+		val config = getConfig()
 		viewModelScope.launch {
 			delay(config.fadeTransitionDurationMs)
 			_playbackState.value = _playbackState.value.copy(isTransitioning = false)

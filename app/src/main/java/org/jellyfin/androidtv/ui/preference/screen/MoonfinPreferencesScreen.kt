@@ -1,0 +1,134 @@
+package org.jellyfin.androidtv.ui.preference.screen
+
+import org.jellyfin.androidtv.R
+import org.jellyfin.androidtv.preference.UserPreferences
+import org.jellyfin.androidtv.preference.UserSettingPreferences
+import org.jellyfin.androidtv.ui.preference.dsl.OptionsFragment
+import org.jellyfin.androidtv.ui.preference.dsl.checkbox
+import org.jellyfin.androidtv.ui.preference.dsl.list
+import org.jellyfin.androidtv.ui.preference.dsl.optionsScreen
+import org.jellyfin.preference.store.PreferenceStore
+import org.koin.android.ext.android.inject
+
+class MoonfinPreferencesScreen : OptionsFragment() {
+	private val userSettingPreferences: UserSettingPreferences by inject()
+	private val userPreferences: UserPreferences by inject()
+
+	override val stores: Array<PreferenceStore<*, *>>
+		get() = arrayOf(userSettingPreferences, userPreferences)
+
+	override val screen by optionsScreen {
+		setTitle(R.string.moonfin_settings)
+
+		// Toolbar Customization
+		category {
+			setTitle(R.string.pref_toolbar_customization)
+
+			checkbox {
+				setTitle(R.string.pref_show_shuffle_button)
+				setContent(R.string.pref_show_shuffle_button_description)
+				bind(userPreferences, UserPreferences.showShuffleButton)
+			}
+
+			checkbox {
+				setTitle(R.string.pref_show_genres_button)
+				setContent(R.string.pref_show_genres_button_description)
+				bind(userPreferences, UserPreferences.showGenresButton)
+			}
+
+			checkbox {
+				setTitle(R.string.pref_show_favorites_button)
+				setContent(R.string.pref_show_favorites_button_description)
+				bind(userPreferences, UserPreferences.showFavoritesButton)
+			}
+
+			checkbox {
+				setTitle(R.string.pref_show_libraries_in_toolbar)
+				setContent(R.string.pref_show_libraries_in_toolbar_description)
+				bind(userPreferences, UserPreferences.showLibrariesInToolbar)
+			}
+
+			list {
+				setTitle(R.string.pref_shuffle_content_type)
+				
+				entries = mapOf(
+					"movies" to getString(R.string.pref_shuffle_movies),
+					"tv" to getString(R.string.pref_shuffle_tv),
+					"both" to getString(R.string.pref_shuffle_both)
+				)
+				bind(userPreferences, UserPreferences.shuffleContentType)
+			}
+		}
+
+		// Media Bar Settings
+		category {
+			setTitle(R.string.pref_media_bar_title)
+
+			list {
+				setTitle(R.string.pref_media_bar_item_count)
+				entries = mapOf(
+					"5" to getString(R.string.pref_media_bar_5_items),
+					"10" to getString(R.string.pref_media_bar_10_items),
+					"15" to getString(R.string.pref_media_bar_15_items)
+				)
+				bind(userSettingPreferences, UserSettingPreferences.mediaBarItemCount)
+			}
+
+			list {
+				setTitle(R.string.pref_media_bar_overlay_opacity)
+				entries = mapOf(
+					"30" to getString(R.string.pref_media_bar_opacity_30),
+					"40" to getString(R.string.pref_media_bar_opacity_40),
+					"50" to getString(R.string.pref_media_bar_opacity_50),
+					"60" to getString(R.string.pref_media_bar_opacity_60),
+					"70" to getString(R.string.pref_media_bar_opacity_70)
+				)
+				bind(userSettingPreferences, UserSettingPreferences.mediaBarOverlayOpacity)
+			}
+
+			list {
+				setTitle(R.string.pref_media_bar_overlay_color)
+				entries = mapOf(
+					"black" to getString(R.string.pref_media_bar_color_black),
+					"gray" to getString(R.string.pref_media_bar_color_gray),
+					"dark_blue" to getString(R.string.pref_media_bar_color_dark_blue),
+					"purple" to getString(R.string.pref_media_bar_color_purple),
+					"teal" to getString(R.string.pref_media_bar_color_teal),
+					"navy" to getString(R.string.pref_media_bar_color_navy),
+					"charcoal" to getString(R.string.pref_media_bar_color_charcoal),
+					"brown" to getString(R.string.pref_media_bar_color_brown),
+					"dark_red" to getString(R.string.pref_media_bar_color_dark_red),
+					"dark_green" to getString(R.string.pref_media_bar_color_dark_green),
+					"slate" to getString(R.string.pref_media_bar_color_slate),
+					"indigo" to getString(R.string.pref_media_bar_color_indigo)
+				)
+				bind(userSettingPreferences, UserSettingPreferences.mediaBarOverlayColor)
+			}
+		}
+
+		// Screensaver
+		category {
+			setTitle(R.string.pref_screensaver)
+
+			list {
+				setTitle(R.string.pref_screensaver_mode)
+				
+				entries = mapOf(
+					"library" to getString(R.string.pref_screensaver_mode_library),
+					"logo" to getString(R.string.pref_screensaver_mode_logo)
+				)
+				
+				bind(userPreferences, UserPreferences.screensaverMode)
+			}
+
+			checkbox {
+				setTitle(R.string.pref_screensaver_dimming)
+				setContent(R.string.pref_screensaver_dimming_description)
+
+				bind(userPreferences, UserPreferences.screensaverDimming)
+
+				depends { userPreferences[UserPreferences.screensaverInAppEnabled] }
+			}
+		}
+	}
+}

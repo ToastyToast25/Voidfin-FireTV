@@ -1,6 +1,7 @@
 package org.jellyfin.androidtv.ui.home
 
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import androidx.compose.ui.platform.ComposeView
 import androidx.leanback.widget.RowPresenter
 import org.jellyfin.androidtv.ui.home.mediabar.MediaBarSlideshowView
@@ -18,11 +19,22 @@ class MediaBarPresenter(
 ) : RowPresenter() {
 	
 	override fun createRowViewHolder(parent: ViewGroup): RowPresenter.ViewHolder {
-		val composeView = ComposeView(parent.context).apply {
+		// Create a container with bottom margin to push the next row down
+		val container = FrameLayout(parent.context).apply {
 			layoutParams = ViewGroup.LayoutParams(
 				ViewGroup.LayoutParams.MATCH_PARENT,
 				ViewGroup.LayoutParams.WRAP_CONTENT
 			)
+		}
+		
+		val composeView = ComposeView(parent.context).apply {
+			layoutParams = FrameLayout.LayoutParams(
+				ViewGroup.LayoutParams.MATCH_PARENT,
+				ViewGroup.LayoutParams.WRAP_CONTENT
+			).apply {
+				// Add bottom margin to push next row out of frame
+				bottomMargin = 40 // 40dp margin to push Continue Watching further down
+			}
 			
 			setContent {
 				MediaBarSlideshowView(
@@ -35,7 +47,9 @@ class MediaBarPresenter(
 			}
 		}
 		
-		return ViewHolder(composeView)
+		container.addView(composeView)
+		
+		return ViewHolder(container)
 	}
 	
 	override fun onBindRowViewHolder(vh: RowPresenter.ViewHolder, item: Any) {

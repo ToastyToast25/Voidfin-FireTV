@@ -147,7 +147,7 @@ val appModule = module {
 
 	// Jellyseerr
 	single { JellyseerrPreferences(androidContext()) }
-	single<JellyseerrRepository> { JellyseerrRepositoryImpl(androidContext(), get()) }
+	single<JellyseerrRepository> { JellyseerrRepositoryImpl(androidContext(), get(), get()) }
 
 	viewModel { StartupViewModel(get(), get(), get(), get()) }
 	viewModel { UserLoginViewModel(get(), get(), get(), get(defaultDeviceInfo)) }

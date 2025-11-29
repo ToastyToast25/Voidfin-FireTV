@@ -25,10 +25,12 @@ class JellyseerrPreferences(context: Context) : SharedPreferenceStore(
 		 */
 		val serverUrl = stringPreference("jellyseerr_server_url", "")
 
-	/**
-	 * Jellyfin password for Jellyseerr authentication
-	 */
-	val password = stringPreference("jellyseerr_password", "")		/**
+		/**
+		 * Jellyfin password for Jellyseerr authentication (used for auto-re-login when cookies expire)
+		 */
+		val password = stringPreference("jellyseerr_password", "")
+
+		/**
 		 * Whether to show Jellyseerr in the main navigation
 		 */
 		val showInNavigation = booleanPreference("jellyseerr_show_in_navigation", true)
