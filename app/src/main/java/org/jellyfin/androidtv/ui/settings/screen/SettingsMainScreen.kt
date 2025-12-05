@@ -40,16 +40,19 @@ import org.jellyfin.androidtv.ui.base.Text
 import org.jellyfin.androidtv.ui.base.list.ListButton
 import org.jellyfin.androidtv.ui.base.list.ListSection
 import org.jellyfin.androidtv.ui.navigation.ActivityDestinations
+import org.jellyfin.androidtv.ui.navigation.LocalRouter
 import org.jellyfin.androidtv.ui.preference.PreferencesActivity
 import org.jellyfin.androidtv.ui.preference.category.showDonateDialog
 import org.jellyfin.androidtv.ui.preference.screen.JellyseerrPreferencesScreen
 import org.jellyfin.androidtv.ui.preference.screen.MoonfinPreferencesScreen
+import org.jellyfin.androidtv.ui.settings.Routes
 import org.koin.java.KoinJavaComponent.inject
 import timber.log.Timber
 
 @Composable
 fun SettingsMainScreen() {
 	val context = LocalContext.current
+	val router = LocalRouter.current
 	val updateChecker by inject<UpdateCheckerService>(UpdateCheckerService::class.java)
 
 	Column(
@@ -162,7 +165,7 @@ fun SettingsMainScreen() {
 			headingContent = { Text(stringResource(R.string.pref_telemetry_category)) },
 			captionContent = { Text(stringResource(R.string.pref_telemetry_description)) },
 			onClick = {
-				context.startActivity(ActivityDestinations.crashReportingPreferences(context))
+				router.push(Routes.TELEMETRY)
 			}
 		)
 
