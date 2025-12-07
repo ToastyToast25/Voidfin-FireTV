@@ -76,8 +76,10 @@ fun BaseItemDto.getProgramSubText(context: Context) = buildString {
 	episodeTitle?.let { append(episodeTitle, " ") }
 
 	// If the start time is on a different day, add the date
-	if (startDate?.dayOfYear != LocalDateTime.now().dayOfYear)
-		append(TimeUtils.getFriendlyDate(context, startDate), " ")
+	startDate?.let { date ->
+		if (date.dayOfYear != LocalDateTime.now().dayOfYear)
+			append(TimeUtils.getFriendlyDate(context, date), " ")
+	}
 
 	// Add the start and end time
 	append(
@@ -120,12 +122,15 @@ fun BaseItemDto.getFullName(context: Context): String? = when (type) {
 
 fun BaseItemDto.getSubName(context: Context): String? = when (type) {
 	BaseItemKind.EPISODE -> when {
-		locationType == LocationType.VIRTUAL && name != null && premiereDate != null ->
-			context.getString(
-				R.string.lbl_name_date,
-				name,
-				TimeUtils.getFriendlyDate(context, premiereDate)
-			)
+		locationType == LocationType.VIRTUAL && name != null && premiereDate != null -> {
+			premiereDate?.let { date ->
+				context.getString(
+					R.string.lbl_name_date,
+					name,
+					TimeUtils.getFriendlyDate(context, date)
+				)
+			}
+		}
 
 		else -> {
 			// Show episode name with resolution if available
