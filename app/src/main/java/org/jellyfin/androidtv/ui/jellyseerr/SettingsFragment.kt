@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -15,6 +14,7 @@ import org.jellyfin.androidtv.constant.JellyseerrFetchLimit
 import org.jellyfin.androidtv.databinding.FragmentJellyseerrSettingsBinding
 import org.jellyfin.androidtv.preference.JellyseerrPreferences
 import org.jellyfin.androidtv.preference.UserPreferences
+import org.jellyfin.androidtv.util.getUserFeedbackManager
 import org.jellyfin.sdk.api.client.ApiClient
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -114,20 +114,12 @@ class SettingsFragment : Fragment(R.layout.fragment_jellyseerr_settings) {
 						binding.testConnectionButton.isEnabled = true
 						binding.statusText.text = "✓ Connected successfully!"
 						binding.statusIcon.setImageResource(R.drawable.ic_check)
-						Toast.makeText(
-							requireContext(),
-							"Connected to Jellyseerr!",
-							Toast.LENGTH_SHORT
-						).show()
+						requireContext().getUserFeedbackManager().showSuccess("Connected to Jellyseerr!")
 					}
 					is JellyseerrLoadingState.Error -> {
 						binding.testConnectionButton.isEnabled = true
 						binding.statusText.text = "✗ Connection failed: ${state.message}"
-						Toast.makeText(
-							requireContext(),
-							"Connection error: ${state.message}",
-							Toast.LENGTH_LONG
-						).show()
+						requireContext().getUserFeedbackManager().showError("Connection error: ${state.message}")
 					}
 					is JellyseerrLoadingState.Idle -> {
 						binding.testConnectionButton.isEnabled = true
@@ -164,7 +156,7 @@ class SettingsFragment : Fragment(R.layout.fragment_jellyseerr_settings) {
 
 		// Validate that connection was set up
 		if (serverUrl.isNullOrEmpty()) {
-			Toast.makeText(requireContext(), "Please connect with Jellyfin first", Toast.LENGTH_SHORT).show()
+			requireContext().getUserFeedbackManager().showError("Please connect with Jellyfin first")
 			return
 		}
 
@@ -178,20 +170,20 @@ class SettingsFragment : Fragment(R.layout.fragment_jellyseerr_settings) {
 		val jellyseerrServerUrl = binding.serverUrlInput.text.toString().trim()
 		
 		if (jellyseerrServerUrl.isEmpty()) {
-			Toast.makeText(requireContext(), "Please enter Jellyseerr server URL first", Toast.LENGTH_LONG).show()
+			requireContext().getUserFeedbackManager().showError("Please enter Jellyseerr server URL first")
 			return
 		}
 
 		// Get the Jellyfin server URL from current connection
 		val jellyfinServerUrl = apiClient.baseUrl ?: run {
-			Toast.makeText(requireContext(), "Could not determine Jellyfin server URL", Toast.LENGTH_LONG).show()
+			requireContext().getUserFeedbackManager().showError("Could not determine Jellyfin server URL")
 			return
 		}
 
 		// Get the current logged-in user's username
 		val currentUser = userRepository.currentUser.value
 		val username = currentUser?.name ?: run {
-			Toast.makeText(requireContext(), "Could not determine current user", Toast.LENGTH_LONG).show()
+			requireContext().getUserFeedbackManager().showError("Could not determine current user")
 			return
 		}
 
@@ -218,11 +210,7 @@ class SettingsFragment : Fragment(R.layout.fragment_jellyseerr_settings) {
 				val password = passwordInput.text.toString().trim()
 				
 				if (password.isEmpty()) {
-					Toast.makeText(
-						requireContext(),
-						"Password is required",
-						Toast.LENGTH_SHORT
-					).show()
+					requireContext().getUserFeedbackManager().showError("Password is required")
 					return@setPositiveButton
 				}
 
@@ -254,19 +242,11 @@ class SettingsFragment : Fragment(R.layout.fragment_jellyseerr_settings) {
 				// Initialize connection (using cookie-based auth)
 				viewModel.initializeJellyseerr(jellyseerrServerUrl, "")
 				
-				Toast.makeText(
-					requireContext(),
-					"Connected successfully using session cookie!",
-					Toast.LENGTH_LONG
-				).show()
+				requireContext().getUserFeedbackManager().showSuccess("Connected successfully using session cookie!")
 				
 				Timber.d("Jellyseerr: Jellyfin authentication successful using cookie authentication")
-				}.onFailure { error ->
-					Toast.makeText(
-						requireContext(),
-						"Connection failed: ${error.message}",
-						Toast.LENGTH_LONG
-					).show()
+			}.onFailure { error ->
+				requireContext().getUserFeedbackManager().showError("Connection failed: ${error.message}", error)
 					binding.statusText.text = "✗ Connection failed"
 					Timber.e(error, "Jellyseerr: Jellyfin authentication failed")
 				}

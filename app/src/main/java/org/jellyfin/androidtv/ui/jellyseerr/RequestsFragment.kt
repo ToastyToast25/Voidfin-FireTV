@@ -2,13 +2,13 @@ package org.jellyfin.androidtv.ui.jellyseerr
 
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.coroutines.launch
 import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.databinding.FragmentJellyseerrRequestsBinding
+import org.jellyfin.androidtv.util.getUserFeedbackManager
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -63,11 +63,7 @@ class RequestsFragment : Fragment(R.layout.fragment_jellyseerr_requests) {
 					is JellyseerrLoadingState.Error -> {
 						binding.loadingState.visibility = View.GONE
 						binding.emptyState.visibility = View.VISIBLE
-						Toast.makeText(
-							requireContext(),
-							"Error: ${state.message}",
-							Toast.LENGTH_LONG
-						).show()
+						requireContext().getUserFeedbackManager().showError("Error: ${state.message}")
 					}
 					else -> {}
 				}
