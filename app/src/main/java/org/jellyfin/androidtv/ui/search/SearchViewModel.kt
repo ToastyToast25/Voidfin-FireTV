@@ -13,6 +13,7 @@ import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.data.repository.JellyseerrRepository
 import org.jellyfin.androidtv.data.service.jellyseerr.toBaseItemDto
 import org.jellyfin.androidtv.preference.JellyseerrPreferences
+import org.jellyfin.androidtv.util.ErrorHandler
 import org.jellyfin.sdk.model.api.BaseItemKind
 import timber.log.Timber
 import kotlin.time.Duration
@@ -79,16 +80,13 @@ class SearchViewModel(
 
 		// Add Jellyseerr results if enabled (displayed last)
 		val allResults = if (jellyseerrPreferences[JellyseerrPreferences.enabled]) {
-			try {
-				val jellyseerrResult = jellyseerrRepository.search(trimmed)
-				val jellyseerrItems = jellyseerrResult.getOrNull()?.results?.map { it.toBaseItemDto() } ?: emptyList()
-				if (jellyseerrItems.isNotEmpty()) {
-					jellyfinResults + listOf(SearchResultGroup(R.string.jellyseerr_search_results, jellyseerrItems))
-				} else {
-					jellyfinResults
-				}
-			} catch (e: Exception) {
-				Timber.w(e, "Failed to search Jellyseerr")
+			val jellyseerrResult = ErrorHandler.catchingWarning("search Jellyseerr") {
+				jellyseerrRepository.search(trimmed)
+			}
+			val jellyseerrItems = jellyseerrResult.getOrNull()?.getOrNull()?.results?.map { it.toBaseItemDto() } ?: emptyList()
+			if (jellyseerrItems.isNotEmpty()) {
+				jellyfinResults + listOf(SearchResultGroup(R.string.jellyseerr_search_results, jellyseerrItems))
+			} else {
 				jellyfinResults
 			}
 		} else {

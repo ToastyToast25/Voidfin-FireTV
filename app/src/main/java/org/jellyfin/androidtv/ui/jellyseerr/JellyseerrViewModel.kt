@@ -11,6 +11,7 @@ import org.jellyfin.androidtv.data.service.jellyseerr.JellyseerrDiscoverItemDto
 import org.jellyfin.androidtv.data.service.jellyseerr.JellyseerrRequestDto
 import org.jellyfin.androidtv.data.service.jellyseerr.Seasons
 import org.jellyfin.androidtv.preference.JellyseerrPreferences
+import org.jellyfin.androidtv.util.ErrorHandler
 import timber.log.Timber
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -57,17 +58,13 @@ class JellyseerrViewModel(
 	 * Fetch and cache the blacklist
 	 */
 	private suspend fun fetchBlacklist() {
-		try {
-			val result = jellyseerrRepository.getBlacklist()
-			if (result.isSuccess) {
-				val blacklist = result.getOrNull()?.results ?: emptyList()
-				blacklistedTmdbIds = blacklist.map { it.tmdbId }.toSet()
-				Timber.d("Jellyseerr: Loaded ${blacklistedTmdbIds.size} blacklisted items")
-			} else {
-				Timber.w("Jellyseerr: Failed to fetch blacklist")
-			}
-		} catch (e: Exception) {
-			Timber.e(e, "Jellyseerr: Error fetching blacklist")
+		val result = ErrorHandler.catchingWarning("fetch Jellyseerr blacklist") {
+			jellyseerrRepository.getBlacklist()
+		}
+		if (result.isSuccess) {
+			val blacklist = result.getOrNull()?.getOrNull()?.results ?: emptyList()
+			blacklistedTmdbIds = blacklist.map { it.tmdbId }.toSet()
+			Timber.d("Jellyseerr: Loaded ${blacklistedTmdbIds.size} blacklisted items")
 		}
 	}
 
@@ -150,11 +147,11 @@ class JellyseerrViewModel(
 	init {
 		// Auto-initialize from saved preferences when ViewModel is created
 		viewModelScope.launch {
-			try {
+			val result = ErrorHandler.catching("initialize Jellyseerr repository") {
 				jellyseerrRepository.ensureInitialized()
+			}
+			if (result.isSuccess) {
 				Timber.d("JellyseerrViewModel: Repository initialized successfully")
-			} catch (error: Exception) {
-				Timber.e(error, "JellyseerrViewModel: Failed to initialize repository")
 			}
 		}
 	}
@@ -162,19 +159,20 @@ class JellyseerrViewModel(
 	fun initializeJellyseerr(serverUrl: String, apiKey: String) {
 		viewModelScope.launch {
 			_loadingState.emit(JellyseerrLoadingState.Loading)
-			try {
-				val result = jellyseerrRepository.initialize(serverUrl, apiKey)
-				if (result.isSuccess) {
-					_loadingState.emit(JellyseerrLoadingState.Success("Jellyseerr initialized successfully"))
-					loadTrendingContent()
-				} else {
-					_loadingState.emit(
-						JellyseerrLoadingState.Error(result.exceptionOrNull()?.message ?: "Initialization failed")
-					)
-				}
-			} catch (error: Exception) {
-				Timber.e(error, "Failed to initialize Jellyseerr")
-				_loadingState.emit(JellyseerrLoadingState.Error(error.message ?: "Unknown error"))
+			val result = ErrorHandler.catching("initialize Jellyseerr") {
+				jellyseerrRepository.initialize(serverUrl, apiKey)
+			}
+			
+			if (result.isSuccess && result.getOrNull()?.isSuccess == true) {
+				_loadingState.emit(JellyseerrLoadingState.Success("Jellyseerr initialized successfully"))
+				loadTrendingContent()
+			} else {
+				val errorMessage = result.getOrNull()?.exceptionOrNull()?.let { error ->
+					ErrorHandler.getUserFriendlyMessage(error, "initialize Jellyseerr")
+				} ?: ErrorHandler.getUserFriendlyMessage(
+					result.exceptionOrNull() ?: Exception("Initialization failed")
+				)
+				_loadingState.emit(JellyseerrLoadingState.Error(errorMessage))
 			}
 		}
 	}
@@ -298,25 +296,12 @@ class JellyseerrViewModel(
 						JellyseerrLoadingState.Error("Failed to load trending content")
 					)
 				}
-			} catch (error: Exception) {
-				Timber.e(error, "Failed to load trending content")
-				val errorMessage = if (error.message?.contains("403") == true) {
-					"Permission Denied: Your Jellyfin account needs Jellyseerr permissions.\n\n" +
-						"To fix this:\n" +
-						"1. Open Jellyseerr web UI (http://your-server:5055)\n" +
-						"2. Go to Settings → Users\n" +
-						"3. Find your Jellyfin account\n" +
-						"4. Enable 'REQUEST' permission\n" +
-						"5. Restart this app"
-				} else {
-					error.message ?: "Unknown error"
-				}
-				_loadingState.emit(JellyseerrLoadingState.Error(errorMessage))
-			}
+		} catch (error: Exception) {
+			val errorMessage = ErrorHandler.handle(error, "load trending content")
+			_loadingState.emit(JellyseerrLoadingState.Error(errorMessage))
 		}
 	}
-
-	fun loadRequests() {
+}	fun loadRequests() {
 		viewModelScope.launch {
 			loadRequestsSuspend()
 		}

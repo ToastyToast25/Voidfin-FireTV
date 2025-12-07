@@ -52,6 +52,7 @@ import org.jellyfin.androidtv.ui.composable.AsyncImage
 import org.jellyfin.androidtv.ui.composable.modifier.overscan
 import org.jellyfin.androidtv.ui.navigation.Destinations
 import org.jellyfin.androidtv.ui.navigation.NavigationRepository
+import org.jellyfin.androidtv.ui.playback.common.PlaybackPromptItemData
 import org.jellyfin.androidtv.util.apiclient.getUrl
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.model.serializer.toUUIDOrNull
@@ -129,7 +130,7 @@ fun NextUpScreen(
 @Composable
 fun NextUpOverlay(
 	modifier: Modifier = Modifier,
-	item: NextUpItemData,
+	item: PlaybackPromptItemData,
 	onConfirm: () -> Unit,
 	onCancel: () -> Unit,
 ) = ProvideTextStyle(JellyfinTheme.typography.default.copy(color = Color.White)) {
