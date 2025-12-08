@@ -86,6 +86,14 @@ class HomeFragment : Fragment() {
 			}
 			?.launchIn(lifecycleScope)
 
+		// Observe media bar state changes (Loading -> Ready transition)
+		mediaBarViewModel.state
+			.flowWithLifecycle(lifecycle, Lifecycle.State.STARTED)
+			.onEach { state ->
+				updateMediaBarBackground()
+			}
+			.launchIn(lifecycleScope)
+
 		// Observe media bar focus state for background
 		mediaBarViewModel.isFocused
 			.flowWithLifecycle(lifecycle, Lifecycle.State.STARTED)

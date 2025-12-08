@@ -356,18 +356,13 @@ private fun CarouselIndicatorDots(
 
 @Composable
 private fun LoadingView() {
+	// Show empty transparent view during loading
+	// Background is handled by HomeFragment
 	Box(
 		modifier = Modifier
 			.fillMaxSize()
-			.background(Color.Gray),
-		contentAlignment = Alignment.Center
-	) {
-		Text(
-			text = "Loading featured content...",
-			fontSize = 16.sp,
-			color = Color.White.copy(alpha = 0.7f)
-		)
-	}
+			.background(Color.Transparent)
+	)
 }
 
 @Composable

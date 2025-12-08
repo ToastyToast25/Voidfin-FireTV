@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -82,10 +83,30 @@ class MediaBarSlideshowViewModel(
 	}
 
 	/**
+	 * Fetch items of a specific type from the server.
+	 * Helper function to avoid code duplication.
+	 */
+	private suspend fun fetchItems(itemType: BaseItemKind, maxItems: Int): org.jellyfin.sdk.model.api.BaseItemDtoQueryResult {
+		val response by api.itemsApi.getItems(
+			includeItemTypes = setOf(itemType),
+			recursive = true,
+			sortBy = setOf(org.jellyfin.sdk.model.api.ItemSortBy.RANDOM),
+			limit = (maxItems * 1.5).toInt(), // Fetch 1.5x for filtering
+			filters = setOf(ItemFilter.IS_NOT_FOLDER),
+			fields = setOf(ItemFields.OVERVIEW, ItemFields.GENRES),
+			imageTypeLimit = 1,
+			enableImageTypes = setOf(ImageType.BACKDROP, ImageType.LOGO),
+		)
+		return response
+	}
+
+	/**
 	 * Load featured media items for the slideshow.
 	 * Uses double-randomization strategy:
 	 * 1. Server-side: sortBy RANDOM returns random set from server
 	 * 2. Client-side: shuffle() randomizes the combined results again
+	 * 
+	 * Optimized to fetch movies and shows in parallel for faster loading.
 	 */
 	private fun loadSlideshowItems() {
 		viewModelScope.launch {
@@ -93,78 +114,49 @@ class MediaBarSlideshowViewModel(
 			_state.value = MediaBarState.Loading
 			val config = getConfig()
 
-			// Fetch movies and shows randomly on IO dispatcher
-			// Using larger limit (3x) to ensure enough items with backdrops after filtering
-			val (moviesResponse, showsResponse) = withContext(Dispatchers.IO) {
-				val movies by api.itemsApi.getItems(
-					includeItemTypes = setOf(BaseItemKind.MOVIE),
-					recursive = true,
-					sortBy = setOf(org.jellyfin.sdk.model.api.ItemSortBy.RANDOM),
-					limit = config.maxItems * 3, // Get more items to filter from
-						filters = setOf(ItemFilter.IS_NOT_FOLDER),
-						fields = setOf(
-							ItemFields.OVERVIEW,
-							ItemFields.GENRES,
-						),
-						imageTypeLimit = 1,
-						enableImageTypes = setOf(ImageType.BACKDROP, ImageType.LOGO),
-					)
-
-					val shows by api.itemsApi.getItems(
-						includeItemTypes = setOf(BaseItemKind.SERIES),
-						recursive = true,
-						sortBy = setOf(org.jellyfin.sdk.model.api.ItemSortBy.RANDOM),
-						limit = config.maxItems * 3, // Get more items to filter from
-						filters = setOf(ItemFilter.IS_NOT_FOLDER),
-						fields = setOf(
-							ItemFields.OVERVIEW,
-							ItemFields.GENRES,
-						),
-						imageTypeLimit = 1,
-						enableImageTypes = setOf(ImageType.BACKDROP, ImageType.LOGO),
-					)
-					
-					Pair(movies, shows)
-				}
-
-				// Combine movies and shows, filter for backdrops, shuffle client-side, take max items
-				val allItems = (moviesResponse.items.orEmpty() + showsResponse.items.orEmpty())
+			// Fetch movies and shows in parallel for better performance
+			val allItems: List<org.jellyfin.sdk.model.api.BaseItemDto> = withContext(Dispatchers.IO) {
+				val movies = async { fetchItems(BaseItemKind.MOVIE, config.maxItems) }
+				val shows = async { fetchItems(BaseItemKind.SERIES, config.maxItems) }
+				
+				(movies.await().items.orEmpty() + shows.await().items.orEmpty())
 					.filter { it.backdropImageTags?.isNotEmpty() == true }
 					.shuffled()
 					.take(config.maxItems)
+			}
 
-				items = allItems.map { item ->
-					MediaBarSlideItem(
-						itemId = item.id,
-						title = item.name.orEmpty(),
-						overview = item.overview,
-						backdropUrl = item.backdropImageTags?.firstOrNull()?.let { tag ->
-							api.imageApi.getItemImageUrl(
-								itemId = item.id,
-								imageType = ImageType.BACKDROP,
-								tag = tag,
-								maxWidth = 1920,
-								quality = 90
-							)
-						},
-						logoUrl = item.imageTags?.get(ImageType.LOGO)?.let { tag ->
-							api.imageApi.getItemImageUrl(
-								itemId = item.id,
-								imageType = ImageType.LOGO,
-								tag = tag,
-								maxWidth = 800,
-							)
-						},
-						rating = item.officialRating,
-						year = item.productionYear,
-						genres = item.genres.orEmpty().take(3),
-						runtime = item.runTimeTicks?.let { ticks -> (ticks / 10000) },
-						criticRating = item.criticRating?.toInt(),
-						communityRating = item.communityRating,
-					)
-				}
+			items = allItems.map { item ->
+				MediaBarSlideItem(
+					itemId = item.id,
+					title = item.name.orEmpty(),
+					overview = item.overview,
+					backdropUrl = item.backdropImageTags?.firstOrNull()?.let { tag ->
+						api.imageApi.getItemImageUrl(
+							itemId = item.id,
+							imageType = ImageType.BACKDROP,
+							tag = tag,
+							maxWidth = 1920,
+							quality = 90
+						)
+					},
+					logoUrl = item.imageTags?.get(ImageType.LOGO)?.let { tag ->
+						api.imageApi.getItemImageUrl(
+							itemId = item.id,
+							imageType = ImageType.LOGO,
+							tag = tag,
+							maxWidth = 800,
+						)
+					},
+					rating = item.officialRating,
+					year = item.productionYear,
+					genres = item.genres.orEmpty().take(3),
+					runtime = item.runTimeTicks?.let { ticks -> (ticks / 10000) },
+					criticRating = item.criticRating?.toInt(),
+					communityRating = item.communityRating,
+				)
+			}
 
-				if (items.isNotEmpty()) {
+			if (items.isNotEmpty()) {
 					_state.value = MediaBarState.Ready(items)
 					startAutoPlay()
 				} else {
