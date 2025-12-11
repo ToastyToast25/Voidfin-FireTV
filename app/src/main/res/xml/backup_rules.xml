@@ -21,6 +21,10 @@
         <include
             domain="sharedpref"
             path="AuthenticationPreferences" />
+        <!-- JellyseerrPreferences -->
+        <include
+            domain="sharedpref"
+            path="jellyseerr_prefs" />
     </cloud-backup>
     <device-transfer>
         <!-- Stored servers & users (without access tokens) -->
@@ -43,5 +47,9 @@
         <include
             domain="sharedpref"
             path="AuthenticationPreferences" />
+        <!-- JellyseerrPreferences -->
+        <include
+            domain="sharedpref"
+            path="jellyseerr_prefs" />
     </device-transfer>
 </data-extraction-rules>
