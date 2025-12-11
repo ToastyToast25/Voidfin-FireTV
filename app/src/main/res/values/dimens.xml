@@ -3,8 +3,8 @@
     <dimen name="overscan_vertical">48dp</dimen>
 
     <!-- Home row spacing -->
-    <dimen name="home_row_spacing">10dp</dimen>
-    <dimen name="home_row_spacing_large">20dp</dimen>
+    <dimen name="home_row_spacing">24dp</dimen>
+    <dimen name="home_row_spacing_large">32dp</dimen>
 
     <fraction name="card_scale_default">100%</fraction>
     <fraction name="card_scale_focus">115%</fraction>

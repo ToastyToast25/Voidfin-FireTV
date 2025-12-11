@@ -127,8 +127,8 @@ public class BrowseGridFragment extends Fragment implements View.OnKeyListener {
     private int mCardsScreenStride = 0;
     private double mCardFocusScale = 1.15; // 115%, just a default we use the resource card_scale_focus otherwise
     private final int MIN_NUM_CARDS = 5; // minimum number of visible cards we allow, this results in more empty space
-    private final double CARD_SPACING_PCT = 1.0; // 100% expressed as relative to the padding_left/top, which depends on the mCardFocusScale and AspectRatio
-    private final double CARD_SPACING_HORIZONTAL_BANNER_PCT = 0.5; // 50% allow horizontal card overlapping for banners, otherwise spacing is too large
+    private final double CARD_SPACING_PCT = 2.5; // 250% expressed as relative to the padding_left/top, which depends on the mCardFocusScale and AspectRatio
+    private final double CARD_SPACING_HORIZONTAL_BANNER_PCT = 1.3; // 130% allow horizontal card overlapping for banners, otherwise spacing is too large
     private final int VIEW_SELECT_UPDATE_DELAY = 250; // delay in ms until we update the top-row info for a selected item
 
     private boolean mDirty = true; // CardHeight, RowDef or GridSize changed
