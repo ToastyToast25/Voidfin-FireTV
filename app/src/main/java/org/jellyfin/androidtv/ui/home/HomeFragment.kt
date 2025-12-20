@@ -117,12 +117,13 @@ class HomeFragment : Fragment() {
 		val isFocused = mediaBarViewModel.isFocused.value
 		val selectedPosition = rowsFragment?.selectedPositionFlow?.value ?: -1
 		
-		// Check if the media bar is actually enabled in settings
-		val isMediaBarEnabled = userSettingPreferences.activeHomesections.contains(org.jellyfin.androidtv.constant.HomeSectionType.MEDIA_BAR)
+		// Check if the media bar is enabled in Moonfin settings
+		val isMediaBarEnabled = userSettingPreferences[UserSettingPreferences.mediaBarEnabled]
 		
 		// Determine if we should show media bar content
 		// Show if: media bar is focused OR (we're at position 0 AND media bar is enabled) OR position is -1 (toolbar/no selection)
-		val shouldShowMediaBar = isFocused || (selectedPosition == 0 && isMediaBarEnabled) || selectedPosition == -1
+		// Important: If media bar is disabled, we should NEVER show its backdrop (even if isFocused somehow becomes true)
+		val shouldShowMediaBar = isMediaBarEnabled && (isFocused || (selectedPosition == 0) || selectedPosition == -1)
 		
 		if (state is org.jellyfin.androidtv.ui.home.mediabar.MediaBarState.Ready && shouldShowMediaBar) {
 			val playbackState = mediaBarViewModel.playbackState.value
@@ -152,7 +153,7 @@ class HomeFragment : Fragment() {
 				titleView?.isVisible = true
 			}
 		} else {
-			// Hide background and logo when on other rows
+			// Hide background and logo when media bar is disabled or on other rows
 			backgroundImage?.isVisible = false
 			logoView?.isVisible = false
 			titleView?.isVisible = true
