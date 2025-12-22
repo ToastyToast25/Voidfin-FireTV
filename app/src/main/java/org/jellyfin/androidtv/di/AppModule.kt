@@ -168,6 +168,9 @@ val appModule = module {
 		org.jellyfin.androidtv.data.repository.MultiServerRepositoryImpl(get(), get(), get(), get(), get(defaultDeviceInfo), get(), get()) 
 	}
 	single { org.jellyfin.androidtv.util.sdk.ApiClientFactory(get(), get(), get(defaultDeviceInfo)) }
+	single<org.jellyfin.androidtv.data.repository.ParentalControlsRepository> {
+		org.jellyfin.androidtv.data.repository.ParentalControlsRepositoryImpl(androidContext(), get(), get())
+	}
 
 	// Jellyseerr - Global preferences (server URL, UI settings)
 	single(named("global")) { JellyseerrPreferences(androidContext()) }
@@ -181,11 +184,11 @@ val appModule = module {
 	viewModel { NextUpViewModel(get(), get(), get()) }
 	viewModel { StillWatchingViewModel(get(), get(), get(), get()) }
 	viewModel { PhotoPlayerViewModel(get()) }
-	viewModel { SearchViewModel(get(), get(), get(named("global"))) }
+	viewModel { SearchViewModel(get(), get(), get(named("global")), get()) }
 	viewModel { DreamViewModel(get(), get(), get(), get(), get()) }
 	viewModel { SettingsViewModel() }
 	viewModel { org.jellyfin.androidtv.ui.jellyseerr.JellyseerrViewModel(get(), get(named("global"))) }
-	single { MediaBarSlideshowViewModel(get(), get(), get(), get(), androidContext(), get(), get()) } // Singleton so both fragments share the same instance
+	single { MediaBarSlideshowViewModel(get(), get(), get(), get(), androidContext(), get(), get(), get()) } // Singleton so both fragments share the same instance
 
 	single { BackgroundService(get(), get(), get(), get(), get(), get()) }
 	single { UpdateCheckerService(get()) }

@@ -870,4 +870,15 @@
     <string name="notification_channel_updates_description">Notifications about app updates</string>
     <string name="notification_update_available_title">Update Available</string>
     <string name="notification_update_available_text">Version %s is available. Tap to update.</string>
+    
+    <!-- Parental Controls -->
+    <string name="pref_parental_controls">Parental Controls</string>
+    <string name="pref_parental_controls_description">Hide content based on rating</string>
+    <string name="pref_parental_controls_category_ratings">Content Ratings</string>
+    <string name="pref_parental_controls_loading">Loading ratings…</string>
+    <string name="pref_parental_controls_no_ratings">No ratings found in your libraries</string>
+    <string name="pref_parental_controls_rating_blocked">Blocked</string>
+    <string name="pref_parental_controls_rating_allowed">Allowed</string>
+    <string name="pref_parental_controls_category_info">Information</string>
+    <string name="pref_parental_controls_info_description">Selected ratings will be hidden from home rows, libraries, search, and media bar across all servers</string>
 </resources>

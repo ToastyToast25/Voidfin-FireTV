@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.data.repository.MultiServerRepository
+import org.jellyfin.androidtv.data.repository.ParentalControlsRepository
 import org.jellyfin.androidtv.preference.UserPreferences
 import org.jellyfin.androidtv.ui.itemhandling.BaseRowItem
 import org.jellyfin.androidtv.ui.itemhandling.AggregatedItemBaseRowItem
@@ -29,6 +30,7 @@ class HomeFragmentAggregatedNextUpRow(
 ) : HomeFragmentRow, KoinComponent {
 	private val multiServerRepository by inject<MultiServerRepository>()
 	private val userPreferences by inject<UserPreferences>()
+	private val parentalControlsRepository by inject<ParentalControlsRepository>()
 
 	override fun addToRowsAdapter(context: Context, cardPresenter: CardPresenter, rowsAdapter: MutableObjectAdapter<Row>) {
 		val header = HeaderItem(context.getString(R.string.lbl_next_up))
@@ -48,7 +50,13 @@ class HomeFragmentAggregatedNextUpRow(
 
 				Timber.d("HomeFragmentAggregatedNextUpRow: Loaded ${items.size} next up items from multiple servers")
 
-				if (items.isEmpty()) {
+				// Apply parental controls filtering
+				val filteredItems = items.filter { aggItem ->
+					!parentalControlsRepository.shouldFilterItem(aggItem.item)
+				}
+				Timber.d("HomeFragmentAggregatedNextUpRow: Filtered ${items.size} -> ${filteredItems.size} items")
+
+				if (filteredItems.isEmpty()) {
 					// Remove row if no items
 					rowsAdapter.remove(row)
 					return@launch
@@ -56,7 +64,7 @@ class HomeFragmentAggregatedNextUpRow(
 
 				// Populate adapter with items
 				val preferParentThumb = userPreferences[UserPreferences.seriesThumbnailsEnabled]
-				items.forEach { aggItem ->
+				filteredItems.forEach { aggItem ->
 					adapter.add(AggregatedItemBaseRowItem(
 						aggregatedItem = aggItem,
 						preferParentThumb = preferParentThumb,

@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.data.repository.JellyseerrRepository
+import org.jellyfin.androidtv.data.repository.ParentalControlsRepository
 import org.jellyfin.androidtv.data.service.jellyseerr.toBaseItemDto
 import org.jellyfin.androidtv.preference.JellyseerrPreferences
 import org.jellyfin.androidtv.util.ErrorHandler
@@ -23,6 +24,7 @@ class SearchViewModel(
 	private val searchRepository: SearchRepository,
 	private val jellyseerrRepository: JellyseerrRepository,
 	private val jellyseerrPreferences: JellyseerrPreferences,
+	private val parentalControlsRepository: ParentalControlsRepository,
 ) : ViewModel() {
 	companion object {
 		private val debounceDuration = 600.milliseconds
@@ -73,8 +75,11 @@ class SearchViewModel(
 				async {
 					val result = searchRepository.search(trimmed, itemKinds)
 					val items = result.getOrNull().orEmpty()
-
-					SearchResultGroup(stringRes, items)
+					// Apply parental controls filtering
+					val filteredItems = items.filter { item ->
+						!parentalControlsRepository.shouldFilterItem(item)
+					}
+					SearchResultGroup(stringRes, filteredItems)
 				}
 			}.awaitAll()
 
@@ -84,8 +89,12 @@ class SearchViewModel(
 				jellyseerrRepository.search(trimmed)
 			}
 			val jellyseerrItems = jellyseerrResult.getOrNull()?.getOrNull()?.results?.map { it.toBaseItemDto() } ?: emptyList()
-			if (jellyseerrItems.isNotEmpty()) {
-				jellyfinResults + listOf(SearchResultGroup(R.string.jellyseerr_search_results, jellyseerrItems))
+			// Apply parental controls filtering to Jellyseerr results
+			val filteredJellyseerrItems = jellyseerrItems.filter { item ->
+				!parentalControlsRepository.shouldFilterItem(item)
+			}
+			if (filteredJellyseerrItems.isNotEmpty()) {
+				jellyfinResults + listOf(SearchResultGroup(R.string.jellyseerr_search_results, filteredJellyseerrItems))
 			} else {
 				jellyfinResults
 			}

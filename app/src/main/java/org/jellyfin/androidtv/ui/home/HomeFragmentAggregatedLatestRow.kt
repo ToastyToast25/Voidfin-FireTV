@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.data.repository.MultiServerRepository
+import org.jellyfin.androidtv.data.repository.ParentalControlsRepository
 import org.jellyfin.androidtv.preference.UserPreferences
 import org.jellyfin.androidtv.ui.itemhandling.AggregatedItemBaseRowItem
 import org.jellyfin.androidtv.ui.itemhandling.BaseRowItem
@@ -27,6 +28,7 @@ import timber.log.Timber
 class HomeFragmentAggregatedLatestRow : HomeFragmentRow, KoinComponent {
 	private val multiServerRepository by inject<MultiServerRepository>()
 	private val userPreferences by inject<UserPreferences>()
+	private val parentalControlsRepository by inject<ParentalControlsRepository>()
 
 	companion object {
 		private const val ITEM_LIMIT = 20
@@ -58,10 +60,17 @@ class HomeFragmentAggregatedLatestRow : HomeFragmentRow, KoinComponent {
 
 						if (items.isEmpty()) return@forEach
 
+						// Apply parental controls filtering
+						val filteredItems = items.filter { aggItem ->
+							!parentalControlsRepository.shouldFilterItem(aggItem.item)
+						}
+						Timber.d("HomeFragmentAggregatedLatestRow: Filtered ${items.size} -> ${filteredItems.size} items for ${aggLib.displayName}")
+						if (filteredItems.isEmpty()) return@forEach
+
 						val header = HeaderItem(context.getString(R.string.lbl_latest_in, aggLib.displayName))
 						val adapter = MutableObjectAdapter<BaseRowItem>(cardPresenter)
 
-						items.forEach { aggItem ->
+						filteredItems.forEach { aggItem ->
 							Timber.d("HomeFragmentAggregatedLatestRow: Adding item ${aggItem.item.id} with serverId=${aggItem.item.serverId} from server ${aggItem.server.name} (baseUrl=${aggItem.apiClient.baseUrl})")
 							adapter.add(
 								AggregatedItemBaseRowItem(
@@ -72,7 +81,7 @@ class HomeFragmentAggregatedLatestRow : HomeFragmentRow, KoinComponent {
 						}
 
 						rowsAdapter.add(ListRow(header, adapter))
-						Timber.d("HomeFragmentAggregatedLatestRow: Added row for ${aggLib.displayName} with ${items.size} items")
+						Timber.d("HomeFragmentAggregatedLatestRow: Added row for ${aggLib.displayName} with ${filteredItems.size} items")
 					} catch (e: Exception) {
 						Timber.e(e, "HomeFragmentAggregatedLatestRow: Error loading latest items for ${aggLib.displayName}")
 					}

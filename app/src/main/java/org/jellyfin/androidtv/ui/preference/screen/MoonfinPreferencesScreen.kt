@@ -84,6 +84,13 @@ class MoonfinPreferencesScreen : OptionsFragment() {
 				setContent(R.string.pref_confirm_exit_description)
 				bind(userPreferences, UserPreferences.confirmExit)
 			}
+			
+			link {
+				setTitle(R.string.pref_parental_controls)
+				setContent(R.string.pref_parental_controls_description)
+				icon = R.drawable.ic_lock
+				withFragment<ParentalControlsPreferencesScreen>()
+			}
 		}
 
 		// Media Bar Settings

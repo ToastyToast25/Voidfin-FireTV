@@ -18,6 +18,7 @@ import kotlinx.coroutines.withContext
 import org.jellyfin.androidtv.auth.repository.UserRepository
 import org.jellyfin.androidtv.data.repository.ItemMutationRepository
 import org.jellyfin.androidtv.data.repository.MultiServerRepository
+import org.jellyfin.androidtv.data.repository.ParentalControlsRepository
 import org.jellyfin.androidtv.preference.UserSettingPreferences
 import org.jellyfin.sdk.api.client.ApiClient
 import android.content.Context
@@ -41,6 +42,7 @@ class MediaBarSlideshowViewModel(
 	private val context: Context,
 	private val imageLoader: ImageLoader,
 	private val multiServerRepository: MultiServerRepository,
+	private val parentalControlsRepository: ParentalControlsRepository,
 ) : ViewModel() {
 	private fun getConfig() = MediaBarConfig(
 		maxItems = userSettingPreferences[UserSettingPreferences.mediaBarItemCount].toIntOrNull() ?: 10
@@ -207,6 +209,15 @@ class MediaBarSlideshowViewModel(
 				}
 			}
 				.filter { it.item.backdropImageTags?.isNotEmpty() == true }
+				// Apply parental controls filtering
+				.also { beforeFilter ->
+					val blockedCount = beforeFilter.count { parentalControlsRepository.shouldFilterItem(it.item) }
+					Timber.d("MediaBar: Before filter: ${beforeFilter.size} items, $blockedCount would be blocked")
+				}
+				.filter { !parentalControlsRepository.shouldFilterItem(it.item) }
+				.also { afterFilter ->
+					Timber.d("MediaBar: After filter: ${afterFilter.size} items")
+				}
 				.shuffled()
 				.take(config.maxItems)
 
