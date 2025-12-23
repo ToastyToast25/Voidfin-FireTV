@@ -173,6 +173,12 @@ public class PlaybackController implements PlaybackControllerNotifiable {
         }
     }
 
+    public void setAudioDelay(long delayMs) {
+        if (hasInitializedVideoManager()) {
+            mVideoManager.setAudioDelay(delayMs);
+        }
+    }
+
     public BaseItemDto getCurrentlyPlayingItem() {
         return mItems.size() > mCurrentIndex ? mItems.get(mCurrentIndex) : null;
     }

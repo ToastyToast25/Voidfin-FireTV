@@ -27,6 +27,7 @@ import org.jellyfin.androidtv.preference.UserPreferences;
 import org.jellyfin.androidtv.preference.constant.ClockBehavior;
 import org.jellyfin.androidtv.ui.playback.PlaybackController;
 import org.jellyfin.androidtv.ui.playback.overlay.action.AndroidAction;
+import org.jellyfin.androidtv.ui.playback.overlay.action.AudioDelayAction;
 import org.jellyfin.androidtv.ui.playback.overlay.action.ChannelBarChannelAction;
 import org.jellyfin.androidtv.ui.playback.overlay.action.ChapterAction;
 import org.jellyfin.androidtv.ui.playback.overlay.action.ClosedCaptionsAction;
@@ -65,6 +66,7 @@ public class CustomPlaybackTransportControlGlue extends PlaybackTransportControl
     private ZoomAction zoomAction;
     private ChapterAction chapterAction;
     private SubtitleDelayAction subtitleDelayAction;
+    private AudioDelayAction audioDelayAction;
 
     // TV actions
     private PreviousLiveTvChannelAction previousLiveTvChannelAction;
@@ -115,6 +117,7 @@ public class CustomPlaybackTransportControlGlue extends PlaybackTransportControl
         playbackSpeedAction.dismissPopup();
         selectAudioAction.dismissPopup();
         selectQualityAction.dismissPopup();
+        audioDelayAction.dismissPopup();
         zoomAction.dismissPopup();
 
         super.onDetachedFromHost();
@@ -208,6 +211,8 @@ public class CustomPlaybackTransportControlGlue extends PlaybackTransportControl
         chapterAction.setLabels(new String[]{context.getString(R.string.lbl_chapters)});
         subtitleDelayAction = new SubtitleDelayAction(context, this, playbackController);
         subtitleDelayAction.setLabels(new String[]{context.getString(R.string.lbl_subtitle_delay)});
+        audioDelayAction = new AudioDelayAction(context, this, playbackController);
+        audioDelayAction.setLabels(new String[]{context.getString(R.string.lbl_audio_delay)});
 
         previousLiveTvChannelAction = new PreviousLiveTvChannelAction(context, this);
         previousLiveTvChannelAction.setLabels(new String[]{context.getString(R.string.lbl_prev_item)});
@@ -284,6 +289,7 @@ public class CustomPlaybackTransportControlGlue extends PlaybackTransportControl
         if (!playerAdapter.isLiveTv()) {
             secondaryActionsAdapter.add(playbackSpeedAction);
             secondaryActionsAdapter.add(selectQualityAction);
+            secondaryActionsAdapter.add(audioDelayAction);
         }
 
         if (playerAdapter.hasSubs()) {

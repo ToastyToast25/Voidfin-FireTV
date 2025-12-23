@@ -71,6 +71,7 @@ public class VideoManager {
     public ExoPlayer mExoPlayer;
     private PlayerView mExoPlayerView;
     private Handler mHandler = new Handler();
+    private AudioDelayProcessor mAudioDelayProcessor;
 
     private long mMetaDuration = -1;
     private long lastExoPlayerPosition = -1;
@@ -198,7 +199,24 @@ public class VideoManager {
      */
     private ExoPlayer.Builder configureExoplayerBuilder(Context context) {
         ExoPlayer.Builder exoPlayerBuilder = new ExoPlayer.Builder(context);
-        DefaultRenderersFactory defaultRendererFactory = new DefaultRenderersFactory(context);
+        
+        // Create audio delay processor
+        mAudioDelayProcessor = new AudioDelayProcessor();
+        
+        // Create custom renderers factory with audio processor
+        DefaultRenderersFactory defaultRendererFactory = new DefaultRenderersFactory(context) {
+            @Override
+            protected androidx.media3.exoplayer.audio.AudioSink buildAudioSink(
+                    Context context,
+                    boolean enableFloatOutput,
+                    boolean enableAudioTrackPlaybackParams) {
+                return new androidx.media3.exoplayer.audio.DefaultAudioSink.Builder(context)
+                        .setEnableFloatOutput(enableFloatOutput)
+                        .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
+                        .setAudioProcessors(new androidx.media3.common.audio.AudioProcessor[]{mAudioDelayProcessor})
+                        .build();
+            }
+        };
         defaultRendererFactory.setEnableDecoderFallback(true);
         defaultRendererFactory.setExtensionRendererMode(determineExoPlayerExtensionRendererMode());
 
@@ -564,6 +582,37 @@ public class VideoManager {
         // 1. Use a custom TextRenderer with time offset
         // 2. Modify subtitle timestamps during parsing
         // 3. Use CuesWithTiming and offset presentation times
+    }
+
+    public void setAudioDelay(long delayMs) {
+        Timber.d("Setting audio delay: %d ms", delayMs);
+        mAudioDelayMs = delayMs;
+        
+        if (mAudioDelayProcessor != null) {
+            mAudioDelayProcessor.setDelayMs(delayMs);
+            
+            if (isInitialized()) {
+                long currentPosition = mExoPlayer.getCurrentPosition();
+                if (mExoPlayer.isPlaying()) {
+                    mExoPlayer.seekTo(currentPosition);
+                    Timber.d("Seeked to %d ms to apply audio delay change", currentPosition);
+                } else if (mExoPlayer.getPlaybackState() == Player.STATE_BUFFERING) {
+                    Timber.d("Player is buffering");
+                    mExoPlayer.seekTo(currentPosition);
+                    Timber.d("Seeked to %d ms to apply audio delay change", currentPosition);
+                } else {
+                    Timber.d("Player not playing, delay will apply on next playback");
+                }
+            }
+        } else {
+            Timber.w("AudioDelayProcessor not initialized");
+        }
+    }
+
+    private long mAudioDelayMs = 0;
+
+    public long getAudioDelay() {
+        return mAudioDelayMs;
     }
 
     public void destroy() {
