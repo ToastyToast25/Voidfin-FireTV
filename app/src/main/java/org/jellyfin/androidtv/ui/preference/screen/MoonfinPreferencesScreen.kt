@@ -192,6 +192,14 @@ class MoonfinPreferencesScreen : OptionsFragment() {
 				bind(userSettingPreferences, UserSettingPreferences.themeMusicEnabled)
 			}
 
+			checkbox {
+				setTitle(R.string.pref_theme_music_on_home_rows)
+				setContent(R.string.pref_theme_music_on_home_rows_summary)
+				bind(userSettingPreferences, UserSettingPreferences.themeMusicOnHomeRows)
+				
+				depends { userSettingPreferences[UserSettingPreferences.themeMusicEnabled] }
+			}
+
 			seekbar {
 				setTitle(R.string.pref_theme_music_volume)
 				setContent(R.string.pref_theme_music_volume_summary)

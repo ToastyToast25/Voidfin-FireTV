@@ -50,6 +50,7 @@ import org.jellyfin.androidtv.ui.home.mediabar.MediaBarSlideshowViewModel
 import org.jellyfin.androidtv.ui.navigation.NavigationRepository
 import org.jellyfin.androidtv.ui.playback.AudioEventListener
 import org.jellyfin.androidtv.ui.playback.MediaManager
+import org.jellyfin.androidtv.ui.playback.ThemeMusicPlayer
 import org.jellyfin.androidtv.ui.presentation.CardPresenter
 import org.jellyfin.androidtv.ui.presentation.MutableObjectAdapter
 import org.jellyfin.androidtv.ui.presentation.PositionableListRowPresenter
@@ -82,6 +83,7 @@ class HomeRowsFragment : RowsSupportFragment(), AudioEventListener, View.OnKeyLi
 	private val itemLauncher by inject<ItemLauncher>()
 	private val keyProcessor by inject<KeyProcessor>()
 	private val mediaBarViewModel by inject<MediaBarSlideshowViewModel>()
+	private val themeMusicPlayer by inject<ThemeMusicPlayer>()
 
 	private val helper by lazy { HomeFragmentHelper(requireContext(), userRepository) }
 
@@ -393,6 +395,9 @@ class HomeRowsFragment : RowsSupportFragment(), AudioEventListener, View.OnKeyLi
 		super.onDestroy()
 
 		mediaManager.removeAudioEventListener(this)
+		
+		// Stop any playing theme music
+		themeMusicPlayer.stop()
 	}
 
 	private inner class ItemViewClickedListener : OnItemViewClickedListener {
@@ -425,6 +430,9 @@ class HomeRowsFragment : RowsSupportFragment(), AudioEventListener, View.OnKeyLi
 				selectionDebouncer.cancel()
 				_selectedItemStateFlow.value = SelectedItemState.EMPTY
 				
+				// Cancel any pending theme music playback
+				themeMusicPlayer.cancelDelayedPlay()
+				
 				// Don't clear background if we're on the media bar row - it has its own backdrop
 				if (row !is MediaBarRow) {
 					backgroundService.clearBackgrounds()
@@ -455,6 +463,11 @@ class HomeRowsFragment : RowsSupportFragment(), AudioEventListener, View.OnKeyLi
 				// Debounce background loading - only load after user stops navigating for 200ms
 				backgroundDebouncer.debounce {
 					backgroundService.setBackground(item.baseItem, BlurContext.BROWSING)
+				}
+				
+				// Play theme music on focus if enabled (with delay)
+				item.baseItem?.let { baseItem ->
+					themeMusicPlayer.playThemeMusicOnFocusDelayed(baseItem)
 				}
 			}
 		}

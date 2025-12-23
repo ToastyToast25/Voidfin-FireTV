@@ -76,6 +76,13 @@ class HomeFragmentAggregatedLatestRow : HomeFragmentRow, KoinComponent {
 						chunkSize = CHUNK_SIZE,
 						preferParentThumb = preferParentThumb,
 						staticHeight = true
+					)
+
+					if (!adapter.hasItems()) return@forEach
+
+					// Load initial chunk
+					adapter.loadInitialItems()
+
 						val header = HeaderItem(context.getString(R.string.lbl_latest_in, aggLib.displayName))
 						rowsAdapter.add(ListRow(header, adapter))
 						Timber.d("HomeFragmentAggregatedLatestRow: Added row for ${aggLib.displayName} with ${adapter.size()}/${adapter.getTotalItems()} items (paginated)")

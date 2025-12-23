@@ -79,6 +79,7 @@ class UserSettingPreferences(
 		// Theme music settings
 		val themeMusicEnabled = booleanPreference("themeMusicEnabled", false)
 		val themeMusicVolume = intPreference("themeMusicVolume", 30) // 0-100
+		val themeMusicOnHomeRows = booleanPreference("themeMusicOnHomeRows", false)
 
 		/* Security */
 		/**

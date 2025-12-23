@@ -731,6 +731,8 @@
     <string name="pref_theme_music_enable_summary">Play background theme music when viewing media details</string>
     <string name="pref_theme_music_volume">Theme music volume</string>
     <string name="pref_theme_music_volume_summary">Adjust the volume level for background theme music (default: 30%)</string>
+    <string name="pref_theme_music_on_home_rows">Play on home rows</string>
+    <string name="pref_theme_music_on_home_rows_summary">Play theme music when focusing on items in home rows</string>
     
     <!-- Jellyseerr Settings -->
     <string name="jellyseerr">Jellyseerr</string>
