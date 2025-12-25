@@ -1,17 +1,28 @@
 package org.jellyfin.androidtv.ui.home
 
-import android.animation.ValueAnimator
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
+import android.os.Handler
+import android.os.Looper
 import android.util.AttributeSet
 import android.view.View
-import android.view.animation.LinearInterpolator
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
+import org.jellyfin.androidtv.R
 import kotlin.random.Random
 
 /**
  * A custom view that renders Halloween effects with ghosts, pumpkins,
  * spiders, and raining candy.
+ * 
+ * Performance optimized for Android TV / Fire TV devices:
+ * - Uses cached bitmap rendering from vector drawables
+ * - Reduced element count for low-powered devices
+ * - Pre-calculated sine table for drift calculations
  */
 class HalloweenView @JvmOverloads constructor(
 	context: Context,
@@ -32,8 +43,8 @@ class HalloweenView @JvmOverloads constructor(
 		var state: GhostState,
 		var alpha: Int,
 		var waitTimer: Int,
-		var floatPhase: Float,
-		val floatSpeed: Float,
+		var floatIndex: Int,
+		val floatIndexSpeed: Int,
 		val floatAmplitude: Float,
 		val fromLeft: Boolean
 	)
@@ -73,65 +84,97 @@ class HalloweenView @JvmOverloads constructor(
 		var y: Float,
 		val size: Float,
 		val speed: Float,
-		val drift: Float,
-		var driftPhase: Float,
+		val driftAmplitude: Float,
+		var driftIndex: Int,
+		val driftIndexSpeed: Int,
 		val alpha: Int,
-		val emoji: String
+		val colorIndex: Int
 	)
+
+	companion object {
+		private const val SINE_TABLE_SIZE = 360
+		private val sineTable = FloatArray(SINE_TABLE_SIZE) { i ->
+			kotlin.math.sin(i * Math.PI / 180.0).toFloat()
+		}
+	}
 
 	private val ghosts = mutableListOf<Ghost>()
 	private val pumpkins = mutableListOf<Pumpkin>()
 	private val spiders = mutableListOf<Spider>()
 	private val candies = mutableListOf<Candy>()
 
-	private val ghostPaint = Paint().apply {
-		isAntiAlias = true
-		textAlign = Paint.Align.CENTER
+	private val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+	
+	// Cached bitmaps for efficient drawing
+	private var ghostBitmap: Bitmap? = null
+	private var pumpkinBitmap: Bitmap? = null
+	private var spiderBitmap: Bitmap? = null
+	private var candyBitmap: Bitmap? = null
+	private val bitmapCache = mutableMapOf<Int, Bitmap>()
+	
+	// Candy color tints
+	private val candyColors = listOf(
+		0xFFFF6B6B.toInt(),  // Red
+		0xFFFFE66D.toInt(),  // Yellow
+		0xFF4ECDC4.toInt(),  // Teal
+		0xFFA855F7.toInt()   // Purple
+	)
+	private val candyColorFilters = candyColors.map { color ->
+		PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN)
 	}
 
-	private val pumpkinPaint = Paint().apply {
-		isAntiAlias = true
-		textAlign = Paint.Align.CENTER
-	}
-
-	private val spiderPaint = Paint().apply {
-		isAntiAlias = true
-		textAlign = Paint.Align.CENTER
-	}
-
-	private val candyPaint = Paint().apply {
-		isAntiAlias = false
-		textAlign = Paint.Align.CENTER
-	}
-
-	private var animator: ValueAnimator? = null
+	private val handler = Handler(Looper.getMainLooper())
+	private var animationRunnable: Runnable? = null
 	private var isActive = false
 	private var ghostSpawnTimer = 0
 	private var pumpkinSpawnTimer = 0
 	private var spiderSpawnTimer = 0
-	private val ghostSpawnInterval = 400  // ~20 seconds at 20fps
-	private val pumpkinSpawnInterval = 500  // ~25 seconds at 20fps
-	private val spiderSpawnInterval = 150  // ~7.5 seconds at 20fps
+	private val ghostSpawnInterval = 300
+	private val pumpkinSpawnInterval = 400
+	private val spiderSpawnInterval = 120
+	private var frameCount = 0
 
+	// Particle settings
 	private val ghostCount = 3
-	private val ghostSize = 50f
+	private val ghostSize = 55f
 
 	private val pumpkinCount = 3
-	private val pumpkinSize = 50f
-	private val gravity = 0.4f
-	private val bounceDamping = 0.25f
-	private val popUpVelocity = -8f
+	private val pumpkinSize = 60f
+	private val gravity = 0.35f
+	private val bounceDamping = 0.2f
+	private val popUpVelocity = -6f
 
 	private val maxSpiders = 2
-	private val spiderSize = 40f
+	private val spiderSize = 45f
 
 	private val maxCandies = 12
-	private val candyEmojis = listOf("🍬", "🍭", "🍫", "🎃")
 
 	init {
 		isClickable = false
 		isFocusable = false
-		setLayerType(LAYER_TYPE_HARDWARE, null)
+		loadBitmaps()
+	}
+	
+	private fun loadBitmaps() {
+		ContextCompat.getDrawable(context, R.drawable.seasonal_ghost)?.let { drawable ->
+			ghostBitmap = drawable.toBitmap(64, 64)
+		}
+		ContextCompat.getDrawable(context, R.drawable.seasonal_jack_o_lantern)?.let { drawable ->
+			pumpkinBitmap = drawable.toBitmap(64, 64)
+		}
+		ContextCompat.getDrawable(context, R.drawable.seasonal_spider)?.let { drawable ->
+			spiderBitmap = drawable.toBitmap(48, 48)
+		}
+		ContextCompat.getDrawable(context, R.drawable.seasonal_candy)?.let { drawable ->
+			candyBitmap = drawable.toBitmap(32, 32)
+		}
+	}
+	
+	private fun getScaledBitmap(source: Bitmap?, size: Int): Bitmap? {
+		source ?: return null
+		return bitmapCache.getOrPut(System.identityHashCode(source) * 1000 + size) {
+			Bitmap.createScaledBitmap(source, size, size, true)
+		}
 	}
 
 	fun startEffect() {
@@ -145,8 +188,8 @@ class HalloweenView @JvmOverloads constructor(
 		if (!isActive) return
 		isActive = false
 
-		animator?.cancel()
-		animator = null
+		animationRunnable?.let { handler.removeCallbacks(it) }
+		animationRunnable = null
 		ghosts.clear()
 		pumpkins.clear()
 		spiders.clear()
@@ -154,6 +197,7 @@ class HalloweenView @JvmOverloads constructor(
 		ghostSpawnTimer = 0
 		pumpkinSpawnTimer = 0
 		spiderSpawnTimer = 0
+		frameCount = 0
 		invalidate()
 	}
 
@@ -167,35 +211,44 @@ class HalloweenView @JvmOverloads constructor(
 	}
 
 	private fun createCandy(randomY: Boolean = false): Candy {
-		val size = Random.nextFloat() * 8f + 16f
+		val size = Random.nextFloat() * 6f + 12f
 		return Candy(
 			x = Random.nextFloat() * width,
 			y = if (randomY) Random.nextFloat() * height else -size * 2,
 			size = size,
-			speed = Random.nextFloat() * 1.2f + 0.8f,
-			drift = Random.nextFloat() * 20f + 10f,
-			driftPhase = Random.nextFloat() * Math.PI.toFloat() * 2,
+			speed = Random.nextFloat() * 0.8f + 0.6f,
+			driftAmplitude = Random.nextFloat() * 15f + 8f,
+			driftIndex = Random.nextInt(SINE_TABLE_SIZE),
+			driftIndexSpeed = Random.nextInt(1, 3),
 			alpha = Random.nextInt(180, 255),
-			emoji = candyEmojis[Random.nextInt(candyEmojis.size)]
+			colorIndex = Random.nextInt(candyColors.size)
 		)
 	}
 
 	private fun startAnimation() {
-		animator?.cancel()
+		animationRunnable?.let { handler.removeCallbacks(it) }
 
-		animator = ValueAnimator.ofFloat(0f, 1f).apply {
-			duration = 50L  // ~20fps
-			repeatCount = ValueAnimator.INFINITE
-			interpolator = LinearInterpolator()
-			addUpdateListener {
-				updateGhosts()
-				updatePumpkins()
-				updateSpiders()
+		animationRunnable = object : Runnable {
+			override fun run() {
+				if (!isActive) return
+				
+				frameCount++
 				updateCandies()
+				// Stagger updates to reduce per-frame work
+				if (frameCount % 2 == 0) {
+					updateGhosts()
+				}
+				if (frameCount % 3 == 0) {
+					updatePumpkins()
+					updateSpiders()
+				}
 				invalidate()
+				
+				// Target ~30fps
+				handler.postDelayed(this, 33L)
 			}
-			start()
 		}
+		handler.post(animationRunnable!!)
 	}
 
 	private fun updateGhosts() {
@@ -225,8 +278,8 @@ class HalloweenView @JvmOverloads constructor(
 						ghost.x -= ghost.speed
 					}
 
-					ghost.floatPhase += ghost.floatSpeed
-					ghost.y = ghost.baseY + kotlin.math.sin(ghost.floatPhase) * ghost.floatAmplitude
+					ghost.floatIndex = (ghost.floatIndex + ghost.floatIndexSpeed) % SINE_TABLE_SIZE
+					ghost.y = ghost.baseY + sineTable[ghost.floatIndex] * ghost.floatAmplitude
 
 					val reachedEnd = if (ghost.fromLeft) ghost.x > width + ghost.size else ghost.x < -ghost.size
 					if (reachedEnd) {
@@ -234,7 +287,7 @@ class HalloweenView @JvmOverloads constructor(
 					}
 				}
 				GhostState.FADING -> {
-					ghost.alpha -= 10
+					ghost.alpha -= 12
 					if (ghost.alpha <= 0) {
 						ghost.state = GhostState.DONE
 					}
@@ -263,14 +316,14 @@ class HalloweenView @JvmOverloads constructor(
 					x = startX,
 					y = baseY,
 					baseY = baseY,
-					speed = 2f + Random.nextFloat() * 1f,
-					size = ghostSize + Random.nextFloat() * 10f,
+					speed = 1.8f + Random.nextFloat() * 0.8f,
+					size = ghostSize + Random.nextFloat() * 8f,
 					state = GhostState.WAITING,
 					alpha = 200,
-					waitTimer = i * 60 + Random.nextInt(20, 80),
-					floatPhase = Random.nextFloat() * Math.PI.toFloat() * 2,
-					floatSpeed = 0.06f + Random.nextFloat() * 0.03f,
-					floatAmplitude = 15f + Random.nextFloat() * 10f,
+					waitTimer = i * 45 + Random.nextInt(15, 60),
+					floatIndex = Random.nextInt(SINE_TABLE_SIZE),
+					floatIndexSpeed = Random.nextInt(2, 5),
+					floatAmplitude = 12f + Random.nextFloat() * 8f,
 					fromLeft = fromLeft
 				)
 			)
@@ -420,11 +473,11 @@ class HalloweenView @JvmOverloads constructor(
 			Spider(
 				x = x,
 				y = y,
-				size = spiderSize + Random.nextFloat() * 15f,
+				size = spiderSize + Random.nextFloat() * 10f,
 				state = SpiderState.WAITING,
 				alpha = 0,
-				waitTimer = Random.nextInt(10, 30),
-				visibleTimer = Random.nextInt(60, 120)  // 3-6 seconds visible
+				waitTimer = Random.nextInt(8, 25),
+				visibleTimer = Random.nextInt(50, 100)  // 2.5-5 seconds visible
 			)
 		)
 	}
@@ -434,8 +487,8 @@ class HalloweenView @JvmOverloads constructor(
 
 		candies.forEachIndexed { index, candy ->
 			candy.y += candy.speed
-			candy.driftPhase += 0.02f
-			candy.x += kotlin.math.sin(candy.driftPhase) * candy.drift * 0.015f
+			candy.driftIndex = (candy.driftIndex + candy.driftIndexSpeed) % SINE_TABLE_SIZE
+			candy.x += sineTable[candy.driftIndex] * candy.driftAmplitude * 0.012f
 
 			if (candy.y > height + candy.size) {
 				val newCandy = createCandy(randomY = false)
@@ -463,33 +516,76 @@ class HalloweenView @JvmOverloads constructor(
 
 		if (!isActive) return
 
-		candies.forEach { candy ->
-			candyPaint.alpha = candy.alpha
-			candyPaint.textSize = candy.size
-			canvas.drawText(candy.emoji, candy.x, candy.y, candyPaint)
+		// Draw candies using cached bitmaps with color tints
+		candyBitmap?.let { baseBitmap ->
+			candies.forEach { candy ->
+				val size = candy.size.toInt()
+				getScaledBitmap(baseBitmap, size)?.let { bitmap ->
+					paint.alpha = candy.alpha
+					paint.colorFilter = candyColorFilters[candy.colorIndex]
+					canvas.drawBitmap(
+						bitmap,
+						candy.x - size / 2f,
+						candy.y - size / 2f,
+						paint
+					)
+				}
+			}
 		}
+		paint.colorFilter = null
 
-		spiders.forEach { spider ->
-			if (spider.state != SpiderState.DONE && spider.state != SpiderState.WAITING) {
-				spiderPaint.alpha = spider.alpha.coerceIn(0, 255)
-				spiderPaint.textSize = spider.size
-				canvas.drawText("🕷️", spider.x, spider.y, spiderPaint)
+		// Draw spiders using cached bitmaps
+		spiderBitmap?.let { baseBitmap ->
+			spiders.forEach { spider ->
+				if (spider.state != SpiderState.DONE && spider.state != SpiderState.WAITING) {
+					val size = spider.size.toInt()
+					getScaledBitmap(baseBitmap, size)?.let { bitmap ->
+						paint.alpha = spider.alpha.coerceIn(0, 255)
+						canvas.drawBitmap(
+							bitmap,
+							spider.x - size / 2f,
+							spider.y - size / 2f,
+							paint
+						)
+					}
+				}
 			}
 		}
 
-		ghosts.forEach { ghost ->
-			if (ghost.state != GhostState.DONE && ghost.state != GhostState.WAITING) {
-				ghostPaint.alpha = ghost.alpha.coerceIn(0, 255)
-				ghostPaint.textSize = ghost.size
-				canvas.drawText("👻", ghost.x, ghost.y, ghostPaint)
+		// Draw ghosts using cached bitmaps
+		ghostBitmap?.let { baseBitmap ->
+			ghosts.forEach { ghost ->
+				if (ghost.state != GhostState.DONE && ghost.state != GhostState.WAITING) {
+					val size = ghost.size.toInt()
+					getScaledBitmap(baseBitmap, size)?.let { bitmap ->
+						paint.alpha = ghost.alpha.coerceIn(0, 255)
+						canvas.save()
+						canvas.translate(ghost.x, ghost.y)
+						if (!ghost.fromLeft) {
+							canvas.scale(-1f, 1f)
+						}
+						canvas.drawBitmap(bitmap, -size / 2f, -size / 2f, paint)
+						canvas.restore()
+					}
+				}
 			}
 		}
 
-		pumpkins.forEach { pumpkin ->
-			if (pumpkin.state != PumpkinState.DONE && pumpkin.state != PumpkinState.WAITING) {
-				pumpkinPaint.alpha = pumpkin.alpha.coerceIn(0, 255)
-				pumpkinPaint.textSize = pumpkin.size
-				canvas.drawText("🎃", pumpkin.x, pumpkin.y, pumpkinPaint)
+		// Draw pumpkins using cached bitmaps
+		pumpkinBitmap?.let { baseBitmap ->
+			pumpkins.forEach { pumpkin ->
+				if (pumpkin.state != PumpkinState.DONE && pumpkin.state != PumpkinState.WAITING) {
+					val size = pumpkin.size.toInt()
+					getScaledBitmap(baseBitmap, size)?.let { bitmap ->
+						paint.alpha = pumpkin.alpha.coerceIn(0, 255)
+						canvas.drawBitmap(
+							bitmap,
+							pumpkin.x - size / 2f,
+							pumpkin.y - size / 2f,
+							paint
+						)
+					}
+				}
 			}
 		}
 	}
@@ -497,17 +593,18 @@ class HalloweenView @JvmOverloads constructor(
 	override fun onDetachedFromWindow() {
 		super.onDetachedFromWindow()
 		stopEffect()
+		bitmapCache.clear()
 	}
 
 	override fun onVisibilityChanged(changedView: View, visibility: Int) {
 		super.onVisibilityChanged(changedView, visibility)
 
 		if (visibility == VISIBLE && isActive) {
-			if (animator?.isRunning != true) {
+			if (animationRunnable == null) {
 				startAnimation()
 			}
 		} else {
-			animator?.cancel()
+			animationRunnable?.let { handler.removeCallbacks(it) }
 		}
 	}
 }

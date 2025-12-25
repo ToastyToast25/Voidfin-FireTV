@@ -905,6 +905,7 @@
     
     <!-- Seasonal Surprise -->
     <string name="pref_seasonal_surprise">Seasonal Surprise</string>
+    <string name="pref_seasonal_surprise_description">Decorative seasonal animations on home screen. Disable if experiencing lag.</string>
     <string name="pref_seasonal_none">None</string>
     <string name="pref_seasonal_winter">Winter ❄️</string>
     <string name="pref_seasonal_spring">Spring 🌸</string>

@@ -1,17 +1,29 @@
 package org.jellyfin.androidtv.ui.home
 
-import android.animation.ValueAnimator
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.ColorFilter
 import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
+import android.os.Handler
+import android.os.Looper
 import android.util.AttributeSet
 import android.view.View
-import android.view.animation.LinearInterpolator
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
+import org.jellyfin.androidtv.R
 import kotlin.random.Random
 
 /**
  * A custom view that renders falling autumn leaves for fall season.
  * Leaves fall slowly with gentle swaying and rotation.
+ * 
+ * Performance optimized for Android TV / Fire TV devices:
+ * - Uses cached bitmap rendering from vector drawables
+ * - Reduced particle count for low-powered devices
+ * - Pre-calculated sine table for drift calculations
  */
 class LeaffallView @JvmOverloads constructor(
 	context: Context,
@@ -24,14 +36,13 @@ class LeaffallView @JvmOverloads constructor(
 		var y: Float,
 		val size: Float,
 		val speed: Float,
-		val drift: Float,
-		val driftSpeed: Float,
-		var driftPhase: Float,
-		val rotation: Float,
+		val driftAmplitude: Float,
+		var driftIndex: Int,
+		val driftIndexSpeed: Int,
 		var currentRotation: Float,
 		val rotationSpeed: Float,
 		val alpha: Int,
-		val emoji: String
+		val colorIndex: Int  // 0 = orange, 1 = red, 2 = brown
 	)
 
 	private enum class PumpkinState {
@@ -50,44 +61,75 @@ class LeaffallView @JvmOverloads constructor(
 		var waitTimer: Int = 0
 	)
 
+	companion object {
+		private const val SINE_TABLE_SIZE = 360
+		private val sineTable = FloatArray(SINE_TABLE_SIZE) { i ->
+			kotlin.math.sin(i * Math.PI / 180.0).toFloat()
+		}
+	}
+
 	private val leaves = mutableListOf<Leaf>()
 	private val pumpkins = mutableListOf<Pumpkin>()
 	
-	private val paint = Paint().apply {
-		isAntiAlias = false  // Disable for performance
-		textAlign = Paint.Align.CENTER
-	}
+	private val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
 	
-	private val pumpkinPaint = Paint().apply {
-		isAntiAlias = true
-		textAlign = Paint.Align.CENTER
+	// Cached bitmaps for efficient drawing
+	private var leafBitmap: Bitmap? = null
+	private var pumpkinBitmap: Bitmap? = null
+	private val bitmapCache = mutableMapOf<Int, Bitmap>()
+	
+	// Leaf color tints for autumn palette
+	private val leafColors = listOf(
+		0xFFFF8C00.toInt(),  // Dark orange
+		0xFFCD5C5C.toInt(),  // Indian red
+		0xFF8B4513.toInt()   // Saddle brown
+	)
+	private val colorFilters = leafColors.map { color ->
+		PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN)
 	}
 
-	private var animator: ValueAnimator? = null
+	private val handler = Handler(Looper.getMainLooper())
+	private var animationRunnable: Runnable? = null
 	private var isFalling = false
 	private var pumpkinSpawnTimer = 0
-	private val pumpkinSpawnInterval = 400  // Spawn pumpkins every ~20 seconds at 20fps
+	private val pumpkinSpawnInterval = 300
+	private var frameCount = 0
 
-	private val maxLeaves = 18  // Reduced from 40
-	private val minSize = 22f
-	private val maxSize = 30f
-	private val minSpeed = 0.6f
-	private val maxSpeed = 1.4f
+	// Particle settings
+	private val maxLeaves = 18
+	private val minSize = 24f
+	private val maxSize = 40f
+	private val minSpeed = 0.5f
+	private val maxSpeed = 1.2f
 	private val minAlpha = 220
 	private val maxAlpha = 255
 
 	private val pumpkinCount = 4
-	private val pumpkinSize = 55f
-	private val gravity = 0.4f
-	private val bounceDamping = 0.25f
-	private val popUpVelocity = -8f
-
-	private val fallEmojis = listOf("🍁", "🍂", "🍁", "🍂", "🍁")
+	private val pumpkinSize = 60f
+	private val gravity = 0.35f
+	private val bounceDamping = 0.2f
+	private val popUpVelocity = -6f
 
 	init {
 		isClickable = false
 		isFocusable = false
-		setLayerType(LAYER_TYPE_HARDWARE, null)  // Hardware acceleration
+		loadBitmaps()
+	}
+	
+	private fun loadBitmaps() {
+		ContextCompat.getDrawable(context, R.drawable.seasonal_maple_leaf)?.let { drawable ->
+			leafBitmap = drawable.toBitmap(48, 48)
+		}
+		ContextCompat.getDrawable(context, R.drawable.seasonal_pumpkin)?.let { drawable ->
+			pumpkinBitmap = drawable.toBitmap(64, 64)
+		}
+	}
+	
+	private fun getScaledBitmap(source: Bitmap?, size: Int): Bitmap? {
+		source ?: return null
+		return bitmapCache.getOrPut(System.identityHashCode(source) * 1000 + size) {
+			Bitmap.createScaledBitmap(source, size, size, true)
+		}
 	}
 
 	/**
@@ -108,11 +150,12 @@ class LeaffallView @JvmOverloads constructor(
 		if (!isFalling) return
 		isFalling = false
 		
-		animator?.cancel()
-		animator = null
+		animationRunnable?.let { handler.removeCallbacks(it) }
+		animationRunnable = null
 		leaves.clear()
 		pumpkins.clear()
 		pumpkinSpawnTimer = 0
+		frameCount = 0
 		invalidate()
 	}
 
@@ -135,31 +178,36 @@ class LeaffallView @JvmOverloads constructor(
 			y = if (randomY) Random.nextFloat() * height else -size * 2,
 			size = size,
 			speed = Random.nextFloat() * (maxSpeed - minSpeed) + minSpeed,
-			drift = Random.nextFloat() * 60f + 30f,  // Wide drift for floating leaf effect
-			driftSpeed = Random.nextFloat() * 0.015f + 0.005f,  // Very slow drift
-			driftPhase = Random.nextFloat() * Math.PI.toFloat() * 2,
-			rotation = Random.nextFloat() * 360f,
+			driftAmplitude = Random.nextFloat() * 40f + 20f,  // Wide drift for floating leaf effect
+			driftIndex = Random.nextInt(SINE_TABLE_SIZE),
+			driftIndexSpeed = Random.nextInt(1, 3),
 			currentRotation = Random.nextFloat() * 360f,
-			rotationSpeed = Random.nextFloat() * 2f + 0.3f,  // Gentle tumbling
+			rotationSpeed = Random.nextFloat() * 1.5f + 0.2f,
 			alpha = Random.nextInt(minAlpha, maxAlpha),
-			emoji = fallEmojis[Random.nextInt(fallEmojis.size)]
+			colorIndex = Random.nextInt(3)
 		)
 	}
 
 	private fun startAnimation() {
-		animator?.cancel()
+		animationRunnable?.let { handler.removeCallbacks(it) }
 		
-		animator = ValueAnimator.ofFloat(0f, 1f).apply {
-			duration = 50L  // ~20fps - slower is fine for gentle leaves
-			repeatCount = ValueAnimator.INFINITE
-			interpolator = LinearInterpolator()
-			addUpdateListener {
+		animationRunnable = object : Runnable {
+			override fun run() {
+				if (!isFalling) return
+				
+				frameCount++
 				updateLeaves()
-				updatePumpkins()
+				// Only update pumpkins every other frame
+				if (frameCount % 2 == 0) {
+					updatePumpkins()
+				}
 				invalidate()
+				
+				// Target ~30fps
+				handler.postDelayed(this, 33L)
 			}
-			start()
 		}
+		handler.post(animationRunnable!!)
 	}
 
 	private fun updateLeaves() {
@@ -168,8 +216,8 @@ class LeaffallView @JvmOverloads constructor(
 		leaves.forEachIndexed { index, leaf ->
 			leaf.y += leaf.speed
 			
-			leaf.driftPhase += leaf.driftSpeed
-			leaf.x += kotlin.math.sin(leaf.driftPhase) * leaf.drift * 0.012f
+			leaf.driftIndex = (leaf.driftIndex + leaf.driftIndexSpeed) % SINE_TABLE_SIZE
+			leaf.x += sineTable[leaf.driftIndex] * leaf.driftAmplitude * 0.01f
 			
 			leaf.currentRotation += leaf.rotationSpeed
 			if (leaf.currentRotation > 360f) leaf.currentRotation -= 360f
@@ -267,7 +315,7 @@ class LeaffallView @JvmOverloads constructor(
 					state = PumpkinState.WAITING,
 					alpha = 255,
 					groundY = groundY,
-					waitTimer = i * 30 + Random.nextInt(0, 40)  // Staggered start times
+					waitTimer = i * 25 + Random.nextInt(0, 30)
 				)
 			)
 		}
@@ -286,22 +334,38 @@ class LeaffallView @JvmOverloads constructor(
 		
 		if (!isFalling) return
 
-		leaves.forEach { leaf ->
-			paint.alpha = leaf.alpha
-			paint.textSize = leaf.size
-			
-			canvas.save()
-			canvas.translate(leaf.x, leaf.y)
-			canvas.rotate(leaf.currentRotation)
-			canvas.drawText(leaf.emoji, 0f, 0f, paint)
-			canvas.restore()
+		// Draw leaves using cached bitmaps with color tints
+		leafBitmap?.let { baseBitmap ->
+			leaves.forEach { leaf ->
+				val size = leaf.size.toInt()
+				getScaledBitmap(baseBitmap, size)?.let { bitmap ->
+					paint.alpha = leaf.alpha
+					paint.colorFilter = colorFilters[leaf.colorIndex]
+					canvas.save()
+					canvas.translate(leaf.x, leaf.y)
+					canvas.rotate(leaf.currentRotation)
+					canvas.drawBitmap(bitmap, -size / 2f, -size / 2f, paint)
+					canvas.restore()
+				}
+			}
 		}
+		paint.colorFilter = null
 		
-		pumpkins.forEach { pumpkin ->
-			if (pumpkin.state != PumpkinState.DONE && pumpkin.state != PumpkinState.WAITING) {
-				pumpkinPaint.alpha = pumpkin.alpha
-				pumpkinPaint.textSize = pumpkin.size
-				canvas.drawText("🎃", pumpkin.x, pumpkin.y, pumpkinPaint)
+		// Draw pumpkins using cached bitmaps
+		pumpkinBitmap?.let { baseBitmap ->
+			pumpkins.forEach { pumpkin ->
+				if (pumpkin.state != PumpkinState.DONE && pumpkin.state != PumpkinState.WAITING) {
+					val size = pumpkin.size.toInt()
+					getScaledBitmap(baseBitmap, size)?.let { bitmap ->
+						paint.alpha = pumpkin.alpha
+						canvas.drawBitmap(
+							bitmap,
+							pumpkin.x - size / 2f,
+							pumpkin.y - size / 2f,
+							paint
+						)
+					}
+				}
 			}
 		}
 	}
@@ -309,17 +373,18 @@ class LeaffallView @JvmOverloads constructor(
 	override fun onDetachedFromWindow() {
 		super.onDetachedFromWindow()
 		stopFalling()
+		bitmapCache.clear()
 	}
 
 	override fun onVisibilityChanged(changedView: View, visibility: Int) {
 		super.onVisibilityChanged(changedView, visibility)
 		
 		if (visibility == VISIBLE && isFalling) {
-			if (animator?.isRunning != true) {
+			if (animationRunnable == null) {
 				startAnimation()
 			}
 		} else {
-			animator?.cancel()
+			animationRunnable?.let { handler.removeCallbacks(it) }
 		}
 	}
 }

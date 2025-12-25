@@ -1,12 +1,16 @@
 package org.jellyfin.androidtv.ui.home
 
-import android.animation.ValueAnimator
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.os.Handler
+import android.os.Looper
 import android.util.AttributeSet
 import android.view.View
-import android.view.animation.LinearInterpolator
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
+import org.jellyfin.androidtv.R
 import kotlin.random.Random
 
 /**
@@ -15,6 +19,12 @@ import kotlin.random.Random
  * Snowmen periodically drop, bounce, settle, and fade out at the bottom.
  * 
  * Inspired by Home Assistant's seasonal surprise feature.
+ * 
+ * Performance optimized for Android TV / Fire TV devices:
+ * - Uses cached bitmap rendering from vector drawables
+ * - Reduced particle count for low-powered devices
+ * - Frame-skipping animation loop to reduce CPU load
+ * - Pre-calculated sine table for drift calculations
  */
 class SnowfallView @JvmOverloads constructor(
 	context: Context,
@@ -27,10 +37,12 @@ class SnowfallView @JvmOverloads constructor(
 		var y: Float,
 		val size: Float,
 		val speed: Float,
-		val drift: Float,
-		val driftSpeed: Float,
-		var driftPhase: Float,
-		val alpha: Int
+		val driftAmplitude: Float,
+		var driftIndex: Int,
+		val driftIndexSpeed: Int,
+		val alpha: Int,
+		var rotation: Float,
+		val rotationSpeed: Float
 	)
 
 	private enum class SnowmanState {
@@ -49,43 +61,66 @@ class SnowfallView @JvmOverloads constructor(
 		var waitTimer: Int = 0
 	)
 
+	companion object {
+		// Pre-calculated sine table for faster drift calculations
+		private const val SINE_TABLE_SIZE = 360
+		private val sineTable = FloatArray(SINE_TABLE_SIZE) { i ->
+			kotlin.math.sin(i * Math.PI / 180.0).toFloat()
+		}
+	}
+
 	private val snowflakes = mutableListOf<Snowflake>()
 	private val snowmen = mutableListOf<Snowman>()
 	
-	private val paint = Paint().apply {
-		isAntiAlias = false  // Disable for performance
-		color = 0xFFFFFFFF.toInt()
-		style = Paint.Style.FILL
-	}
+	private val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
 	
-	private val snowmanPaint = Paint().apply {
-		isAntiAlias = true
-		textAlign = Paint.Align.CENTER
-	}
+	// Cached bitmaps for efficient drawing
+	private var snowflakeBitmap: Bitmap? = null
+	private var snowmanBitmap: Bitmap? = null
+	private val bitmapCache = mutableMapOf<Int, Bitmap>()
 
-	private var animator: ValueAnimator? = null
+	private val handler = Handler(Looper.getMainLooper())
+	private var animationRunnable: Runnable? = null
 	private var isSnowing = false
 	private var snowmanSpawnTimer = 0
-	private val snowmanSpawnInterval = 300  // Spawn snowmen every ~10 seconds at 30fps
+	private val snowmanSpawnInterval = 300
+	private var frameCount = 0
 
-	private val maxSnowflakes = 25  // Reduced from 60
-	private val minSize = 4f
-	private val maxSize = 10f
-	private val minSpeed = 1.5f
-	private val maxSpeed = 3.5f
-	private val minAlpha = 120
-	private val maxAlpha = 200
+	// Particle settings
+	private val maxSnowflakes = 25
+	private val minSize = 16f
+	private val maxSize = 32f
+	private val minSpeed = 1.0f
+	private val maxSpeed = 2.5f
+	private val minAlpha = 180
+	private val maxAlpha = 255
 	
 	private val snowmanCount = 4
-	private val snowmanSize = 60f
-	private val gravity = 0.4f  // Reduced gravity for gentler motion
-	private val bounceDamping = 0.25f  // Much less bouncy
-	private val popUpVelocity = -8f  // Initial upward velocity when popping up
+	private val snowmanSize = 70f
+	private val gravity = 0.35f
+	private val bounceDamping = 0.2f
+	private val popUpVelocity = -6f
 
 	init {
 		isClickable = false
 		isFocusable = false
-		setLayerType(LAYER_TYPE_HARDWARE, null)  // Hardware acceleration
+		loadBitmaps()
+	}
+	
+	private fun loadBitmaps() {
+		ContextCompat.getDrawable(context, R.drawable.seasonal_snowflake)?.let { drawable ->
+			snowflakeBitmap = drawable.toBitmap(48, 48)
+		}
+		ContextCompat.getDrawable(context, R.drawable.seasonal_snowman)?.let { drawable ->
+			snowmanBitmap = drawable.toBitmap(80, 80)
+		}
+	}
+	
+	private fun getScaledBitmap(source: Bitmap?, size: Int): Bitmap? {
+		source ?: return null
+		return bitmapCache.getOrPut(System.identityHashCode(source) * 1000 + size) {
+			Bitmap.createScaledBitmap(source, size, size, true)
+		}
 	}
 
 	/**
@@ -106,11 +141,12 @@ class SnowfallView @JvmOverloads constructor(
 		if (!isSnowing) return
 		isSnowing = false
 		
-		animator?.cancel()
-		animator = null
+		animationRunnable?.let { handler.removeCallbacks(it) }
+		animationRunnable = null
 		snowflakes.clear()
 		snowmen.clear()
 		snowmanSpawnTimer = 0
+		frameCount = 0
 		invalidate()
 	}
 
@@ -133,27 +169,35 @@ class SnowfallView @JvmOverloads constructor(
 			y = if (randomY) Random.nextFloat() * height else -size * 2,
 			size = size,
 			speed = Random.nextFloat() * (maxSpeed - minSpeed) + minSpeed,
-			drift = Random.nextFloat() * 30f + 10f,  // Drift amplitude 10-40 pixels
-			driftSpeed = Random.nextFloat() * 0.03f + 0.01f,
-			driftPhase = Random.nextFloat() * Math.PI.toFloat() * 2,
-			alpha = Random.nextInt(minAlpha, maxAlpha)
+			driftAmplitude = Random.nextFloat() * 20f + 8f,
+			driftIndex = Random.nextInt(SINE_TABLE_SIZE),
+			driftIndexSpeed = Random.nextInt(1, 4),
+			alpha = Random.nextInt(minAlpha, maxAlpha),
+			rotation = Random.nextFloat() * 360f,
+			rotationSpeed = Random.nextFloat() * 2f - 1f
 		)
 	}
 
 	private fun startAnimation() {
-		animator?.cancel()
+		animationRunnable?.let { handler.removeCallbacks(it) }
 		
-		animator = ValueAnimator.ofFloat(0f, 1f).apply {
-			duration = 33L  // ~30fps for better performance
-			repeatCount = ValueAnimator.INFINITE
-			interpolator = LinearInterpolator()
-			addUpdateListener {
+		animationRunnable = object : Runnable {
+			override fun run() {
+				if (!isSnowing) return
+				
+				frameCount++
 				updateSnowflakes()
-				updateSnowmen()
+				// Only update snowmen every other frame to reduce calculations
+				if (frameCount % 2 == 0) {
+					updateSnowmen()
+				}
 				invalidate()
+				
+				// Target ~30fps for smooth animations
+				handler.postDelayed(this, 33L)
 			}
-			start()
 		}
+		handler.post(animationRunnable!!)
 	}
 
 	private fun updateSnowflakes() {
@@ -161,9 +205,11 @@ class SnowfallView @JvmOverloads constructor(
 
 		snowflakes.forEachIndexed { index, flake ->
 			flake.y += flake.speed
+			flake.rotation += flake.rotationSpeed
 			
-			flake.driftPhase += flake.driftSpeed
-			flake.x += kotlin.math.sin(flake.driftPhase) * flake.drift * 0.02f
+			// Use pre-calculated sine table instead of Math.sin()
+			flake.driftIndex = (flake.driftIndex + flake.driftIndexSpeed) % SINE_TABLE_SIZE
+			flake.x += sineTable[flake.driftIndex] * flake.driftAmplitude * 0.015f
 			
 			if (flake.y > height + flake.size) {
 				val newFlake = createSnowflake(randomY = false)
@@ -249,7 +295,7 @@ class SnowfallView @JvmOverloads constructor(
 		
 		repeat(snowmanCount) { i ->
 			val x = spacing * (i + 1) + Random.nextFloat() * 40 - 20  // Add some randomness
-			val staggerDelay = Random.nextInt(20, 80)  // Random delay 0.6-2.6 seconds at 30fps
+			val staggerDelay = Random.nextInt(15, 50)  // Random delay at 20fps
 			snowmen.add(
 				Snowman(
 					x = x.toFloat(),
@@ -259,7 +305,7 @@ class SnowfallView @JvmOverloads constructor(
 					state = SnowmanState.WAITING,
 					alpha = 255,
 					groundY = groundY,
-					waitTimer = staggerDelay * i + Random.nextInt(0, 30)  // Staggered start times
+					waitTimer = staggerDelay * i + Random.nextInt(0, 20)  // Staggered start times
 				)
 			)
 		}
@@ -278,16 +324,36 @@ class SnowfallView @JvmOverloads constructor(
 		
 		if (!isSnowing) return
 
-		snowflakes.forEach { flake ->
-			paint.alpha = flake.alpha
-			canvas.drawCircle(flake.x, flake.y, flake.size / 2, paint)
+		// Draw snowflakes using cached bitmaps
+		snowflakeBitmap?.let { baseBitmap ->
+			snowflakes.forEach { flake ->
+				val size = flake.size.toInt()
+				getScaledBitmap(baseBitmap, size)?.let { bitmap ->
+					paint.alpha = flake.alpha
+					canvas.save()
+					canvas.translate(flake.x, flake.y)
+					canvas.rotate(flake.rotation)
+					canvas.drawBitmap(bitmap, -size / 2f, -size / 2f, paint)
+					canvas.restore()
+				}
+			}
 		}
 		
-		snowmen.forEach { snowman ->
-			if (snowman.state != SnowmanState.DONE) {
-				snowmanPaint.alpha = snowman.alpha
-				snowmanPaint.textSize = snowman.size
-				canvas.drawText("⛄", snowman.x, snowman.y, snowmanPaint)
+		// Draw snowmen using cached bitmaps
+		snowmanBitmap?.let { baseBitmap ->
+			snowmen.forEach { snowman ->
+				if (snowman.state != SnowmanState.DONE && snowman.state != SnowmanState.WAITING) {
+					val size = snowman.size.toInt()
+					getScaledBitmap(baseBitmap, size)?.let { bitmap ->
+						paint.alpha = snowman.alpha
+						canvas.drawBitmap(
+							bitmap,
+							snowman.x - size / 2f,
+							snowman.y - size / 2f,
+							paint
+						)
+					}
+				}
 			}
 		}
 	}
@@ -295,17 +361,18 @@ class SnowfallView @JvmOverloads constructor(
 	override fun onDetachedFromWindow() {
 		super.onDetachedFromWindow()
 		stopSnowing()
+		bitmapCache.clear()
 	}
 
 	override fun onVisibilityChanged(changedView: View, visibility: Int) {
 		super.onVisibilityChanged(changedView, visibility)
 		
 		if (visibility == VISIBLE && isSnowing) {
-			if (animator?.isRunning != true) {
+			if (animationRunnable == null) {
 				startAnimation()
 			}
 		} else {
-			animator?.cancel()
+			animationRunnable?.let { handler.removeCallbacks(it) }
 		}
 	}
 }

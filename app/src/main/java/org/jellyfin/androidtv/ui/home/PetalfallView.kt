@@ -1,17 +1,26 @@
 package org.jellyfin.androidtv.ui.home
 
-import android.animation.ValueAnimator
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.os.Handler
+import android.os.Looper
 import android.util.AttributeSet
 import android.view.View
-import android.view.animation.LinearInterpolator
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
+import org.jellyfin.androidtv.R
 import kotlin.random.Random
 
 /**
  * A custom view that renders falling cherry blossom petals and flowers for spring.
  * Petals fall slower than snowflakes with gentle swaying motion.
+ * 
+ * Performance optimized for Android TV / Fire TV devices:
+ * - Uses cached bitmap rendering from vector drawables
+ * - Reduced particle count for low-powered devices
+ * - Pre-calculated sine table for drift calculations
  */
 class PetalfallView @JvmOverloads constructor(
 	context: Context,
@@ -24,14 +33,13 @@ class PetalfallView @JvmOverloads constructor(
 		var y: Float,
 		val size: Float,
 		val speed: Float,
-		val drift: Float,
-		val driftSpeed: Float,
-		var driftPhase: Float,
-		val rotation: Float,
+		val driftAmplitude: Float,
+		var driftIndex: Int,
+		val driftIndexSpeed: Int,
 		var currentRotation: Float,
 		val rotationSpeed: Float,
 		val alpha: Int,
-		val emoji: String
+		val isPink: Boolean  // true = pink petal, false = yellow flower center
 	)
 
 	private enum class BeeState {
@@ -47,48 +55,69 @@ class PetalfallView @JvmOverloads constructor(
 		var state: BeeState,
 		var alpha: Int,
 		var waitTimer: Int,
-		var buzzPhase: Float,
-		val buzzSpeed: Float,
+		var buzzIndex: Int,
+		val buzzIndexSpeed: Int,
 		val buzzAmplitude: Float,
 		val fromLeft: Boolean
 	)
 
+	companion object {
+		private const val SINE_TABLE_SIZE = 360
+		private val sineTable = FloatArray(SINE_TABLE_SIZE) { i ->
+			kotlin.math.sin(i * Math.PI / 180.0).toFloat()
+		}
+	}
+
 	private val petals = mutableListOf<Petal>()
 	private val bees = mutableListOf<Bee>()
 	
-	private val paint = Paint().apply {
-		isAntiAlias = false  // Disable for performance
-		textAlign = Paint.Align.CENTER
-	}
+	private val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
 	
-	private val beePaint = Paint().apply {
-		isAntiAlias = true
-		textAlign = Paint.Align.CENTER
-	}
+	// Cached bitmaps for efficient drawing
+	private var cherryBlossomBitmap: Bitmap? = null
+	private var beeBitmap: Bitmap? = null
+	private val bitmapCache = mutableMapOf<Int, Bitmap>()
 
-	private var animator: ValueAnimator? = null
+	private val handler = Handler(Looper.getMainLooper())
+	private var animationRunnable: Runnable? = null
 	private var isFalling = false
 	private var beeSpawnTimer = 0
-	private val beeSpawnInterval = 400  // Spawn bees every ~20 seconds at 20fps
+	private val beeSpawnInterval = 300
+	private var frameCount = 0
 
-	private val maxPetals = 20  // Reduced from 45
-	private val minSize = 18f
-	private val maxSize = 26f
-	private val minSpeed = 0.8f
-	private val maxSpeed = 1.8f
+	// Particle settings
+	private val maxPetals = 20
+	private val minSize = 20f
+	private val maxSize = 36f
+	private val minSpeed = 0.6f
+	private val maxSpeed = 1.4f
 	private val minAlpha = 200
 	private val maxAlpha = 255
 
 	private val beeCount = 3
-	private val beeSize = 35f
-	private val beeSpeed = 3f
-
-	private val springEmojis = listOf("🌸", "🌼", "🌸", "🌸", "🌼", "🌸")
+	private val beeSize = 40f
+	private val beeSpeed = 2.5f
 
 	init {
 		isClickable = false
 		isFocusable = false
-		setLayerType(LAYER_TYPE_HARDWARE, null)  // Hardware acceleration
+		loadBitmaps()
+	}
+	
+	private fun loadBitmaps() {
+		ContextCompat.getDrawable(context, R.drawable.seasonal_cherry_blossom)?.let { drawable ->
+			cherryBlossomBitmap = drawable.toBitmap(48, 48)
+		}
+		ContextCompat.getDrawable(context, R.drawable.seasonal_bee)?.let { drawable ->
+			beeBitmap = drawable.toBitmap(48, 48)
+		}
+	}
+	
+	private fun getScaledBitmap(source: Bitmap?, size: Int): Bitmap? {
+		source ?: return null
+		return bitmapCache.getOrPut(System.identityHashCode(source) * 1000 + size) {
+			Bitmap.createScaledBitmap(source, size, size, true)
+		}
 	}
 
 	/**
@@ -109,11 +138,12 @@ class PetalfallView @JvmOverloads constructor(
 		if (!isFalling) return
 		isFalling = false
 		
-		animator?.cancel()
-		animator = null
+		animationRunnable?.let { handler.removeCallbacks(it) }
+		animationRunnable = null
 		petals.clear()
 		bees.clear()
 		beeSpawnTimer = 0
+		frameCount = 0
 		invalidate()
 	}
 
@@ -136,31 +166,36 @@ class PetalfallView @JvmOverloads constructor(
 			y = if (randomY) Random.nextFloat() * height else -size * 2,
 			size = size,
 			speed = Random.nextFloat() * (maxSpeed - minSpeed) + minSpeed,
-			drift = Random.nextFloat() * 50f + 20f,  // Wider drift for floating effect
-			driftSpeed = Random.nextFloat() * 0.02f + 0.008f,  // Slower drift
-			driftPhase = Random.nextFloat() * Math.PI.toFloat() * 2,
-			rotation = Random.nextFloat() * 360f,
+			driftAmplitude = Random.nextFloat() * 35f + 15f,  // Drift for floating effect
+			driftIndex = Random.nextInt(SINE_TABLE_SIZE),
+			driftIndexSpeed = Random.nextInt(1, 3),
 			currentRotation = Random.nextFloat() * 360f,
-			rotationSpeed = Random.nextFloat() * 1.5f + 0.5f,  // Gentle rotation
+			rotationSpeed = Random.nextFloat() * 1.2f + 0.3f,
 			alpha = Random.nextInt(minAlpha, maxAlpha),
-			emoji = springEmojis[Random.nextInt(springEmojis.size)]
+			isPink = Random.nextFloat() > 0.2f  // 80% pink petals, 20% yellow
 		)
 	}
 
 	private fun startAnimation() {
-		animator?.cancel()
+		animationRunnable?.let { handler.removeCallbacks(it) }
 		
-		animator = ValueAnimator.ofFloat(0f, 1f).apply {
-			duration = 50L  // ~20fps - slower is fine for gentle petals
-			repeatCount = ValueAnimator.INFINITE
-			interpolator = LinearInterpolator()
-			addUpdateListener {
+		animationRunnable = object : Runnable {
+			override fun run() {
+				if (!isFalling) return
+				
+				frameCount++
 				updatePetals()
-				updateBees()
+				// Only update bees every other frame
+				if (frameCount % 2 == 0) {
+					updateBees()
+				}
 				invalidate()
+				
+				// Target ~30fps
+				handler.postDelayed(this, 33L)
 			}
-			start()
 		}
+		handler.post(animationRunnable!!)
 	}
 
 	private fun updatePetals() {
@@ -169,8 +204,8 @@ class PetalfallView @JvmOverloads constructor(
 		petals.forEachIndexed { index, petal ->
 			petal.y += petal.speed
 			
-			petal.driftPhase += petal.driftSpeed
-			petal.x += kotlin.math.sin(petal.driftPhase) * petal.drift * 0.015f
+			petal.driftIndex = (petal.driftIndex + petal.driftIndexSpeed) % SINE_TABLE_SIZE
+			petal.x += sineTable[petal.driftIndex] * petal.driftAmplitude * 0.012f
 			
 			petal.currentRotation += petal.rotationSpeed
 			if (petal.currentRotation > 360f) petal.currentRotation -= 360f
@@ -215,8 +250,8 @@ class PetalfallView @JvmOverloads constructor(
 						bee.x -= bee.speed
 					}
 					
-					bee.buzzPhase += bee.buzzSpeed
-					bee.y += kotlin.math.sin(bee.buzzPhase) * bee.buzzAmplitude
+					bee.buzzIndex = (bee.buzzIndex + bee.buzzIndexSpeed) % SINE_TABLE_SIZE
+					bee.y += sineTable[bee.buzzIndex] * bee.buzzAmplitude
 					
 					val reachedEnd = if (bee.fromLeft) bee.x > width + bee.size else bee.x < -bee.size
 					if (reachedEnd) {
@@ -224,7 +259,7 @@ class PetalfallView @JvmOverloads constructor(
 					}
 				}
 				BeeState.FADING -> {
-					bee.alpha -= 15  // Quick fade
+					bee.alpha -= 20
 					if (bee.alpha <= 0) {
 						bee.state = BeeState.DONE
 					}
@@ -239,7 +274,7 @@ class PetalfallView @JvmOverloads constructor(
 	private fun spawnBees() {
 		if (width <= 0 || height <= 0) return
 		
-		val usableHeight = height * 0.6f  // Use middle 60% of screen
+		val usableHeight = height * 0.6f
 		val topMargin = height * 0.2f
 		val zoneHeight = usableHeight / beeCount
 		
@@ -254,14 +289,14 @@ class PetalfallView @JvmOverloads constructor(
 					x = startX,
 					y = y,
 					targetX = if (fromLeft) width + beeSize else -beeSize,
-					speed = beeSpeed + Random.nextFloat() * 1.5f,
+					speed = beeSpeed + Random.nextFloat() * 1f,
 					size = beeSize,
 					state = BeeState.WAITING,
 					alpha = 255,
-					waitTimer = i * 40 + Random.nextInt(20, 60),  // Staggered: 0-3s, 2-5s, 4-7s
-					buzzPhase = Random.nextFloat() * Math.PI.toFloat() * 2,
-					buzzSpeed = 0.5f + Random.nextFloat() * 0.3f,  // Fast vibration
-					buzzAmplitude = 1.5f + Random.nextFloat() * 1f,  // Small vertical buzz
+					waitTimer = i * 30 + Random.nextInt(15, 45),
+					buzzIndex = Random.nextInt(SINE_TABLE_SIZE),
+					buzzIndexSpeed = Random.nextInt(15, 25),  // Fast vibration
+					buzzAmplitude = 1.2f + Random.nextFloat() * 0.8f,
 					fromLeft = fromLeft
 				)
 			)
@@ -281,29 +316,37 @@ class PetalfallView @JvmOverloads constructor(
 		
 		if (!isFalling) return
 
-		petals.forEach { petal ->
-			paint.alpha = petal.alpha
-			paint.textSize = petal.size
-			
-			canvas.save()
-			canvas.translate(petal.x, petal.y)
-			canvas.rotate(petal.currentRotation)
-			canvas.drawText(petal.emoji, 0f, 0f, paint)
-			canvas.restore()
+		// Draw petals using cached bitmaps
+		cherryBlossomBitmap?.let { baseBitmap ->
+			petals.forEach { petal ->
+				val size = petal.size.toInt()
+				getScaledBitmap(baseBitmap, size)?.let { bitmap ->
+					paint.alpha = petal.alpha
+					canvas.save()
+					canvas.translate(petal.x, petal.y)
+					canvas.rotate(petal.currentRotation)
+					canvas.drawBitmap(bitmap, -size / 2f, -size / 2f, paint)
+					canvas.restore()
+				}
+			}
 		}
 
-		bees.forEach { bee ->
-			if (bee.state != BeeState.DONE && bee.state != BeeState.WAITING) {
-				beePaint.alpha = bee.alpha
-				beePaint.textSize = bee.size
-				
-				canvas.save()
-				canvas.translate(bee.x, bee.y)
-				if (bee.fromLeft) {
-					canvas.scale(-1f, 1f)
+		// Draw bees using cached bitmaps
+		beeBitmap?.let { baseBitmap ->
+			bees.forEach { bee ->
+				if (bee.state != BeeState.DONE && bee.state != BeeState.WAITING) {
+					val size = bee.size.toInt()
+					getScaledBitmap(baseBitmap, size)?.let { bitmap ->
+						paint.alpha = bee.alpha
+						canvas.save()
+						canvas.translate(bee.x, bee.y)
+						if (!bee.fromLeft) {
+							canvas.scale(-1f, 1f)
+						}
+						canvas.drawBitmap(bitmap, -size / 2f, -size / 2f, paint)
+						canvas.restore()
+					}
 				}
-				canvas.drawText("🐝", 0f, 0f, beePaint)
-				canvas.restore()
 			}
 		}
 	}
@@ -311,17 +354,18 @@ class PetalfallView @JvmOverloads constructor(
 	override fun onDetachedFromWindow() {
 		super.onDetachedFromWindow()
 		stopFalling()
+		bitmapCache.clear()
 	}
 
 	override fun onVisibilityChanged(changedView: View, visibility: Int) {
 		super.onVisibilityChanged(changedView, visibility)
 		
 		if (visibility == VISIBLE && isFalling) {
-			if (animator?.isRunning != true) {
+			if (animationRunnable == null) {
 				startAnimation()
 			}
 		} else {
-			animator?.cancel()
+			animationRunnable?.let { handler.removeCallbacks(it) }
 		}
 	}
 }

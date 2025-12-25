@@ -1,17 +1,26 @@
 package org.jellyfin.androidtv.ui.home
 
-import android.animation.ValueAnimator
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.os.Handler
+import android.os.Looper
 import android.util.AttributeSet
 import android.view.View
-import android.view.animation.LinearInterpolator
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
+import org.jellyfin.androidtv.R
 import kotlin.random.Random
 
 /**
  * A custom view that renders summer effects with bouncing beach balls
  * and pulsing suns.
+ * 
+ * Performance optimized for Android TV / Fire TV devices:
+ * - Uses cached bitmap rendering from vector drawables
+ * - Reduced element count for low-powered devices
+ * - Pre-calculated sine table for bounce calculations
  */
 class SummerView @JvmOverloads constructor(
 	context: Context,
@@ -33,11 +42,10 @@ class SummerView @JvmOverloads constructor(
 		var state: BeachBallState,
 		var alpha: Int,
 		var waitTimer: Int,
-		var bouncePhase: Float,
-		val bounceSpeed: Float,
+		var bounceIndex: Int,
+		val bounceIndexSpeed: Int,
 		val bounceAmplitude: Float,
-		val fromLeft: Boolean,
-		val emoji: String
+		val fromLeft: Boolean
 	)
 
 	private enum class SunState {
@@ -70,50 +78,71 @@ class SummerView @JvmOverloads constructor(
 		var waitTimer: Int = 0
 	)
 
+	companion object {
+		private const val SINE_TABLE_SIZE = 360
+		private val sineTable = FloatArray(SINE_TABLE_SIZE) { i ->
+			kotlin.math.sin(i * Math.PI / 180.0).toFloat()
+		}
+	}
+
 	private val beachBalls = mutableListOf<BeachBall>()
 	private val suns = mutableListOf<Sun>()
 	private val beachUmbrellas = mutableListOf<BeachUmbrella>()
 
-	private val beachBallPaint = Paint().apply {
-		isAntiAlias = true
-		textAlign = Paint.Align.CENTER
-	}
+	private val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+	
+	// Cached bitmaps for efficient drawing
+	private var sunBitmap: Bitmap? = null
+	private var beachBallBitmap: Bitmap? = null
+	private var umbrellaBitmap: Bitmap? = null
+	private val bitmapCache = mutableMapOf<Int, Bitmap>()
 
-	private val sunPaint = Paint().apply {
-		isAntiAlias = true
-		textAlign = Paint.Align.CENTER
-	}
-
-	private val umbrellaPaint = Paint().apply {
-		isAntiAlias = true
-		textAlign = Paint.Align.CENTER
-	}
-
-	private var animator: ValueAnimator? = null
+	private val handler = Handler(Looper.getMainLooper())
+	private var animationRunnable: Runnable? = null
 	private var isActive = false
 	private var beachBallSpawnTimer = 0
 	private var sunSpawnTimer = 0
 	private var umbrellaSpawnTimer = 0
-	private val beachBallSpawnInterval = 350  // ~17 seconds at 20fps
-	private val sunSpawnInterval = 120  // ~6 seconds at 20fps
-	private val umbrellaSpawnInterval = 450  // ~22 seconds at 20fps
+	private val beachBallSpawnInterval = 250
+	private val sunSpawnInterval = 100
+	private val umbrellaSpawnInterval = 350
+	private var frameCount = 0
 
+	// Particle settings
 	private val beachBallCount = 2
-	private val beachBallSize = 45f
-	private val beachBallSpeed = 2.5f
-	private val beachBallEmojis = listOf("🏐")
+	private val beachBallSize = 50f
+	private val beachBallSpeed = 2f
 
 	private val maxSuns = 2
-	private val sunSize = 50f
+	private val sunSize = 60f
 
 	private val umbrellaCount = 3
-	private val umbrellaSize = 50f
-	private val umbrellaRiseSpeed = -4f
+	private val umbrellaSize = 60f
+	private val umbrellaRiseSpeed = -3f
 
 	init {
 		isClickable = false
 		isFocusable = false
-		setLayerType(LAYER_TYPE_HARDWARE, null)
+		loadBitmaps()
+	}
+	
+	private fun loadBitmaps() {
+		ContextCompat.getDrawable(context, R.drawable.seasonal_sun)?.let { drawable ->
+			sunBitmap = drawable.toBitmap(64, 64)
+		}
+		ContextCompat.getDrawable(context, R.drawable.seasonal_beach_ball)?.let { drawable ->
+			beachBallBitmap = drawable.toBitmap(64, 64)
+		}
+		ContextCompat.getDrawable(context, R.drawable.seasonal_beach_umbrella)?.let { drawable ->
+			umbrellaBitmap = drawable.toBitmap(64, 64)
+		}
+	}
+	
+	private fun getScaledBitmap(source: Bitmap?, size: Int): Bitmap? {
+		source ?: return null
+		return bitmapCache.getOrPut(System.identityHashCode(source) * 1000 + size) {
+			Bitmap.createScaledBitmap(source, size, size, true)
+		}
 	}
 
 	fun startEffect() {
@@ -126,32 +155,41 @@ class SummerView @JvmOverloads constructor(
 		if (!isActive) return
 		isActive = false
 
-		animator?.cancel()
-		animator = null
+		animationRunnable?.let { handler.removeCallbacks(it) }
+		animationRunnable = null
 		beachBalls.clear()
 		suns.clear()
 		beachUmbrellas.clear()
 		beachBallSpawnTimer = 0
 		sunSpawnTimer = 0
 		umbrellaSpawnTimer = 0
+		frameCount = 0
 		invalidate()
 	}
 
 	private fun startAnimation() {
-		animator?.cancel()
+		animationRunnable?.let { handler.removeCallbacks(it) }
 
-		animator = ValueAnimator.ofFloat(0f, 1f).apply {
-			duration = 50L  // ~20fps
-			repeatCount = ValueAnimator.INFINITE
-			interpolator = LinearInterpolator()
-			addUpdateListener {
+		animationRunnable = object : Runnable {
+			override fun run() {
+				if (!isActive) return
+				
+				frameCount++
 				updateBeachBalls()
-				updateSuns()
-				updateBeachUmbrellas()
+				// Stagger updates to reduce per-frame work
+				if (frameCount % 2 == 0) {
+					updateSuns()
+				}
+				if (frameCount % 3 == 0) {
+					updateBeachUmbrellas()
+				}
 				invalidate()
+				
+				// Target ~30fps
+				handler.postDelayed(this, 33L)
 			}
-			start()
 		}
+		handler.post(animationRunnable!!)
 	}
 
 	private fun updateBeachBalls() {
@@ -181,8 +219,8 @@ class SummerView @JvmOverloads constructor(
 						ball.x -= ball.speed
 					}
 
-					ball.bouncePhase += ball.bounceSpeed
-					ball.y = ball.baseY + kotlin.math.sin(ball.bouncePhase) * ball.bounceAmplitude * 0.3f
+					ball.bounceIndex = (ball.bounceIndex + ball.bounceIndexSpeed) % SINE_TABLE_SIZE
+					ball.y = ball.baseY + sineTable[ball.bounceIndex] * ball.bounceAmplitude * 0.3f
 
 					val reachedEnd = if (ball.fromLeft) ball.x > width + ball.size else ball.x < -ball.size
 					if (reachedEnd) {
@@ -190,7 +228,7 @@ class SummerView @JvmOverloads constructor(
 					}
 				}
 				BeachBallState.FADING -> {
-					ball.alpha -= 12
+					ball.alpha -= 15
 					if (ball.alpha <= 0) {
 						ball.state = BeachBallState.DONE
 					}
@@ -220,16 +258,15 @@ class SummerView @JvmOverloads constructor(
 					y = baseY,
 					baseY = baseY,
 					targetX = if (fromLeft) width + beachBallSize else -beachBallSize,
-					speed = beachBallSpeed + Random.nextFloat() * 1f,
-					size = beachBallSize + Random.nextFloat() * 10f,
+					speed = beachBallSpeed + Random.nextFloat() * 0.8f,
+					size = beachBallSize + Random.nextFloat() * 8f,
 					state = BeachBallState.WAITING,
 					alpha = 255,
-					waitTimer = i * 50 + Random.nextInt(20, 70),
-					bouncePhase = Random.nextFloat() * Math.PI.toFloat(),
-					bounceSpeed = 0.08f + Random.nextFloat() * 0.04f,  // Slower than bee buzz
-					bounceAmplitude = 40f + Random.nextFloat() * 20f,  // Bigger bounce
-					fromLeft = fromLeft,
-					emoji = beachBallEmojis[Random.nextInt(beachBallEmojis.size)]
+					waitTimer = i * 40 + Random.nextInt(15, 50),
+					bounceIndex = Random.nextInt(SINE_TABLE_SIZE),
+					bounceIndexSpeed = Random.nextInt(3, 7),
+					bounceAmplitude = 35f + Random.nextFloat() * 15f,
+					fromLeft = fromLeft
 				)
 			)
 		}
@@ -382,31 +419,57 @@ class SummerView @JvmOverloads constructor(
 
 		if (!isActive) return
 
-		suns.forEach { sun ->
-			if (sun.state != SunState.DONE && sun.state != SunState.WAITING) {
-				sunPaint.alpha = sun.alpha.coerceIn(0, 255)
-				sunPaint.textSize = sun.size * sun.scale
-
-				canvas.save()
-				canvas.translate(sun.x, sun.y)
-				canvas.drawText("☀️", 0f, 0f, sunPaint)
-				canvas.restore()
+		// Draw suns using cached bitmaps
+		sunBitmap?.let { baseBitmap ->
+			suns.forEach { sun ->
+				if (sun.state != SunState.DONE && sun.state != SunState.WAITING) {
+					val scaledSize = (sun.size * sun.scale).toInt()
+					getScaledBitmap(baseBitmap, scaledSize)?.let { bitmap ->
+						paint.alpha = sun.alpha.coerceIn(0, 255)
+						canvas.drawBitmap(
+							bitmap,
+							sun.x - scaledSize / 2f,
+							sun.y - scaledSize / 2f,
+							paint
+						)
+					}
+				}
 			}
 		}
 
-		beachBalls.forEach { ball ->
-			if (ball.state != BeachBallState.DONE && ball.state != BeachBallState.WAITING) {
-				beachBallPaint.alpha = ball.alpha.coerceIn(0, 255)
-				beachBallPaint.textSize = ball.size
-				canvas.drawText(ball.emoji, ball.x, ball.y, beachBallPaint)
+		// Draw beach balls using cached bitmaps
+		beachBallBitmap?.let { baseBitmap ->
+			beachBalls.forEach { ball ->
+				if (ball.state != BeachBallState.DONE && ball.state != BeachBallState.WAITING) {
+					val size = ball.size.toInt()
+					getScaledBitmap(baseBitmap, size)?.let { bitmap ->
+						paint.alpha = ball.alpha.coerceIn(0, 255)
+						canvas.drawBitmap(
+							bitmap,
+							ball.x - size / 2f,
+							ball.y - size / 2f,
+							paint
+						)
+					}
+				}
 			}
 		}
 
-		beachUmbrellas.forEach { umbrella ->
-			if (umbrella.state != BeachUmbrellaState.DONE && umbrella.state != BeachUmbrellaState.WAITING) {
-				umbrellaPaint.alpha = umbrella.alpha.coerceIn(0, 255)
-				umbrellaPaint.textSize = umbrella.size
-				canvas.drawText("🏖️", umbrella.x, umbrella.y, umbrellaPaint)
+		// Draw umbrellas using cached bitmaps
+		umbrellaBitmap?.let { baseBitmap ->
+			beachUmbrellas.forEach { umbrella ->
+				if (umbrella.state != BeachUmbrellaState.DONE && umbrella.state != BeachUmbrellaState.WAITING) {
+					val size = umbrella.size.toInt()
+					getScaledBitmap(baseBitmap, size)?.let { bitmap ->
+						paint.alpha = umbrella.alpha.coerceIn(0, 255)
+						canvas.drawBitmap(
+							bitmap,
+							umbrella.x - size / 2f,
+							umbrella.y - size / 2f,
+							paint
+						)
+					}
+				}
 			}
 		}
 	}
@@ -414,17 +477,18 @@ class SummerView @JvmOverloads constructor(
 	override fun onDetachedFromWindow() {
 		super.onDetachedFromWindow()
 		stopEffect()
+		bitmapCache.clear()
 	}
 
 	override fun onVisibilityChanged(changedView: View, visibility: Int) {
 		super.onVisibilityChanged(changedView, visibility)
 
 		if (visibility == VISIBLE && isActive) {
-			if (animator?.isRunning != true) {
+			if (animationRunnable == null) {
 				startAnimation()
 			}
 		} else {
-			animator?.cancel()
+			animationRunnable?.let { handler.removeCallbacks(it) }
 		}
 	}
 }
