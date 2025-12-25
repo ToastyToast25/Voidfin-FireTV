@@ -242,7 +242,7 @@ class UserPreferences(context: Context) : SharedPreferenceStore(
 		/**
 		 * Subtitles font size
 		 */
-		var subtitlesTextSize = floatPreference("subtitles_text_size", 1f)
+		var subtitlesTextSize = floatPreference("subtitles_text_size", 24f)
 
 		/**
 		 * Subtitles offset
@@ -339,8 +339,14 @@ class UserPreferences(context: Context) : SharedPreferenceStore(
 				putLong("subtitles_text_stroke_color", if (subtitleStrokeSize > 0) 0XFF000000L else 0X00FFFFFFL)
 			}
 
+// v0.19.0 to v0.20.0
+			migration(toVersion = 9) {
+				// Reset subtitle text size as we changed from fractional sizing to absolute sizing
+				remove("subtitles_text_size")
+			}
+
 			// v1.2.0 to v1.3.0
-			migration(toVersion = 9) { prefs ->
+			migration(toVersion = 10) { prefs ->
 				// Migrate screensaver dimming from boolean to int (0-100)
 				val oldDimmingKey = "pref_screensaver_dimming"
 				val wasEnabled = prefs.getBoolean(oldDimmingKey, false)
@@ -360,7 +366,6 @@ class UserPreferences(context: Context) : SharedPreferenceStore(
 						}
 					} catch (e: ClassCastException) {
 						// Already stored as Int, no migration needed
-						// Keep the existing integer value
 					}
 				}
 			}

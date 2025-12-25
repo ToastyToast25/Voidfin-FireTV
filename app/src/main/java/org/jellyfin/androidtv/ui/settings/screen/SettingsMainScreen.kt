@@ -134,7 +134,7 @@ fun SettingsMainScreen() {
 		}
 
 		item {
-			ListSection(
+ListSection(
 				headingContent = { Text("Support & Updates") },
 			)
 		}
@@ -172,9 +172,13 @@ fun SettingsMainScreen() {
 			)
 		}
 
-		settingsAboutItems(
-			openLicenses = { router.push(Routes.LICENSES) }
-		)
+		item {
+			ListButton(
+				leadingContent = { Icon(painterResource(R.drawable.ic_jellyfin), contentDescription = null) },
+				headingContent = { Text(stringResource(R.string.pref_about_title)) },
+				onClick = { router.push(Routes.ABOUT) }
+			)
+		}
 	}
 }
 

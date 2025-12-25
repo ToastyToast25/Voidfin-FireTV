@@ -8,11 +8,16 @@ import org.jellyfin.androidtv.ui.preference.screen.JellyseerrRowsConfigScreen
 import org.jellyfin.androidtv.ui.settings.screen.SettingsDeveloperScreen
 import org.jellyfin.androidtv.ui.settings.screen.SettingsMainScreen
 import org.jellyfin.androidtv.ui.settings.screen.SettingsTelemetryScreen
+import org.jellyfin.androidtv.ui.settings.screen.about.SettingsAboutScreen
 import org.jellyfin.androidtv.ui.settings.screen.authentication.SettingsAuthenticationAutoSignInScreen
 import org.jellyfin.androidtv.ui.settings.screen.authentication.SettingsAuthenticationScreen
 import org.jellyfin.androidtv.ui.settings.screen.authentication.SettingsAuthenticationServerScreen
 import org.jellyfin.androidtv.ui.settings.screen.authentication.SettingsAuthenticationServerUserScreen
 import org.jellyfin.androidtv.ui.settings.screen.authentication.SettingsAuthenticationSortByScreen
+import org.jellyfin.androidtv.ui.settings.screen.customization.subtitle.SettingsSubtitleTextStrokeColorScreen
+import org.jellyfin.androidtv.ui.settings.screen.customization.subtitle.SettingsSubtitlesBackgroundColorScreen
+import org.jellyfin.androidtv.ui.settings.screen.customization.subtitle.SettingsSubtitlesScreen
+import org.jellyfin.androidtv.ui.settings.screen.customization.subtitle.SettingsSubtitlesTextColorScreen
 import org.jellyfin.androidtv.ui.settings.screen.license.SettingsLicenseScreen
 import org.jellyfin.androidtv.ui.settings.screen.license.SettingsLicensesScreen
 import org.jellyfin.androidtv.ui.settings.screen.playback.SettingsPlaybackInactivityPromptScreen
@@ -33,7 +38,11 @@ object Routes {
 	const val AUTHENTICATION_SERVER_USER = "/authentication/server/{serverId}/user/{userId}"
 	const val AUTHENTICATION_SORT_BY = "/authentication/sort-by"
 	const val AUTHENTICATION_AUTO_SIGN_IN = "/authentication/auto-sign-in"
-	const val CUSTOMIZATION = "/customization"
+const val CUSTOMIZATION = "/customization"
+	const val CUSTOMIZATION_SUBTITLES = "/customization/subtitles"
+	const val CUSTOMIZATION_SUBTITLES_TEXT_COLOR = "/customization/subtitles/text-color"
+	const val CUSTOMIZATION_SUBTITLES_BACKGROUND_COLOR = "/customization/subtitles/background-color"
+	const val CUSTOMIZATION_SUBTITLES_EDGE_COLOR = "/customization/subtitles/edge-color"
 	const val PLAYBACK = "/playback"
 	const val PLAYBACK_NEXT_UP = "/playback/next-up"
 	const val PLAYBACK_NEXT_UP_BEHAVIOR = "/playback/next-up/behavior"
@@ -46,6 +55,7 @@ object Routes {
 	const val JELLYSEERR_ROWS = "/jellyseerr/rows"
 	const val TELEMETRY = "/telemetry"
 	const val DEVELOPER = "/developer"
+	const val ABOUT = "/about"
 	const val LICENSES = "/licenses"
 	const val LICENSE = "/license/{artifactId}"
 }
@@ -77,8 +87,20 @@ val routes = mapOf<String, RouteComposable>(
 	Routes.AUTHENTICATION_AUTO_SIGN_IN to {
 		SettingsAuthenticationAutoSignInScreen()
 	},
-	Routes.CUSTOMIZATION to {
+Routes.CUSTOMIZATION to {
 		CustomizationPreferencesScreen()
+	},
+	Routes.CUSTOMIZATION_SUBTITLES to {
+		SettingsSubtitlesScreen()
+	},
+	Routes.CUSTOMIZATION_SUBTITLES_TEXT_COLOR to {
+		SettingsSubtitlesTextColorScreen()
+	},
+	Routes.CUSTOMIZATION_SUBTITLES_BACKGROUND_COLOR to {
+		SettingsSubtitlesBackgroundColorScreen()
+	},
+	Routes.CUSTOMIZATION_SUBTITLES_EDGE_COLOR to {
+		SettingsSubtitleTextStrokeColorScreen()
 	},
 	Routes.PLAYBACK to {
 		SettingsPlaybackScreen()
@@ -117,6 +139,9 @@ val routes = mapOf<String, RouteComposable>(
 	},
 	Routes.DEVELOPER to {
 		SettingsDeveloperScreen()
+	},
+	Routes.ABOUT to { context ->
+		SettingsAboutScreen(context.parameters["fromLogin"] == "true")
 	},
 	Routes.LICENSES to {
 		SettingsLicensesScreen()
