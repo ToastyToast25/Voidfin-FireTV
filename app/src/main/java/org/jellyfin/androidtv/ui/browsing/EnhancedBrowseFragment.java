@@ -225,7 +225,8 @@ public class EnhancedBrowseFragment extends Fragment implements RowLoader, View.
 
     public void loadRows(List<BrowseRowDef> rows) {
         mRowsAdapter = new MutableObjectAdapter<Row>(new PositionableListRowPresenter());
-        mCardPresenter = new CardPresenter(false, 140);
+        boolean isSeason = mFolder != null && mFolder.getType() == BaseItemKind.SEASON;
+        mCardPresenter = isSeason ? new CardPresenter(false, ImageType.THUMB, 120) : new CardPresenter(false, 140);
         ClassPresenterSelector ps = new ClassPresenterSelector();
         ps.addClassPresenter(GridButtonBaseRowItem.class, new GridButtonPresenter(155, 140));
         ps.addClassPresenter(BaseRowItem.class, mCardPresenter);

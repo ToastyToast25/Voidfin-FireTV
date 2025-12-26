@@ -522,28 +522,9 @@ private fun MainToolbar(
 		}
 		},
 		end = {
-		Row(
-			horizontalArrangement = Arrangement.spacedBy(8.dp),
-			verticalAlignment = Alignment.CenterVertically,
-		) {
-			IconButton(
-				onClick = {
-					settingsViewModel.show()
-				},
-				colors = ButtonDefaults.colors(
-					containerColor = Color.Transparent,
-					focusedContainerColor = JellyfinTheme.colorScheme.buttonFocused,
-				),
-			) {
-				Icon(
-					imageVector = ImageVector.vectorResource(R.drawable.ic_settings),
-					contentDescription = stringResource(R.string.lbl_settings),
-				)
-			}
-
+			// Clock only - settings icon is already in the navbar
 			ToolbarClock()
 		}
-	}
 	)
 }
 
