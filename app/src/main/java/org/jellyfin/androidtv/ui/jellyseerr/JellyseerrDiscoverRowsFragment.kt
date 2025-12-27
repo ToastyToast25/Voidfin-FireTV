@@ -426,8 +426,14 @@ class JellyseerrDiscoverRowsFragment : RowsSupportFragment() {
 				if (rowAdapter is ArrayObjectAdapter) {
 					Timber.d("JellyseerrDiscoverRowsFragment: Setting row $index - showing ${items.size} items")
 					
-					// Defer adapter update to avoid modifying RecyclerView during layout/scroll
-					view?.post {
+					// If view is available, defer update to avoid modifying RecyclerView during layout
+					// Otherwise, set items directly (needed for initial load before view is created)
+					val currentView = view
+					if (currentView != null) {
+						currentView.post {
+							rowAdapter.setItems(items, null)
+						}
+					} else {
 						rowAdapter.setItems(items, null)
 					}
 				}
@@ -443,8 +449,14 @@ class JellyseerrDiscoverRowsFragment : RowsSupportFragment() {
 			val listRow = rowsAdapter.get(index) as? ListRow
 			listRow?.adapter?.let { rowAdapter ->
 				if (rowAdapter is ArrayObjectAdapter) {
-					// Defer adapter update to avoid modifying RecyclerView during layout/scroll
-					view?.post {
+					// If view is available, defer update to avoid modifying RecyclerView during layout
+					// Otherwise, set items directly (needed for initial load before view is created)
+					val currentView = view
+					if (currentView != null) {
+						currentView.post {
+							rowAdapter.setItems(items, null)
+						}
+					} else {
 						rowAdapter.setItems(items, null)
 					}
 				}
