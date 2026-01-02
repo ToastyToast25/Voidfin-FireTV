@@ -1,8 +1,6 @@
 package org.jellyfin.androidtv.ui.settings
 
 import org.jellyfin.androidtv.ui.navigation.RouteComposable
-import org.jellyfin.androidtv.ui.preference.screen.CustomizationPreferencesScreen
-import org.jellyfin.androidtv.ui.preference.screen.HomeSectionsConfigScreen
 import org.jellyfin.androidtv.ui.preference.screen.JellyseerrPreferencesScreen
 import org.jellyfin.androidtv.ui.preference.screen.JellyseerrRowsConfigScreen
 import org.jellyfin.androidtv.ui.settings.screen.SettingsDeveloperScreen
@@ -14,16 +12,27 @@ import org.jellyfin.androidtv.ui.settings.screen.authentication.SettingsAuthenti
 import org.jellyfin.androidtv.ui.settings.screen.authentication.SettingsAuthenticationServerScreen
 import org.jellyfin.androidtv.ui.settings.screen.authentication.SettingsAuthenticationServerUserScreen
 import org.jellyfin.androidtv.ui.settings.screen.authentication.SettingsAuthenticationSortByScreen
-import org.jellyfin.androidtv.ui.settings.screen.customization.SettingsAppThemeScreen
-import org.jellyfin.androidtv.ui.settings.screen.customization.SettingsClockBehaviorScreen
-import org.jellyfin.androidtv.ui.settings.screen.customization.SettingsRatingTypeScreen
-import org.jellyfin.androidtv.ui.settings.screen.customization.SettingsWatchedIndicatorBehaviorScreen
+import org.jellyfin.androidtv.ui.settings.screen.customization.SettingsCustomizationClockScreen
+import org.jellyfin.androidtv.ui.settings.screen.customization.SettingsCustomizationRatingTypeScreen
+import org.jellyfin.androidtv.ui.settings.screen.customization.SettingsCustomizationScreen
+import org.jellyfin.androidtv.ui.settings.screen.customization.SettingsCustomizationThemeScreen
+import org.jellyfin.androidtv.ui.settings.screen.customization.SettingsCustomizationWatchedIndicatorScreen
 import org.jellyfin.androidtv.ui.settings.screen.customization.subtitle.SettingsSubtitleTextStrokeColorScreen
 import org.jellyfin.androidtv.ui.settings.screen.customization.subtitle.SettingsSubtitlesBackgroundColorScreen
 import org.jellyfin.androidtv.ui.settings.screen.customization.subtitle.SettingsSubtitlesScreen
 import org.jellyfin.androidtv.ui.settings.screen.customization.subtitle.SettingsSubtitlesTextColorScreen
+import org.jellyfin.androidtv.ui.settings.screen.home.SettingsHomeScreen
+import org.jellyfin.androidtv.ui.settings.screen.home.SettingsHomeSectionScreen
+import org.jellyfin.androidtv.ui.settings.screen.library.SettingsLibrariesDisplayGridScreen
+import org.jellyfin.androidtv.ui.settings.screen.library.SettingsLibrariesDisplayImageSizeScreen
+import org.jellyfin.androidtv.ui.settings.screen.library.SettingsLibrariesDisplayImageTypeScreen
+import org.jellyfin.androidtv.ui.settings.screen.library.SettingsLibrariesDisplayScreen
+import org.jellyfin.androidtv.ui.settings.screen.library.SettingsLibrariesScreen
 import org.jellyfin.androidtv.ui.settings.screen.license.SettingsLicenseScreen
 import org.jellyfin.androidtv.ui.settings.screen.license.SettingsLicensesScreen
+import org.jellyfin.androidtv.ui.settings.screen.livetv.SettingsLiveTvGuideChannelOrderScreen
+import org.jellyfin.androidtv.ui.settings.screen.livetv.SettingsLiveTvGuideFiltersScreen
+import org.jellyfin.androidtv.ui.settings.screen.livetv.SettingsLiveTvGuideOptionsScreen
 import org.jellyfin.androidtv.ui.settings.screen.playback.SettingsPlaybackInactivityPromptScreen
 import org.jellyfin.androidtv.ui.settings.screen.playback.SettingsPlaybackPlayerScreen
 import org.jellyfin.androidtv.ui.settings.screen.playback.SettingsPlaybackPrerollsScreen
@@ -49,9 +58,9 @@ object Routes {
 	const val AUTHENTICATION_SORT_BY = "/authentication/sort-by"
 	const val AUTHENTICATION_AUTO_SIGN_IN = "/authentication/auto-sign-in"
 	const val CUSTOMIZATION = "/customization"
-	const val CUSTOMIZATION_APP_THEME = "/customization/app-theme"
-	const val CUSTOMIZATION_CLOCK_BEHAVIOR = "/customization/clock-behavior"
-	const val CUSTOMIZATION_WATCHED_INDICATOR_BEHAVIOR = "/customization/watched-indicator-behavior"
+	const val CUSTOMIZATION_THEME = "/customization/theme"
+	const val CUSTOMIZATION_CLOCK = "/customization/clock"
+	const val CUSTOMIZATION_WATCHED_INDICATOR = "/customization/watch-indicators"
 	const val CUSTOMIZATION_RATING_TYPE = "/customization/rating-type"
 	const val CUSTOMIZATION_SCREENSAVER = "/customization/screensaver"
 	const val CUSTOMIZATION_SCREENSAVER_TIMEOUT = "/customization/screensaver/timeout"
@@ -62,6 +71,16 @@ object Routes {
 	const val CUSTOMIZATION_SUBTITLES_TEXT_COLOR = "/customization/subtitles/text-color"
 	const val CUSTOMIZATION_SUBTITLES_BACKGROUND_COLOR = "/customization/subtitles/background-color"
 	const val CUSTOMIZATION_SUBTITLES_EDGE_COLOR = "/customization/subtitles/edge-color"
+	const val LIBRARIES = "/libraries"
+	const val LIBRARIES_DISPLAY = "/libraries/display/{itemId}/{displayPreferencesId}"
+	const val LIBRARIES_DISPLAY_IMAGE_SIZE = "/libraries/display/{itemId}/{displayPreferencesId}/image-size"
+	const val LIBRARIES_DISPLAY_IMAGE_TYPE = "/libraries/display/{itemId}/{displayPreferencesId}/image-type"
+	const val LIBRARIES_DISPLAY_GRID = "/libraries/display/{itemId}/{displayPreferencesId}/grid"
+	const val HOME = "/home"
+	const val HOME_SECTION = "/home/section/{index}"
+	const val LIVETV_GUIDE_FILTERS = "/livetv/guide/filters"
+	const val LIVETV_GUIDE_OPTIONS = "/livetv/guide/options"
+	const val LIVETV_GUIDE_CHANNEL_ORDER = "/livetv/guide/channel-order"
 	const val PLAYBACK = "/playback"
 	const val PLAYBACK_PLAYER = "/playback/player"
 	const val PLAYBACK_NEXT_UP = "/playback/next-up"
@@ -70,7 +89,6 @@ object Routes {
 	const val PLAYBACK_PREROLLS = "/playback/prerolls"
 	const val PLAYBACK_MEDIA_SEGMENTS = "/playback/media-segments"
 	const val PLAYBACK_MEDIA_SEGMENT = "/playback/media-segments/{segmentType}"
-	const val HOME_SECTIONS = "/home-sections"
 	const val JELLYSEERR = "/jellyseerr"
 	const val JELLYSEERR_ROWS = "/jellyseerr/rows"
 	const val TELEMETRY = "/telemetry"
@@ -108,19 +126,19 @@ val routes = mapOf<String, RouteComposable>(
 		SettingsAuthenticationAutoSignInScreen()
 	},
 	Routes.CUSTOMIZATION to {
-		CustomizationPreferencesScreen()
+		SettingsCustomizationScreen()
 	},
-	Routes.CUSTOMIZATION_APP_THEME to {
-		SettingsAppThemeScreen()
+	Routes.CUSTOMIZATION_THEME to {
+		SettingsCustomizationThemeScreen()
 	},
-	Routes.CUSTOMIZATION_CLOCK_BEHAVIOR to {
-		SettingsClockBehaviorScreen()
+	Routes.CUSTOMIZATION_CLOCK to {
+		SettingsCustomizationClockScreen()
 	},
-	Routes.CUSTOMIZATION_WATCHED_INDICATOR_BEHAVIOR to {
-		SettingsWatchedIndicatorBehaviorScreen()
+	Routes.CUSTOMIZATION_WATCHED_INDICATOR to {
+		SettingsCustomizationWatchedIndicatorScreen()
 	},
 	Routes.CUSTOMIZATION_RATING_TYPE to {
-		SettingsRatingTypeScreen()
+		SettingsCustomizationRatingTypeScreen()
 	},
 	Routes.CUSTOMIZATION_SCREENSAVER to {
 		SettingsScreensaverScreen()
@@ -149,6 +167,36 @@ val routes = mapOf<String, RouteComposable>(
 	Routes.CUSTOMIZATION_SUBTITLES_EDGE_COLOR to {
 		SettingsSubtitleTextStrokeColorScreen()
 	},
+	Routes.LIBRARIES to {
+		SettingsLibrariesScreen()
+	},
+	Routes.LIBRARIES_DISPLAY to { context ->
+		SettingsLibrariesDisplayScreen(context.parameters["itemId"]?.toUUIDOrNull()!!, context.parameters["displayPreferencesId"]!!)
+	},
+	Routes.LIBRARIES_DISPLAY_IMAGE_SIZE to { context ->
+		SettingsLibrariesDisplayImageSizeScreen(context.parameters["itemId"]?.toUUIDOrNull()!!, context.parameters["displayPreferencesId"]!!)
+	},
+	Routes.LIBRARIES_DISPLAY_IMAGE_TYPE to { context ->
+		SettingsLibrariesDisplayImageTypeScreen(context.parameters["itemId"]?.toUUIDOrNull()!!, context.parameters["displayPreferencesId"]!!)
+	},
+	Routes.LIBRARIES_DISPLAY_GRID to { context ->
+		SettingsLibrariesDisplayGridScreen(context.parameters["itemId"]?.toUUIDOrNull()!!, context.parameters["displayPreferencesId"]!!)
+	},
+	Routes.HOME to {
+		SettingsHomeScreen()
+	},
+	Routes.HOME_SECTION to { context ->
+		SettingsHomeSectionScreen(context.parameters["index"]?.toInt()!!)
+	},
+	Routes.LIVETV_GUIDE_FILTERS to {
+		SettingsLiveTvGuideFiltersScreen()
+	},
+	Routes.LIVETV_GUIDE_OPTIONS to {
+		SettingsLiveTvGuideOptionsScreen()
+	},
+	Routes.LIVETV_GUIDE_CHANNEL_ORDER to {
+		SettingsLiveTvGuideChannelOrderScreen()
+	},
 	Routes.PLAYBACK to {
 		SettingsPlaybackScreen()
 	},
@@ -174,9 +222,6 @@ val routes = mapOf<String, RouteComposable>(
 		SettingsPlaybackMediaSegmentScreen(
 			segmentType = context.parameters["segmentType"]?.let(MediaSegmentType::fromNameOrNull)!!,
 		)
-	},
-	Routes.HOME_SECTIONS to {
-		HomeSectionsConfigScreen()
 	},
 	Routes.JELLYSEERR to {
 		JellyseerrPreferencesScreen()

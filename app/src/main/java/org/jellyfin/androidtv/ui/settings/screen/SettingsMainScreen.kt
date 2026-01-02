@@ -31,7 +31,6 @@ import org.jellyfin.androidtv.ui.base.Text
 import org.jellyfin.androidtv.ui.base.form.Checkbox
 import org.jellyfin.androidtv.ui.base.list.ListButton
 import org.jellyfin.androidtv.ui.base.list.ListSection
-import org.jellyfin.androidtv.ui.navigation.ActivityDestinations
 import org.jellyfin.androidtv.ui.navigation.LocalRouter
 import org.jellyfin.androidtv.ui.preference.PreferencesActivity
 import org.jellyfin.androidtv.ui.preference.category.showDonateDialog
@@ -46,7 +45,6 @@ import timber.log.Timber
 
 @Composable
 fun SettingsMainScreen() {
-	val context = LocalContext.current
 	val router = LocalRouter.current
 	val updateChecker by inject<UpdateCheckerService>(UpdateCheckerService::class.java)
 	val userPreferences = koinInject<UserPreferences>()

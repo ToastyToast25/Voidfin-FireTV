@@ -1,4 +1,4 @@
-package org.jellyfin.androidtv.ui.preference.screen
+package org.jellyfin.androidtv.ui.settings.screen.home
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -38,7 +38,7 @@ import org.jellyfin.androidtv.ui.settings.composable.SettingsColumn
 import org.koin.compose.koinInject
 
 @Composable
-fun HomeSectionsConfigScreen() {
+fun SettingsHomeScreen() {
 	val userSettingPreferences = koinInject<UserSettingPreferences>()
 	
 	var sections by remember { mutableStateOf(userSettingPreferences.homeSectionsConfig) }
@@ -61,8 +61,8 @@ fun HomeSectionsConfigScreen() {
 	SettingsColumn {
 		item {
 			ListSection(
-				overlineContent = { Text(stringResource(R.string.home_prefs).uppercase()) },
-				headingContent = { Text(stringResource(R.string.home_sections)) },
+				overlineContent = { Text(stringResource(R.string.pref_customization).uppercase()) },
+				headingContent = { Text(stringResource(R.string.home_prefs)) },
 				captionContent = { Text(stringResource(R.string.home_sections_description)) },
 			)
 		}
@@ -155,7 +155,7 @@ private fun HomeSectionRow(
 	var isFocused by remember { mutableStateOf(false) }
 	
 	// Request focus when this item should be focused
-	androidx.compose.runtime.LaunchedEffect(shouldRequestFocus) {
+	LaunchedEffect(shouldRequestFocus) {
 		if (shouldRequestFocus) {
 			focusRequester.requestFocus()
 		}
@@ -219,4 +219,5 @@ private fun HomeSectionRow(
 			}
 		},
 		onClick = onToggle
-	)}
+	)
+}
