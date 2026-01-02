@@ -79,7 +79,16 @@ open class BaseItemDtoBaseRowItem @JvmOverloads constructor(
 		baseItem?.type == BaseItemKind.AUDIO && baseItem.albumArtists != null -> baseItem.albumArtists?.joinToString(", ")
 		baseItem?.type == BaseItemKind.AUDIO && baseItem.albumArtist != null -> baseItem.albumArtist
 		baseItem?.type == BaseItemKind.AUDIO && baseItem.album != null -> baseItem.album
-		baseItem?.type == BaseItemKind.EPISODE -> baseItem.name
+		baseItem?.type == BaseItemKind.EPISODE -> {
+			val episodeName = baseItem.name
+			val seasonNum = baseItem.parentIndexNumber
+			val episodeNum = baseItem.indexNumber
+			if (seasonNum != null && episodeNum != null) {
+				"$episodeName - S$seasonNum:E$episodeNum"
+			} else {
+				episodeName
+			}
+		}
 		else -> baseItem?.getFullName(context)
 	}
 
