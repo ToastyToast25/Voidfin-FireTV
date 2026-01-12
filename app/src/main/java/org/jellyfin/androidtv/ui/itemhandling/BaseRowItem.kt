@@ -13,6 +13,11 @@ abstract class BaseRowItem protected constructor(
 	val preferParentThumb: Boolean = false,
 	val selectAction: BaseRowItemSelectAction = BaseRowItemSelectAction.ShowDetails,
 	val baseItem: BaseItemDto? = null,
+	/**
+	 * When true, forces the item to use its own primary image instead of parent/series images.
+	 * Currently used for episodes in search results to display episode thumbnails rather than series posters.
+	 */
+	val useOwnPrimaryImage: Boolean = false,
 ) {
 	open val itemId: UUID? = null
 	open val showCardInfoOverlay: Boolean = false

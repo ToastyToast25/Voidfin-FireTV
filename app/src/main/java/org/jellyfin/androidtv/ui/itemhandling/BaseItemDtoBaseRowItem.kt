@@ -5,18 +5,17 @@ import android.graphics.drawable.Drawable
 import org.jellyfin.androidtv.constant.ImageType
 import org.jellyfin.androidtv.util.ImageHelper
 import org.jellyfin.androidtv.util.TimeUtils
-import org.jellyfin.androidtv.util.apiclient.seriesPrimaryImage
 import org.jellyfin.androidtv.util.sdk.getFullName
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.extensions.ticks
-import timber.log.Timber
 
 open class BaseItemDtoBaseRowItem @JvmOverloads constructor(
 	item: BaseItemDto,
 	preferParentThumb: Boolean = false,
 	staticHeight: Boolean = false,
 	selectAction: BaseRowItemSelectAction = BaseRowItemSelectAction.ShowDetails,
+	useOwnPrimaryImage: Boolean = false,
 ) : BaseRowItem(
 	baseRowType = when (item.type) {
 		BaseItemKind.TV_CHANNEL,
@@ -33,6 +32,7 @@ open class BaseItemDtoBaseRowItem @JvmOverloads constructor(
 	preferParentThumb = preferParentThumb,
 	selectAction = selectAction,
 	baseItem = item,
+	useOwnPrimaryImage = useOwnPrimaryImage,
 ) {
 	override val showCardInfoOverlay
 		get() = when (baseItem?.type) {
@@ -109,7 +109,6 @@ open class BaseItemDtoBaseRowItem @JvmOverloads constructor(
 		fillWidth: Int,
 		fillHeight: Int
 	): String? {
-		Timber.d("BaseItemDtoBaseRowItem.getImageUrl called for item ${baseItem?.id} type=$imageType")
 		return when {
 			imageType == ImageType.BANNER -> imageHelper.getBannerImageUrl(
 				requireNotNull(baseItem), fillWidth, fillHeight
@@ -118,20 +117,6 @@ open class BaseItemDtoBaseRowItem @JvmOverloads constructor(
 			imageType == ImageType.THUMB -> imageHelper.getThumbImageUrl(
 				requireNotNull(baseItem), fillWidth, fillHeight
 			)
-
-			imageType == ImageType.POSTER && baseItem?.type == BaseItemKind.EPISODE -> {
-				val seriesPoster = baseItem?.seriesPrimaryImage
-				if (seriesPoster != null) {
-					imageHelper.getImageUrl(seriesPoster, baseItem!!, fillWidth, fillHeight)
-				} else {
-					imageHelper.getPrimaryImageUrl(
-						baseItem!!,
-						preferParentThumb,
-						null,
-						fillHeight
-					)
-				}
-			}
 
 			else -> imageHelper.getPrimaryImageUrl(
 				baseItem!!,

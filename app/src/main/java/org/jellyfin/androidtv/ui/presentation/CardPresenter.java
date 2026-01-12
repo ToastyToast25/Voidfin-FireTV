@@ -140,7 +140,7 @@ public class CardPresenter extends Presenter {
                             break;
                         case EPISODE:
                             mDefaultCardImage = ContextCompat.getDrawable(mCardView.getContext(), R.drawable.tile_land_tv);
-                            if (imageType.equals(ImageType.POSTER)) {
+                            if (imageType.equals(ImageType.POSTER) && !m.getUseOwnPrimaryImage()) {
                                 aspect = ImageHelper.ASPECT_RATIO_2_3;
                                 mDefaultCardImage = ContextCompat.getDrawable(mCardView.getContext(), R.drawable.tile_port_tv);
                             } else {
@@ -382,7 +382,11 @@ public class CardPresenter extends Presenter {
             if (aspect == ImageHelper.ASPECT_RATIO_BANNER) {
                 image = JellyfinImageKt.getItemImages(rowItem.getBaseItem()).get(org.jellyfin.sdk.model.api.ImageType.BANNER);
             } else if (mImageType.equals(ImageType.POSTER) && rowItem.getBaseItem().getType() == BaseItemKind.EPISODE) {
-                image = JellyfinImageKt.getSeriesPrimaryImage(rowItem.getBaseItem());
+                if (rowItem.getUseOwnPrimaryImage()) {
+                    image = JellyfinImageKt.getItemImages(rowItem.getBaseItem()).get(org.jellyfin.sdk.model.api.ImageType.PRIMARY);
+                } else {
+                    image = JellyfinImageKt.getSeriesPrimaryImage(rowItem.getBaseItem());
+                }
             } else if (aspect == ImageHelper.ASPECT_RATIO_16_9 && !isUserView && (rowItem.getBaseItem().getType() != BaseItemKind.EPISODE || !rowItem.getBaseItem().getImageTags().containsKey(org.jellyfin.sdk.model.api.ImageType.PRIMARY) || (rowItem.getPreferParentThumb() && rowItem.getBaseItem().getParentThumbImageTag() != null))) {
                 if (rowItem.getPreferParentThumb() || !rowItem.getBaseItem().getImageTags().containsKey(org.jellyfin.sdk.model.api.ImageType.PRIMARY)) {
                     image = JellyfinImageKt.getParentImages(rowItem.getBaseItem()).get(org.jellyfin.sdk.model.api.ImageType.THUMB);

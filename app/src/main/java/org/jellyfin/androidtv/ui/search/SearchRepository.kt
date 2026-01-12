@@ -6,10 +6,12 @@ import org.jellyfin.androidtv.util.apiclient.ioCallContent
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.exception.ApiClientException
 import org.jellyfin.sdk.api.client.extensions.itemsApi
+import org.jellyfin.sdk.api.client.extensions.personsApi
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.MediaType
 import org.jellyfin.sdk.model.api.request.GetItemsRequest
+import org.jellyfin.sdk.model.api.request.GetPersonsRequest
 import timber.log.Timber
 
 interface SearchRepository {
@@ -26,6 +28,21 @@ class SearchRepositoryImpl(
 		searchTerm: String,
 		itemTypes: Collection<BaseItemKind>,
 	): Result<List<BaseItemDto>> = try {
+		if (itemTypes.size == 1 && itemTypes.first() == BaseItemKind.PERSON) {
+			val request = GetPersonsRequest(
+				searchTerm = searchTerm,
+				limit = QueryDefaults.SEARCH_PAGE_SIZE,
+				imageTypeLimit = 1,
+				fields = ItemRepository.itemFields,
+			)
+
+			val result = apiClient.ioCallContent {
+				personsApi.getPersons(request)
+			}
+
+			return Result.success(result.items)
+		}
+
 		var request = GetItemsRequest(
 			searchTerm = searchTerm,
 			limit = QueryDefaults.SEARCH_PAGE_SIZE,

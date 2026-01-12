@@ -727,7 +727,9 @@ public class ItemRowAdapter extends MutableObjectAdapter<Object> {
                 if (serverId != null && item.getServerId() == null) {
                     item = JavaCompat.copyWithServerId(item, serverId);
                 }
-                add(new BaseItemDtoBaseRowItem(item));
+                boolean useEpisodeThumbnail = queryType == QueryType.Search 
+                    && item.getType() == org.jellyfin.sdk.model.api.BaseItemKind.EPISODE;
+                add(new BaseItemDtoBaseRowItem(item, false, false, BaseRowItemSelectAction.ShowDetails, useEpisodeThumbnail));
             }
             itemsLoaded = mItems.size();
         } else {
