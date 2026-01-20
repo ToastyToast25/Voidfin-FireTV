@@ -54,13 +54,12 @@ fun showShuffleDialog(
 								enableMultiServer = userPreferences[UserPreferences.enableMultiServerLibraries] ?: false
 								shuffleContentType = userPreferences[UserPreferences.shuffleContentType] ?: "both"
 								val views = userViewsRepository.views.first()
-								userViews = views.filter { it.collectionType != CollectionType.PLAYLISTS }
-								
+							userViews = views.toList()
 								if (enableMultiServer) {
 									try {
 										aggregatedLibraries = withContext(Dispatchers.IO) {
 											multiServerRepository.getAggregatedLibraries()
-												.filter { it.library.collectionType != CollectionType.PLAYLISTS }
+				
 										}
 									} catch (e: Exception) {
 										Timber.e(e, "Failed to load aggregated libraries")

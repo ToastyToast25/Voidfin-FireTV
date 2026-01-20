@@ -162,8 +162,7 @@ fun MainToolbar(
 	var userViews by remember { mutableStateOf<List<BaseItemDto>>(emptyList()) }
 	LaunchedEffect(Unit) {
 		userViewsRepository.views.collect { views ->
-			// Filter out playlists from toolbar
-			userViews = views.filter { it.collectionType != CollectionType.PLAYLISTS }.toList()
+			userViews = views.toList()
 		}
 	}
 	
@@ -175,7 +174,6 @@ fun MainToolbar(
 			aggregationScope.launch(Dispatchers.IO) {
 				try {
 					aggregatedLibraries = multiServerRepository.getAggregatedLibraries()
-						.filter { it.library.collectionType != CollectionType.PLAYLISTS }
 				} catch (e: Exception) {
 				}
 			}

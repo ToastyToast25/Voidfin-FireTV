@@ -170,6 +170,7 @@
     <string name="lbl_add_to_queue">Add to queue</string>
     <string name="lbl_add_to_watch_list">Add to Watch List</string>
     <string name="lbl_remove_from_watch_list">Remove from Watch List</string>
+    <string name="lbl_remove_from_playlist">Remove from Playlist</string>
     <string name="msg_added_to_watch_list">Added to Watch List</string>
     <string name="msg_removed_from_watch_list">Removed from Watch List</string>
     <string name="msg_failed_to_add_to_watch_list">Failed to add to Watch List</string>
