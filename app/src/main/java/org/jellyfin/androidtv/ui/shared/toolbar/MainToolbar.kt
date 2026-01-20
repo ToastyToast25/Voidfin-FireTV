@@ -347,182 +347,114 @@ private fun MainToolbar(
 				backgroundColor = overlayColor,
 				alpha = overlayOpacity
 			) {
-				IconButton(
+				ExpandableIconButton(
+					icon = ImageVector.vectorResource(R.drawable.ic_house),
+					label = stringResource(R.string.lbl_home),
 					onClick = {
-						if (activeButton != MainToolbarActiveButton.Home) {
-							navigationRepository.reset(Destinations.home)
-						}
+						navigationRepository.reset(Destinations.home)
 					},
-					colors = if (activeButton == MainToolbarActiveButton.Home) activeButtonColors else toolbarButtonColors,
-				) {
-					Icon(
-						imageVector = ImageVector.vectorResource(R.drawable.ic_house),
-						contentDescription = stringResource(R.string.lbl_home),
-					)
-				}
+					colors = toolbarButtonColors,
+				)
 
-				IconButton(
+				ExpandableIconButton(
+					icon = ImageVector.vectorResource(R.drawable.ic_search),
+					label = stringResource(R.string.lbl_search),
 					onClick = {
-						if (activeButton != MainToolbarActiveButton.Search) {
-							navigationRepository.navigate(Destinations.search())
-						}
+						navigationRepository.navigate(Destinations.search())
 					},
-					colors = if (activeButton == MainToolbarActiveButton.Search) activeButtonColors else toolbarButtonColors,
-				) {
-					Icon(
-						imageVector = ImageVector.vectorResource(R.drawable.ic_search),
-						contentDescription = stringResource(R.string.lbl_search),
-					)
-				}
+					colors = toolbarButtonColors,
+				)
 
 				if (showShuffleButton) {
-				IconButton(
-					onLongClick = { showShuffleDialog = true },
-					onClick = {
-						scope.launch {
-							executeShuffle(
-								libraryId = null,
-								serverId = null,
-								genreName = null,
-								contentType = shuffleContentType,
-								libraryCollectionType = null,
-								api = api,
-								apiClientFactory = apiClientFactory,
-								navigationRepository = navigationRepository
-							)
-						}
-					},
-					colors = toolbarButtonColors,
-				) {
-					Icon(
-						imageVector = ImageVector.vectorResource(R.drawable.ic_shuffle),
-						contentDescription = stringResource(R.string.lbl_shuffle_all),
+					ExpandableIconButton(
+						icon = ImageVector.vectorResource(R.drawable.ic_shuffle),
+						label = "Shuffle",
+						onClick = {
+							scope.launch {
+								executeShuffle(
+									libraryId = null,
+									serverId = null,
+									genreName = null,
+									contentType = shuffleContentType,
+									libraryCollectionType = null,
+									api = api,
+									apiClientFactory = apiClientFactory,
+									navigationRepository = navigationRepository
+								)
+							}
+						},
+						colors = toolbarButtonColors,
 					)
 				}
-			}
 
-			// Genres button (conditional)
-			if (showGenresButton) {
-				IconButton(
-					onClick = {
-						navigationRepository.navigate(Destinations.allGenres)
-					},
-					colors = toolbarButtonColors,
-				) {
-					Icon(
-						imageVector = ImageVector.vectorResource(R.drawable.ic_masks),
-						contentDescription = stringResource(R.string.lbl_genres),
+				// Genres button (conditional)
+				if (showGenresButton) {
+					ExpandableIconButton(
+						icon = ImageVector.vectorResource(R.drawable.ic_masks),
+						label = stringResource(R.string.lbl_genres),
+						onClick = {
+							navigationRepository.navigate(Destinations.allGenres)
+						},
+						colors = toolbarButtonColors,
 					)
-				}
 			}
 
-			// Favorites button (conditional)
 			if (showFavoritesButton) {
-				IconButton(
+					ExpandableIconButton(
+						icon = ImageVector.vectorResource(R.drawable.ic_heart),
+						label = stringResource(R.string.lbl_favorites),
+						onClick = {
+							navigationRepository.navigate(Destinations.allFavorites)
+						},
+						colors = toolbarButtonColors,
+					)
+				}
+
+				if (jellyseerrEnabled) {
+					ExpandableIconButton(
+						icon = ImageVector.vectorResource(R.drawable.ic_jellyseerr_jellyfish),
+						label = "Jellyseerr",
+						onClick = {
+							navigationRepository.navigate(Destinations.jellyseerrDiscover)
+						},
+						colors = toolbarButtonColors,
+					)
+				}
+				
+				if (syncPlayEnabled) {
+					ExpandableIconButton(
+						icon = ImageVector.vectorResource(R.drawable.ic_syncplay),
+						label = stringResource(R.string.syncplay),
+						onClick = {
+							syncPlayViewModel.show()
+						},
+						colors = toolbarButtonColors,
+					)
+				}
+
+				ExpandableIconButton(
+					icon = ImageVector.vectorResource(R.drawable.ic_settings),
+					label = "Settings",
 					onClick = {
-						navigationRepository.navigate(Destinations.allFavorites)
+						settingsViewModel.show()
 					},
 					colors = toolbarButtonColors,
-				) {
-					Icon(
-						imageVector = ImageVector.vectorResource(R.drawable.ic_heart),
-						contentDescription = stringResource(R.string.lbl_favorites),
+				)
+				
+				if (showLibrariesInToolbar) {
+					ExpandableLibrariesButton(
+						activeLibraryId = activeLibraryId,
+						userViews = userViews,
+						aggregatedLibraries = aggregatedLibraries,
+						enableMultiServer = enableMultiServer,
+						currentSession = currentSession,
+						colors = toolbarButtonColors,
+						activeColors = activeButtonColors,
+						navigationRepository = navigationRepository,
+						itemLauncher = itemLauncher,
 					)
 				}
 			}
-
-		if (jellyseerrEnabled) {
-			IconButton(
-				onClick = {
-					if (activeButton != MainToolbarActiveButton.Jellyseerr) {
-						navigationRepository.navigate(Destinations.jellyseerrDiscover)
-					} else {
-						val fragmentActivity = activity as? androidx.fragment.app.FragmentActivity
-						fragmentActivity?.supportFragmentManager?.popBackStack()
-					}
-				},
-				colors = if (activeButton == MainToolbarActiveButton.Jellyseerr) activeButtonColors else toolbarButtonColors,
-			) {
-				Icon(
-					imageVector = ImageVector.vectorResource(R.drawable.ic_jellyseerr_jellyfish),
-					contentDescription = "Jellyseerr Discover",
-				)
-			}
-		}
-			
-			// SyncPlay button (conditional) - before Settings
-			if (syncPlayEnabled) {
-				IconButton(
-					onClick = {
-						syncPlayViewModel.show()
-					},
-					colors = toolbarButtonColors,
-				) {
-					Icon(
-						imageVector = ImageVector.vectorResource(R.drawable.ic_syncplay),
-						contentDescription = stringResource(R.string.syncplay),
-					)
-				}
-			}
-
-			// Settings button
-			IconButton(
-				onClick = {
-					settingsViewModel.show()
-				},
-				colors = toolbarButtonColors,
-			) {
-				Icon(
-					imageVector = ImageVector.vectorResource(R.drawable.ic_settings),
-					contentDescription = stringResource(R.string.lbl_settings),
-				)
-			}
-			
-			// Dynamic library buttons (conditional)
-			if (showLibrariesInToolbar) {
-				ProvideTextStyle(JellyfinTheme.typography.default.copy(fontWeight = FontWeight.Bold)) {
-					if (enableMultiServer && aggregatedLibraries.isNotEmpty()) {
-						// Show aggregated libraries from all servers
-						aggregatedLibraries.forEach { aggLib ->
-							val isActiveLibrary = activeButton == MainToolbarActiveButton.Library &&
-								activeLibraryId == aggLib.library.id
-							
-							Button(
-								onClick = {
-									if (!isActiveLibrary) {
-										scope.launch {
-											// Navigate to library - no session switching needed
-										// Pass serverId so the library view can fetch content from the correct server
-										val destination = Destinations.libraryBrowser(aggLib.library, aggLib.server.id)
-											navigationRepository.navigate(destination)
-										}
-									}
-								},
-								colors = if (isActiveLibrary) activeButtonColors else toolbarButtonColors,
-								content = { Text(aggLib.displayName) }
-							)
-						}
-					} else {
-						// Show libraries from current server only
-						userViews.forEach { library ->
-							val isActiveLibrary = activeButton == MainToolbarActiveButton.Library &&
-								activeLibraryId == library.id
-							
-							Button(
-								onClick = {
-									if (!isActiveLibrary) {
-										val destination = itemLauncher.getUserViewDestination(library)
-										navigationRepository.navigate(destination)
-									}
-								},
-								colors = if (isActiveLibrary) activeButtonColors else toolbarButtonColors,
-								content = { Text(library.name ?: "") }
-							)
-						}
-					}
-				}
-			}
-		}
 		},
 		end = {
 			// Clock only - settings icon is already in the navbar
