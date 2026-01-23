@@ -1177,7 +1177,7 @@ public class PlaybackController implements PlaybackControllerNotifiable {
 
     public void rewind() {
         UserSettingPreferences prefs = KoinJavaComponent.<UserSettingPreferences>get(UserSettingPreferences.class);
-        skip(-prefs.get(UserSettingPreferences.Companion.getSkipBackLength()));
+        skip(-prefs.get(UserSettingPreferences.Companion.getSkipForwardLength()));
     }
 
     public void seek(long pos) {
@@ -1219,8 +1219,6 @@ public class PlaybackController implements PlaybackControllerNotifiable {
                     Timber.e(e, "Failed to sync seek with SyncPlay");
                 }
             });
-            wasSeeking = false;
-            return; // Server will send seek command back to all clients
         }
 
         // Stop playback when the requested seek position is at the end of the video
@@ -1292,9 +1290,6 @@ public class PlaybackController implements PlaybackControllerNotifiable {
             // if seek succeeds call play and mirror the logic in play() for unpausing. if fails call pause()
             // stopProgressLoop() being called at the beginning of startProgressLoop keeps this from breaking. otherwise it would start twice
             // if seek() is called from skip()
-            
-            // Track if we were paused before seeking (to restore paused state after SyncPlay seek)
-            boolean wasPausedBeforeSeek = mPlaybackState == PlaybackState.PAUSED || isRespondingToSyncPlayCommand;
             mPlaybackState = PlaybackState.SEEKING;
             if (mVideoManager.seekTo(pos) < 0) {
                 wasSeeking = false;
@@ -1303,16 +1298,16 @@ public class PlaybackController implements PlaybackControllerNotifiable {
                 pause();
             } else {
                 wasSeeking = false;
-                // Don't automatically resume playback after seek if we're responding to SyncPlay
-                // or if we were paused before the seek
-                if (!wasPausedBeforeSeek) {
+                // Don't automatically resume if responding to SyncPlay command (server controls play state)
+                if (isRespondingToSyncPlayCommand) {
+                    mPlaybackState = PlaybackState.PAUSED;
+                    if (mFragment != null) mFragment.setFadingEnabled(false);
+                } else {
+                    // Original upstream behavior: always play after successful seek
                     mVideoManager.play();
                     mPlaybackState = PlaybackState.PLAYING;
                     if (mFragment != null) mFragment.setFadingEnabled(true);
                     startReportLoop();
-                } else {
-                    mPlaybackState = PlaybackState.PAUSED;
-                    if (mFragment != null) mFragment.setFadingEnabled(false);
                 }
             }
         }
@@ -1601,7 +1596,7 @@ public class PlaybackController implements PlaybackControllerNotifiable {
     }
 
     public long getCurrentPosition() {
-        // don't report the real position if seeking
+        if (currentSkipPos > 0) return currentSkipPos;
         return !isPlaying() && mSeekPosition != -1 ? mSeekPosition : mCurrentPosition;
     }
 

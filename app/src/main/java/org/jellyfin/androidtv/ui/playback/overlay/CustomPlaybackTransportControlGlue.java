@@ -388,7 +388,6 @@ public class CustomPlaybackTransportControlGlue extends PlaybackTransportControl
     @Override
     public boolean onKey(View v, int keyCode, KeyEvent event) {
         if (event.getAction() != KeyEvent.ACTION_UP) {
-            // The below actions are only handled on key up
             return super.onKey(v, keyCode, event);
         }
 
