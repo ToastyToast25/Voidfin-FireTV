@@ -63,17 +63,21 @@ class AdvancedRequestOptionsDialog(
 		val defaultRootFolder: String
 	)
 
+	private data class OptionButtonData(val view: TextView, val id: Int?)
+
 	private var selectedProfileId: Int? = null
 	private var selectedRootFolderId: Int? = null
 	private var serverId: Int? = null
+	private var defaultProfileIdValue: Int? = null
+	private var defaultRootFolderIdValue: Int? = null
 	
 	private lateinit var contentContainer: LinearLayout
 	private lateinit var loadingIndicator: ProgressBar
 	private lateinit var confirmButton: TextView
 	private lateinit var cancelButton: TextView
 	
-	private var profileButtons = mutableListOf<View>()
-	private var rootFolderButtons = mutableListOf<View>()
+	private var profileButtons = mutableListOf<OptionButtonData>()
+	private var rootFolderButtons = mutableListOf<OptionButtonData>()
 	
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -237,8 +241,10 @@ class AdvancedRequestOptionsDialog(
 				withContext(Dispatchers.Main) {
 					if (data != null) {
 						serverId = data.serverId
+						defaultProfileIdValue = data.defaultProfileId
 						selectedProfileId = data.defaultProfileId
-						selectedRootFolderId = data.rootFolders.find { it.path == data.defaultRootFolder }?.id
+						defaultRootFolderIdValue = data.rootFolders.find { it.path == data.defaultRootFolder }?.id
+						selectedRootFolderId = defaultRootFolderIdValue
 						buildContent(data)
 						loadingIndicator.visibility = View.GONE
 						contentContainer.visibility = View.VISIBLE
@@ -297,29 +303,29 @@ class AdvancedRequestOptionsDialog(
 		val profileSection = createSectionHeader("Quality Profile")
 		scrollContent.addView(profileSection)
 		
-		// Server Default option for profiles
+		// Server Default option for profiles (id = null represents server default)
 		val defaultProfileButton = createOptionButton(
 			"Server Default",
-			isSelected = selectedProfileId == data.defaultProfileId,
+			isSelected = true,
 			isDefault = true
 		) {
-			selectedProfileId = data.defaultProfileId
+			selectedProfileId = defaultProfileIdValue
 			updateProfileSelection(null) // null means server default
 		}
-		profileButtons.add(defaultProfileButton)
+		profileButtons.add(OptionButtonData(defaultProfileButton, null))
 		scrollContent.addView(defaultProfileButton)
 		
 		// Profile options
 		data.profiles.forEach { profile ->
 			val profileButton = createOptionButton(
 				profile.name,
-				isSelected = selectedProfileId == profile.id && profile.id != data.defaultProfileId,
+				isSelected = false,
 				isDefault = false
 			) {
 				selectedProfileId = profile.id
 				updateProfileSelection(profile.id)
 			}
-			profileButtons.add(profileButton)
+			profileButtons.add(OptionButtonData(profileButton, profile.id))
 			scrollContent.addView(profileButton)
 		}
 		
@@ -333,16 +339,16 @@ class AdvancedRequestOptionsDialog(
 		// Find default root folder
 		val defaultRootFolder = data.rootFolders.find { it.path == data.defaultRootFolder }
 		
-		// Server Default option for root folders
+		// Server Default option for root folders (id = null represents server default)
 		val defaultRootFolderButton = createOptionButton(
 			"Server Default" + (defaultRootFolder?.let { " (${getDisplayPath(it.path)})" } ?: ""),
-			isSelected = selectedRootFolderId == defaultRootFolder?.id || selectedRootFolderId == null,
+			isSelected = true,
 			isDefault = true
 		) {
-			selectedRootFolderId = defaultRootFolder?.id
-			updateRootFolderSelection(null) // null means server default
+			selectedRootFolderId = defaultRootFolderIdValue
+			updateRootFolderSelection(null)
 		}
-		rootFolderButtons.add(defaultRootFolderButton)
+		rootFolderButtons.add(OptionButtonData(defaultRootFolderButton, null))
 		scrollContent.addView(defaultRootFolderButton)
 		
 		// Root folder options
@@ -351,13 +357,13 @@ class AdvancedRequestOptionsDialog(
 			if (!isDefault) { // Don't duplicate the default
 				val folderButton = createOptionButton(
 					getDisplayPath(folder.path),
-					isSelected = selectedRootFolderId == folder.id,
+					isSelected = false,
 					isDefault = false
 				) {
 					selectedRootFolderId = folder.id
 					updateRootFolderSelection(folder.id)
 				}
-				rootFolderButtons.add(folderButton)
+				rootFolderButtons.add(OptionButtonData(folderButton, folder.id))
 				scrollContent.addView(folderButton)
 			}
 		}
@@ -366,7 +372,7 @@ class AdvancedRequestOptionsDialog(
 		contentContainer.addView(scrollView)
 		
 		// Focus on first focusable option
-		profileButtons.firstOrNull()?.requestFocus()
+		profileButtons.firstOrNull()?.view?.requestFocus()
 	}
 	
 	private fun createSectionHeader(text: String): TextView {
@@ -405,7 +411,7 @@ class AdvancedRequestOptionsDialog(
 		onClick: () -> Unit
 	): TextView {
 		return TextView(context).apply {
-			val displayText = if (isDefault && isSelected) "● $text" else if (isSelected) "● $text" else "○ $text"
+			val displayText = if (isSelected) "● $text" else "○ $text"
 			this.text = displayText
 			textSize = 14f
 			setTextColor(if (isSelected) Color.parseColor("#A78BFA") else Color.WHITE) // purple-400 or white
@@ -428,24 +434,28 @@ class AdvancedRequestOptionsDialog(
 		}
 	}
 	
+	private fun updateButtonVisualState(button: TextView, isSelected: Boolean) {
+		val originalText = button.tag as String
+		val displayText = if (isSelected) "● $originalText" else "○ $originalText"
+		button.text = displayText
+		button.setTextColor(
+			if (isSelected) Color.parseColor("#A78BFA") // purple-400
+			else Color.WHITE
+		)
+	}
+	
 	private fun updateProfileSelection(selectedId: Int?) {
-		profileButtons.forEachIndexed { index, view ->
-			val textView = view as TextView
-			val originalText = textView.tag as String
-			val isSelected = if (selectedId == null) index == 0 else {
-				// Check if this is the selected profile
-				originalText == profileButtons.getOrNull(index)?.tag
-			}
-			
-			// For now just update colors based on selection state
-			// This is simplified - a more robust solution would track profile IDs
+		profileButtons.forEach { buttonData ->
+			val isSelected = buttonData.id == selectedId
+			updateButtonVisualState(buttonData.view, isSelected)
 		}
-		// Just rebuild will be cleaner but for performance we can update in place
-		// For simplicity, let user see their click worked via focus state
 	}
 	
 	private fun updateRootFolderSelection(selectedId: Int?) {
-		// Similar to profile selection update
+		rootFolderButtons.forEach { buttonData ->
+			val isSelected = buttonData.id == selectedId
+			updateButtonVisualState(buttonData.view, isSelected)
+		}
 	}
 	
 	private fun getDisplayPath(path: String): String {
