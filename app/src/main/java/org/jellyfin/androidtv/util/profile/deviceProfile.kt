@@ -1,10 +1,12 @@
 package org.jellyfin.androidtv.util.profile
 
 import android.content.Context
+import android.util.Size
 import androidx.media3.common.MimeTypes
 import org.jellyfin.androidtv.constant.Codec
 import org.jellyfin.androidtv.preference.UserPreferences
 import org.jellyfin.androidtv.preference.constant.AudioBehavior
+import org.jellyfin.androidtv.preference.constant.MaxVideoResolution
 import org.jellyfin.sdk.model.ServerVersion
 import org.jellyfin.sdk.model.api.CodecType
 import org.jellyfin.sdk.model.api.DlnaProfileType
@@ -81,6 +83,7 @@ fun createDeviceProfile(
 ) = createDeviceProfile(
 	mediaTest = MediaCodecCapabilitiesTest(context),
 	maxBitrate = userPreferences.getMaxBitrate(),
+	maxVideoResolution = userPreferences[UserPreferences.maxVideoResolution],
 	isAC3Enabled = userPreferences[UserPreferences.ac3Enabled],
 	downMixAudio = userPreferences[UserPreferences.audioBehaviour] == AudioBehavior.DOWNMIX_TO_STEREO,
 	assDirectPlay = userPreferences[UserPreferences.assDirectPlay],
@@ -90,6 +93,7 @@ fun createDeviceProfile(
 fun createDeviceProfile(
 	mediaTest: MediaCodecCapabilitiesTest,
 	maxBitrate: Int,
+	maxVideoResolution: MaxVideoResolution = MaxVideoResolution.AUTO,
 	isAC3Enabled: Boolean,
 	downMixAudio: Boolean,
 	assDirectPlay: Boolean,
@@ -112,10 +116,23 @@ fun createDeviceProfile(
 	val supportsAV1 = mediaTest.supportsAV1()
 	val supportsAV1Main10 = mediaTest.supportsAV1Main10()
 	val supportsVC1 = mediaTest.supportsVc1()
-	val maxResolutionAVC = mediaTest.getMaxResolution(MimeTypes.VIDEO_H264)
-	val maxResolutionHevc = mediaTest.getMaxResolution(MimeTypes.VIDEO_H265)
-	val maxResolutionAV1 = mediaTest.getMaxResolution(MimeTypes.VIDEO_AV1)
-	val maxResolutionVC1 = mediaTest.getMaxResolution(MimeTypes.VIDEO_VC1)
+
+	// Get hardware-detected max resolutions and apply user preference limit
+	val userMaxWidth = maxVideoResolution.maxWidth
+	val userMaxHeight = maxVideoResolution.maxHeight
+
+	val maxResolutionAVC = mediaTest.getMaxResolution(MimeTypes.VIDEO_H264).let { hw ->
+		Size(minOf(hw.width, userMaxWidth), minOf(hw.height, userMaxHeight))
+	}
+	val maxResolutionHevc = mediaTest.getMaxResolution(MimeTypes.VIDEO_H265).let { hw ->
+		Size(minOf(hw.width, userMaxWidth), minOf(hw.height, userMaxHeight))
+	}
+	val maxResolutionAV1 = mediaTest.getMaxResolution(MimeTypes.VIDEO_AV1).let { hw ->
+		Size(minOf(hw.width, userMaxWidth), minOf(hw.height, userMaxHeight))
+	}
+	val maxResolutionVC1 = mediaTest.getMaxResolution(MimeTypes.VIDEO_VC1).let { hw ->
+		Size(minOf(hw.width, userMaxWidth), minOf(hw.height, userMaxHeight))
+	}
 
 	/// HDR capabilities
 

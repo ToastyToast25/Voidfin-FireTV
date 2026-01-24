@@ -6,6 +6,7 @@ import org.jellyfin.androidtv.preference.UserPreferences.Companion.screensaverIn
 import org.jellyfin.androidtv.preference.constant.AppTheme
 import org.jellyfin.androidtv.preference.constant.AudioBehavior
 import org.jellyfin.androidtv.preference.constant.ClockBehavior
+import org.jellyfin.androidtv.preference.constant.MaxVideoResolution
 import org.jellyfin.androidtv.preference.constant.NextUpBehavior
 import org.jellyfin.androidtv.preference.constant.RatingType
 import org.jellyfin.androidtv.preference.constant.RefreshRateSwitchingBehavior
@@ -145,6 +146,12 @@ class UserPreferences(context: Context) : SharedPreferenceStore(
 		 * Maximum bitrate in megabit for playback.
 		 */
 		var maxBitrate = stringPreference("pref_max_bitrate", "100")
+
+		/**
+		 * Maximum video resolution for playback.
+		 * Videos exceeding this resolution will be transcoded down.
+		 */
+		var maxVideoResolution = enumPreference("pref_max_video_resolution", MaxVideoResolution.AUTO)
 
 		/**
 		 * Auto-play next item

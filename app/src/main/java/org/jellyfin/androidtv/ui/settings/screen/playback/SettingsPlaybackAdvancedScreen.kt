@@ -166,6 +166,16 @@ fun SettingsPlaybackAdvancedScreen() {
 		}
 
 		item {
+			var maxVideoResolution by rememberPreference(userPreferences, UserPreferences.maxVideoResolution)
+
+			ListButton(
+				headingContent = { Text(stringResource(R.string.pref_max_resolution_title)) },
+				captionContent = { Text(stringResource(maxVideoResolution.nameRes)) },
+				onClick = { router.push(Routes.PLAYBACK_MAX_RESOLUTION) }
+			)
+		}
+
+		item {
 			var refreshRateSwitchingBehavior by rememberPreference(userPreferences, UserPreferences.refreshRateSwitchingBehavior)
 
 			ListButton(

@@ -8,6 +8,13 @@
     <string name="byletter_letters">ABCDEFGHIJKLMNOPQRSTUVWXYZ</string>
     <string name="pref_playback">Playback</string>
     <string name="pref_max_bitrate_title">Max streaming bitrate</string>
+    <string name="pref_max_resolution_title">Max video resolution</string>
+    <string name="pref_max_resolution_description">Videos exceeding this resolution will be transcoded. Useful for devices that cannot play 4K content.</string>
+    <string name="max_resolution_auto">Auto (device capability)</string>
+    <string name="max_resolution_480p">480p (SD)</string>
+    <string name="max_resolution_720p">720p (HD)</string>
+    <string name="max_resolution_1080p">1080p (Full HD)</string>
+    <string name="max_resolution_2160p">2160p (4K UHD)</string>
     <string name="settings_title">Preferences</string>
     <string name="pref_authentication_cat">Authentication</string>
     <string name="chapters">Chapters</string>
