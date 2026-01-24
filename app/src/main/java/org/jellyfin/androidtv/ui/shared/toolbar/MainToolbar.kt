@@ -271,7 +271,7 @@ private fun MainToolbar(
 			.focusGroup(),
 		start = {
 			Row(
-				horizontalArrangement = Arrangement.spacedBy(4.dp),
+				horizontalArrangement = Arrangement.spacedBy(8.dp),
 				verticalAlignment = Alignment.CenterVertically,
 			) {
 				val userImagePainter = userImage?.let { rememberAsyncImagePainter(it) }

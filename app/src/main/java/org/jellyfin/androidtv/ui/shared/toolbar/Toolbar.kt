@@ -121,7 +121,6 @@ fun ToolbarButtons(
 
 	Row(
 		modifier = modifier
-			.widthIn(max = 400.dp)
 			.background(
 				brush = Brush.verticalGradient(
 					colors = listOf(
@@ -132,7 +131,7 @@ fun ToolbarButtons(
 				shape = pillShape
 			)
 			.clip(pillShape)
-			.padding(horizontal = 4.dp, vertical = 0.dp)
+			.padding(horizontal = 8.dp, vertical = 0.dp)
 			.horizontalScroll(scrollState)
 			.focusRestorer()
 			.focusGroup()

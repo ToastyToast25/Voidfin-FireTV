@@ -58,17 +58,6 @@ fun ExpandableIconButton(
 		label = "ButtonScale"
 	)
 	
-	// Animate padding to make buttons more compact when not focused
-	val horizontalPadding by animateDpAsState(
-		targetValue = if (isFocused) 12.dp else 6.dp,
-		animationSpec = tween(durationMillis = 200),
-		label = "ButtonPadding"
-	)
-	val verticalPadding by animateDpAsState(
-		targetValue = if (isFocused) 8.dp else 6.dp,
-		animationSpec = tween(durationMillis = 200),
-		label = "ButtonVerticalPadding"
-	)
 	
 	// Bring button into view when focused
 	LaunchedEffect(isFocused) {
@@ -87,7 +76,6 @@ fun ExpandableIconButton(
 			.bringIntoViewRequester(bringIntoViewRequester)
 			.scale(scale),
 		interactionSource = interactionSource,
-		contentPadding = PaddingValues(horizontal = horizontalPadding, vertical = verticalPadding),
 	) {
 		Row(
 			horizontalArrangement = Arrangement.Center,
