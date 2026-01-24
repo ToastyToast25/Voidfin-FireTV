@@ -175,6 +175,17 @@
     <string name="msg_removed_from_watch_list">Removed from Watch List</string>
     <string name="msg_failed_to_add_to_watch_list">Failed to add to Watch List</string>
     <string name="msg_failed_to_remove_from_watch_list">Failed to remove from Watch List</string>
+    <string name="lbl_add_to_playlist">Add to Playlist</string>
+    <string name="lbl_create_new_playlist">Create New Playlist</string>
+    <string name="lbl_playlist_name">Playlist name</string>
+    <string name="lbl_select_playlist">Select Playlist</string>
+    <string name="lbl_select_server">Select Server</string>
+    <string name="lbl_public_playlist">Public playlist</string>
+    <string name="msg_added_to_playlist">Added to playlist</string>
+    <string name="msg_failed_to_add_to_playlist">Failed to add to playlist</string>
+    <string name="msg_playlist_created">Playlist created</string>
+    <string name="msg_failed_to_create_playlist">Failed to create playlist</string>
+    <string name="msg_enter_playlist_name">Please enter a playlist name</string>
     <string name="lbl_open_artist">Open artist</string>
     <string name="lbl_open_album">Open album</string>
     <string name="lbl_shuffle_queue">Toggle shuffle</string>
@@ -451,7 +462,7 @@
     <string name="home_section_resume_audio">Continue listening</string>
     <string name="home_section_active_recordings">Active recordings</string>
     <string name="home_section_next_up">Next up</string>
-    <string name="home_section_watchlist">Watch List</string>
+    <string name="home_section_playlists">Playlists</string>
     <string name="home_section_livetv">Live TV</string>
     <string name="home_section_resume_book">Continue reading</string>
     <string name="home_section_none">None</string>

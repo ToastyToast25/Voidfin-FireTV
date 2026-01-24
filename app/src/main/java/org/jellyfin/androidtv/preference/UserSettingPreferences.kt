@@ -246,6 +246,30 @@ class UserSettingPreferences(
 				val jsonString = json.encodeToString(newConfigs)
 				putString(homeSectionsJson.key, jsonString)
 			}
+			
+			// Migration 3: Add PLAYLISTS section if it doesn't exist (replaces old WATCHLIST)
+			migration(toVersion = 3) { prefs ->
+				val existingConfig = prefs.getString(homeSectionsJson.key, "")
+				if (existingConfig.isNullOrBlank()) return@migration
+				
+				try {
+					val configs = json.decodeFromString<List<HomeSectionConfig>>(existingConfig)
+					// Check if PLAYLISTS already exists (either new or migrated from watchlist)
+					val hasPlaylists = configs.any { it.type == HomeSectionType.PLAYLISTS }
+					if (!hasPlaylists) {
+						// Add PLAYLISTS as disabled at the end
+						val maxOrder = configs.maxOfOrNull { it.order } ?: -1
+						val updatedConfigs = configs + HomeSectionConfig(
+							type = HomeSectionType.PLAYLISTS,
+							enabled = false,
+							order = maxOrder + 1
+						)
+						putString(homeSectionsJson.key, json.encodeToString(updatedConfigs))
+					}
+				} catch (e: Exception) {
+					// If parsing fails, leave as-is (defaults will be used)
+				}
+			}
 		}
 	}
 }

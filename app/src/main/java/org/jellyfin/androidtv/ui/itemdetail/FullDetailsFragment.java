@@ -970,6 +970,15 @@ public class FullDetailsFragment extends Fragment implements RecordingIndicatorV
             });
             favButton.setActivated(userData.isFavorite());
             mDetailsOverviewRow.addAction(favButton);
+
+            //Add to Playlist
+            TextUnderButton addToPlaylistButton = TextUnderButton.create(requireContext(), R.drawable.ic_add, buttonSize, 0, getString(R.string.lbl_add_to_playlist), new View.OnClickListener() {
+                @Override
+                public void onClick(final View v) {
+                    org.jellyfin.androidtv.ui.playlist.AddToPlaylistDialogLauncherKt.showAddToPlaylistDialog(requireContext(), mBaseItem.getId());
+                }
+            });
+            mDetailsOverviewRow.addAction(addToPlaylistButton);
         }
 
         if (mBaseItem.getType() == BaseItemKind.EPISODE && mBaseItem.getSeriesId() != null) {

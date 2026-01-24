@@ -22,7 +22,7 @@ enum class HomeSectionType(
 	RESUME_BOOK("resumebook", R.string.home_section_resume_book),
 	ACTIVE_RECORDINGS("activerecordings", R.string.home_section_active_recordings),
 	NEXT_UP("nextup", R.string.home_section_next_up),
-	WATCHLIST("watchlist", R.string.home_section_watchlist),
+	PLAYLISTS("playlists", R.string.home_section_playlists),
 	LIVE_TV("livetv", R.string.home_section_livetv),
 	NONE("none", R.string.home_section_none),
 }

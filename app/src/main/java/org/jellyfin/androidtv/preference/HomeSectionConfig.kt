@@ -22,6 +22,10 @@ object HomeSectionTypeSerializer : KSerializer<HomeSectionType> {
 
 	override fun deserialize(decoder: Decoder): HomeSectionType {
 		val name = decoder.decodeString()
+		// Handle legacy "watchlist" -> PLAYLISTS migration
+		if (name == "watchlist") {
+			return HomeSectionType.PLAYLISTS
+		}
 		return HomeSectionType.entries.find { it.serializedName == name } 
 			?: HomeSectionType.NONE
 	}
@@ -53,7 +57,7 @@ data class HomeSectionConfig(
 			HomeSectionConfig(HomeSectionType.RESUME_AUDIO, enabled = false, order = 7),
 			HomeSectionConfig(HomeSectionType.RESUME_BOOK, enabled = false, order = 8),
 			HomeSectionConfig(HomeSectionType.ACTIVE_RECORDINGS, enabled = false, order = 9),
-			HomeSectionConfig(HomeSectionType.WATCHLIST, enabled = false, order = 10),
+			HomeSectionConfig(HomeSectionType.PLAYLISTS, enabled = false, order = 10),
 		)
 	}
 }

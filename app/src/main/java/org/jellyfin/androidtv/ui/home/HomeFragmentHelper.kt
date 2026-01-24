@@ -7,7 +7,6 @@ import org.jellyfin.androidtv.auth.repository.UserRepository
 import org.jellyfin.androidtv.constant.ChangeTriggerType
 import org.jellyfin.androidtv.constant.HomeSectionType
 import org.jellyfin.androidtv.data.repository.ItemRepository
-import org.jellyfin.androidtv.data.repository.LocalWatchlistRepository
 import org.jellyfin.androidtv.preference.UserPreferences
 import org.jellyfin.androidtv.ui.browsing.BrowseRowDef
 import org.jellyfin.sdk.api.client.ApiClient
@@ -31,7 +30,6 @@ class HomeFragmentHelper(
 	private val userPreferences by inject<UserPreferences>()
 	private val api by inject<ApiClient>()
 	private val serverRepository by inject<ServerRepository>()
-	private val watchlistRepository by inject<LocalWatchlistRepository>()
 
 	fun loadRecentlyAdded(userViews: Collection<BaseItemDto>): HomeFragmentRow {
 		// Check if multi-server is enabled
@@ -188,9 +186,8 @@ class HomeFragmentHelper(
 		return HomeFragmentBrowseRowDefRow(BrowseRowDef(context.getString(R.string.lbl_on_now), query, HOME_ROW_CHUNK_SIZE))
 	}
 
-	fun loadWatchlist(): HomeFragmentRow? {
-		val serverId = serverRepository.currentServer.value?.id ?: return null
-		return HomeFragmentWatchlistRow(context, api, serverId, watchlistRepository)
+	fun loadPlaylists(): HomeFragmentRow {
+		return HomeFragmentPlaylistsRow(api)
 	}
 
 	companion object {
