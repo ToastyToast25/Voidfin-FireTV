@@ -181,7 +181,10 @@ fun PlaybackController.applyMediaSegments(
 
 @OptIn(UnstableApi::class)
 private fun PlaybackController.addSkipAction(mediaSegment: MediaSegmentDto) {
-	mVideoManager.mExoPlayer
+	val videoManager = mVideoManager ?: return
+	val exoPlayer = videoManager.mExoPlayer ?: return
+	
+	exoPlayer
 		.createMessage { _, _ ->
 			// We can't seek directly on the ExoPlayer instance as not all media is seekable
 			// the seek function in the PlaybackController checks this and optionally starts a transcode
@@ -198,7 +201,10 @@ private fun PlaybackController.addSkipAction(mediaSegment: MediaSegmentDto) {
 
 @OptIn(UnstableApi::class)
 private fun PlaybackController.addAskToSkipAction(mediaSegment: MediaSegmentDto) {
-	mVideoManager.mExoPlayer
+	val videoManager = mVideoManager ?: return
+	val exoPlayer = videoManager.mExoPlayer ?: return
+	
+	exoPlayer
 		.createMessage { _, _ ->
 			fragment?.askToSkip(mediaSegment.end, mediaSegment.type)
 		}
