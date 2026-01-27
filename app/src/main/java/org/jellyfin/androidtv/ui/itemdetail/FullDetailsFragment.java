@@ -55,6 +55,7 @@ import org.jellyfin.androidtv.ui.RecordingIndicatorView;
 import org.jellyfin.androidtv.constant.ImageType;
 import org.jellyfin.androidtv.ui.TextUnderButton;
 import org.jellyfin.androidtv.ui.browsing.BrowsingUtils;
+import org.jellyfin.androidtv.ui.itemhandling.BaseItemDtoBaseRowItem;
 import org.jellyfin.androidtv.ui.itemhandling.BaseRowItem;
 import org.jellyfin.androidtv.ui.itemhandling.ItemLauncher;
 import org.jellyfin.androidtv.ui.itemhandling.ItemRowAdapter;
@@ -77,6 +78,7 @@ import org.jellyfin.androidtv.util.PlaybackHelper;
 import org.jellyfin.androidtv.util.TimeUtils;
 import org.jellyfin.androidtv.util.Utils;
 import org.jellyfin.androidtv.util.apiclient.BaseItemUtils;
+import org.jellyfin.androidtv.util.apiclient.EmptyResponse;
 import org.jellyfin.androidtv.util.apiclient.Response;
 import org.jellyfin.androidtv.util.sdk.BaseItemExtensionsKt;
 import org.jellyfin.androidtv.util.sdk.TrailerUtils;
@@ -99,6 +101,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 
 import kotlin.Lazy;
@@ -136,6 +139,9 @@ public class FullDetailsFragment extends Fragment implements RecordingIndicatorV
 
     private Handler mLoopHandler = new Handler();
     private Runnable mClockLoop;
+    private Runnable mPersonBackdropLoop;
+    private List<BaseItemDto> mPersonFilmographyItems = new ArrayList<>();
+    private static final int PERSON_BACKDROP_ROTATION_INTERVAL = 8000; // 8 seconds
 
     BaseItemDto mBaseItem;
 
@@ -330,6 +336,33 @@ public class FullDetailsFragment extends Fragment implements RecordingIndicatorV
     private void stopClock() {
         if (mLoopHandler != null && mClockLoop != null) {
             mLoopHandler.removeCallbacks(mClockLoop);
+        }
+        stopPersonBackdropRotation();
+    }
+
+    private void startPersonBackdropRotation() {
+        if (mPersonFilmographyItems.isEmpty()) return;
+
+        mPersonBackdropLoop = new Runnable() {
+            @Override
+            public void run() {
+                if (!getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) return;
+                if (mPersonFilmographyItems.isEmpty()) return;
+
+                BaseItemDto randomItem = mPersonFilmographyItems.get(new Random().nextInt(mPersonFilmographyItems.size()));
+                backgroundService.getValue().setBackground(randomItem);
+                mLoopHandler.postDelayed(this, PERSON_BACKDROP_ROTATION_INTERVAL);
+            }
+        };
+
+        BaseItemDto randomItem = mPersonFilmographyItems.get(new Random().nextInt(mPersonFilmographyItems.size()));
+        backgroundService.getValue().setBackground(randomItem);
+        mLoopHandler.postDelayed(mPersonBackdropLoop, PERSON_BACKDROP_ROTATION_INTERVAL);
+    }
+
+    private void stopPersonBackdropRotation() {
+        if (mLoopHandler != null && mPersonBackdropLoop != null) {
+            mLoopHandler.removeCallbacks(mPersonBackdropLoop);
         }
     }
 
@@ -573,11 +606,44 @@ public class FullDetailsFragment extends Fragment implements RecordingIndicatorV
                 addInfoRows(adapter);
                 break;
             case PERSON:
+                mPersonFilmographyItems.clear();
+                final int[] loadedAdapters = {0};
+
                 ItemRowAdapter personMoviesAdapter = new ItemRowAdapter(requireContext(), BrowsingUtils.createPersonItemsRequest(mBaseItem.getId(), BaseItemKind.MOVIE), 100, false, new CardPresenter(), adapter);
                 addItemRow(adapter, personMoviesAdapter, 0, getString(R.string.lbl_movies));
 
+                personMoviesAdapter.setRetrieveFinishedListener(new EmptyResponse(getLifecycle()) {
+                    @Override
+                    public void onResponse() {
+                        for (Object item : personMoviesAdapter) {
+                            if (item instanceof BaseItemDtoBaseRowItem) {
+                                mPersonFilmographyItems.add(((BaseItemDtoBaseRowItem) item).getBaseItem());
+                            }
+                        }
+                        loadedAdapters[0]++;
+                        if (loadedAdapters[0] >= 2 && !mPersonFilmographyItems.isEmpty()) {
+                            startPersonBackdropRotation();
+                        }
+                    }
+                });
+
                 ItemRowAdapter personSeriesAdapter = new ItemRowAdapter(requireContext(), BrowsingUtils.createPersonItemsRequest(mBaseItem.getId(), BaseItemKind.SERIES), 100, false, new CardPresenter(), adapter);
                 addItemRow(adapter, personSeriesAdapter, 1, getString(R.string.lbl_tv_series));
+
+                personSeriesAdapter.setRetrieveFinishedListener(new EmptyResponse(getLifecycle()) {
+                    @Override
+                    public void onResponse() {
+                        for (Object item : personSeriesAdapter) {
+                            if (item instanceof BaseItemDtoBaseRowItem) {
+                                mPersonFilmographyItems.add(((BaseItemDtoBaseRowItem) item).getBaseItem());
+                            }
+                        }
+                        loadedAdapters[0]++;
+                        if (loadedAdapters[0] >= 2 && !mPersonFilmographyItems.isEmpty()) {
+                            startPersonBackdropRotation();
+                        }
+                    }
+                });
 
                 ItemRowAdapter personEpisodesAdapter = new ItemRowAdapter(requireContext(), BrowsingUtils.createPersonItemsRequest(mBaseItem.getId(), BaseItemKind.EPISODE), 100, false, new CardPresenter(), adapter);
                 addItemRow(adapter, personEpisodesAdapter, 2, getString(R.string.lbl_episodes));
