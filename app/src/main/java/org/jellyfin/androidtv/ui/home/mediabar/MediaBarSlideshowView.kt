@@ -42,6 +42,7 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -55,7 +56,9 @@ import coil3.toBitmap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jellyfin.androidtv.R
+import org.jellyfin.androidtv.preference.UserPreferences
 import org.jellyfin.androidtv.preference.UserSettingPreferences
+import org.jellyfin.androidtv.preference.constant.NavbarPosition
 import org.jellyfin.androidtv.ui.base.Text
 import org.jellyfin.androidtv.ui.shared.LogoView
 import org.jellyfin.androidtv.util.TimeUtils
@@ -77,6 +80,10 @@ fun MediaBarSlideshowView(
 	val playbackState by viewModel.playbackState.collectAsState()
 	val isFocused by viewModel.isFocused.collectAsState()
 	val userSettingPreferences = koinInject<UserSettingPreferences>()
+	val userPreferences = koinInject<UserPreferences>()
+
+	// Check if sidebar is enabled
+	val isSidebarEnabled = userPreferences[UserPreferences.navbarPosition] == NavbarPosition.LEFT
 
 	// Get overlay preferences
 	val overlayOpacity = userSettingPreferences[UserSettingPreferences.mediaBarOverlayOpacity] / 100f
@@ -108,6 +115,9 @@ fun MediaBarSlideshowView(
 		}
 	}
 
+	// Get root view to find sidebar
+	val rootView = LocalView.current.rootView
+
 	Box(
 		modifier = modifier
 			.fillMaxWidth()
@@ -123,8 +133,19 @@ fun MediaBarSlideshowView(
 
 				when (keyEvent.key) {
 					Key.DirectionLeft, Key.MediaPrevious -> {
-						viewModel.previousSlide()
-						true
+						if (isSidebarEnabled) {
+							// Find sidebar and request focus
+							val sidebar = rootView.findViewById<android.view.View?>(R.id.sidebar)
+							if (sidebar != null && sidebar.visibility == android.view.View.VISIBLE) {
+								sidebar.requestFocus()
+								true
+							} else {
+								false
+							}
+						} else {
+							viewModel.previousSlide()
+							true
+						}
 					}
 					Key.DirectionRight, Key.MediaNext -> {
 						viewModel.nextSlide()
@@ -201,21 +222,23 @@ fun MediaBarSlideshowView(
 
 				// Navigation arrows (without padding, close to edges, raised by 40%)
 				if (currentState.items.size > 1) {
-					// Left arrow - closer to left edge
-					Box(
-						modifier = Modifier
-							.align(Alignment.TopStart)
-							.padding(start = 16.dp, top = 0.dp)
-							.size(48.dp)
-							.background(overlayColor.copy(alpha = overlayOpacity), CircleShape),
-						contentAlignment = Alignment.Center
-					) {
-						Icon(
-							painter = painterResource(id = R.drawable.chevron_left),
-							contentDescription = "Previous",
-							tint = Color.White.copy(alpha = 0.9f),
-							modifier = Modifier.size(24.dp)
-						)
+					// Left arrow is hidden when sidebar is enabled
+					if (!isSidebarEnabled) {
+						Box(
+							modifier = Modifier
+								.align(Alignment.TopStart)
+								.padding(start = 16.dp, top = 0.dp)
+								.size(48.dp)
+								.background(overlayColor.copy(alpha = overlayOpacity), CircleShape),
+							contentAlignment = Alignment.Center
+						) {
+							Icon(
+								painter = painterResource(id = R.drawable.chevron_left),
+								contentDescription = "Previous",
+								tint = Color.White.copy(alpha = 0.9f),
+								modifier = Modifier.size(24.dp)
+							)
+						}
 					}
 
 					// Right arrow - closer to right edge

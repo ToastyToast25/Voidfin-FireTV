@@ -44,8 +44,12 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -259,6 +263,11 @@ private fun CollapsibleSidebarContent(
 		}
 	}
 
+	// Get root view to check for rowsFragment (HomeFragment)
+	val rootView = LocalView.current.rootView
+	val isHomeFragment = rootView.findViewById<android.view.View?>(R.id.rowsFragment) != null
+	val isSearchFragment = activeButton == MainToolbarActiveButton.Search
+
 	Box(
 		modifier = Modifier
 			.fillMaxHeight()
@@ -266,6 +275,65 @@ private fun CollapsibleSidebarContent(
 			.then(
 				if (isExpanded) {
 					Modifier.background(expandedBackground)
+				} else {
+					Modifier
+				}
+			)
+			.then(
+				// Add key handler for HomeFragment (media bar case) and SearchFragment
+				if (isHomeFragment || isSearchFragment) {
+					Modifier.onKeyEvent { keyEvent ->
+						if (keyEvent.nativeKeyEvent.action == android.view.KeyEvent.ACTION_DOWN &&
+							keyEvent.key == Key.DirectionRight) {
+							when {
+								isHomeFragment -> {
+									// Navigate back to rowsFragment
+									val rowsFragment = rootView.findViewById<android.view.View?>(R.id.rowsFragment)
+									if (rowsFragment != null) {
+										rowsFragment.requestFocus()
+										true
+									} else {
+										false
+									}
+								}
+								isSearchFragment -> {
+									// For SearchFragment, find any VerticalGridView (search results) or focusable view
+									val contentView = rootView.findViewById<android.view.ViewGroup?>(android.R.id.content)
+									var focusTarget: android.view.View? = null
+									
+									// Try to find a VerticalGridView (search results)
+									contentView?.let { parent ->
+										fun findVerticalGridView(view: android.view.View): android.view.View? {
+											if (view is androidx.leanback.widget.VerticalGridView) return view
+											if (view is android.view.ViewGroup) {
+												for (i in 0 until view.childCount) {
+													val result = findVerticalGridView(view.getChildAt(i))
+													if (result != null) return result
+												}
+											}
+											return null
+										}
+										focusTarget = findVerticalGridView(parent)
+									}
+									
+									// If no VerticalGridView found, try any focusable view to the right
+									if (focusTarget == null) {
+										focusTarget = contentView?.focusSearch(android.view.View.FOCUS_RIGHT)
+									}
+									
+									if (focusTarget != null) {
+										focusTarget.requestFocus()
+										true
+									} else {
+										false
+									}
+								}
+								else -> false
+							}
+						} else {
+							false
+						}
+					}
 				} else {
 					Modifier
 				}
