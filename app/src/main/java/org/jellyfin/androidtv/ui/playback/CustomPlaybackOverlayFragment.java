@@ -495,10 +495,10 @@ public class CustomPlaybackOverlayFragment extends Fragment implements LiveTvGui
                         // Capture values before clearing
                         kotlin.jvm.functions.Function0<kotlin.Unit> onPlayNext = binding.skipOverlay.getOnPlayNext();
                         Long targetPosition = binding.skipOverlay.getTargetPositionMs();
-                        
+
                         // Clear overlay immediately to hide button
                         clearSkipOverlay();
-                        
+
                         if (onPlayNext != null) {
                             // Invoke the callback (which will call playbackController.next())
                             onPlayNext.invoke();
@@ -506,7 +506,7 @@ public class CustomPlaybackOverlayFragment extends Fragment implements LiveTvGui
                             // Regular skip - seek to target position
                             playbackControllerContainer.getValue().getPlaybackController().seek(targetPosition, true);
                         }
-                        
+
                         leanbackOverlayFragment.setShouldShowOverlay(false);
                         return true;
                     }
@@ -1366,6 +1366,20 @@ public class CustomPlaybackOverlayFragment extends Fragment implements LiveTvGui
         if (navigating) return;
         navigating = true;
 
+        // Reset display mode before performing navigation so HDMI mode switch
+        // occurs during the transition, not after. This prevents a black screen
+        // from appearing post-navigation, possibly after the UI has already rendered,
+        // which can look glitchy
+        WindowManager.LayoutParams params = getActivity().getWindow().getAttributes();
+        int currentModeId = params.preferredDisplayModeId;
+        params.preferredDisplayModeId = 0;
+        getActivity().getWindow().setAttributes(params);
+
+        // actually perform the navigation
+        performNavigation();
+}
+
+    private void performNavigation() {
         if (navigationRepository.getValue().getCanGoBack()) {
             navigationRepository.getValue().goBack();
         } else {
@@ -1395,10 +1409,8 @@ public class CustomPlaybackOverlayFragment extends Fragment implements LiveTvGui
         WindowCompat.setDecorFitsSystemWindows(requireActivity().getWindow(), true);
         WindowCompat.getInsetsController(requireActivity().getWindow(), requireActivity().getWindow().getDecorView()).show(WindowInsetsCompat.Type.systemBars());
 
-        // Reset display mode
-        WindowManager.LayoutParams params = getActivity().getWindow().getAttributes();
-        params.preferredDisplayModeId = 0;
-        getActivity().getWindow().setAttributes(params);
+        // Display mode reset now happens in closePlayer() before navigation
+        // to ensure HDMI mode switch occurs during the transition, not after
     }
 
     public PlaybackController getPlaybackController() {
