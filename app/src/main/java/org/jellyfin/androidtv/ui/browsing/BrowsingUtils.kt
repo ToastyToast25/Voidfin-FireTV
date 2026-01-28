@@ -12,6 +12,7 @@ import org.jellyfin.sdk.api.client.extensions.itemsApi
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.CollectionType
+import org.jellyfin.sdk.model.api.ItemFields
 import org.jellyfin.sdk.model.api.ItemFilter
 import org.jellyfin.sdk.model.api.ItemSortBy
 import org.jellyfin.sdk.model.api.SortOrder
@@ -264,7 +265,7 @@ object BrowsingUtils {
 
 	@JvmStatic
 	fun createPlaylistsRequest() = GetItemsRequest(
-		fields = ItemRepository.itemFields,
+		fields = ItemRepository.itemFields + ItemFields.CAN_DELETE,
 		includeItemTypes = setOf(BaseItemKind.PLAYLIST),
 		imageTypeLimit = 1,
 		recursive = true,

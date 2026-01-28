@@ -15,6 +15,7 @@ import org.jellyfin.androidtv.ui.presentation.MutableObjectAdapter
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.extensions.itemsApi
 import org.jellyfin.sdk.model.api.BaseItemKind
+import org.jellyfin.sdk.model.api.ItemFields
 import org.jellyfin.sdk.model.api.ItemSortBy
 import org.jellyfin.sdk.model.api.SortOrder
 import org.jellyfin.androidtv.data.repository.ItemRepository
@@ -58,10 +59,10 @@ class HomeFragmentPlaylistsRow(
 					recursive = true,
 					sortBy = setOf(ItemSortBy.DATE_CREATED),
 					sortOrder = setOf(SortOrder.DESCENDING),
-					fields = ItemRepository.itemFields,
+					fields = ItemRepository.itemFields + ItemFields.CAN_DELETE,
 					imageTypeLimit = 1,
 					limit = 50,
-				).content.items
+				).content.items.filter { it.canDelete == true }
 			}
 			
 			items.forEach { item ->

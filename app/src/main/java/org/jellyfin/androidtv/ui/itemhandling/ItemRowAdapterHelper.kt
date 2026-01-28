@@ -681,7 +681,7 @@ fun ItemRowAdapter.retrieveItems(
 				).content
 			}
 
-			val filteredItems = if (query.excludeItemTypes?.contains(BaseItemKind.BOX_SET) == true) {
+			var filteredItems = if (query.excludeItemTypes?.contains(BaseItemKind.BOX_SET) == true) {
 				response.items.filter { it.type != BaseItemKind.BOX_SET }.also { filtered ->
 					if (filtered.size != response.items.size) {
 						Timber.d("ItemRowAdapter: Filtered out ${response.items.size - filtered.size} BoxSet items (${response.items.size} -> ${filtered.size})")
@@ -689,6 +689,15 @@ fun ItemRowAdapter.retrieveItems(
 				}
 			} else {
 				response.items
+			}
+
+			// Filter playlists to only show user-created ones (canDelete == true)
+			if (query.includeItemTypes?.contains(BaseItemKind.PLAYLIST) == true) {
+				filteredItems = filteredItems.filter { it.canDelete == true }.also { filtered ->
+					if (filtered.size != response.items.size) {
+						Timber.d("ItemRowAdapter: Filtered playlists to user-created only (${response.items.size} -> ${filtered.size})")
+					}
+				}
 			}
 
 			totalItems = response.totalRecordCount
