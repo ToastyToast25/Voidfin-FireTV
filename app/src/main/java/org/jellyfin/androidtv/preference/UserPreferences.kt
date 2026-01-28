@@ -141,6 +141,12 @@ class UserPreferences(context: Context) : SharedPreferenceStore(
 		 */
 		var enableMultiServerLibraries = booleanPreference("enable_multi_server_libraries", false)
 
+		/**
+		 * Enable folder view in navigation
+		 * When enabled, adds a "Folders" entry to browse media by folder structure
+		 */
+		var enableFolderView = booleanPreference("enable_folder_view", false)
+
 		/* Playback - General*/
 		/**
 		 * Maximum bitrate in megabit for playback.

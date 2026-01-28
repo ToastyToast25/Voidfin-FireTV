@@ -122,6 +122,16 @@ fun SettingsMoonfinScreen() {
 		}
 
 		item {
+			var enableFolderView by rememberPreference(userPreferences, UserPreferences.enableFolderView)
+			ListButton(
+				headingContent = { Text(stringResource(R.string.pref_enable_folder_view)) },
+				captionContent = { Text(stringResource(R.string.pref_enable_folder_view_description)) },
+				trailingContent = { Checkbox(checked = enableFolderView) },
+				onClick = { enableFolderView = !enableFolderView }
+			)
+		}
+
+		item {
 			var confirmExit by rememberPreference(userPreferences, UserPreferences.confirmExit)
 			ListButton(
 				headingContent = { Text(stringResource(R.string.pref_confirm_exit)) },

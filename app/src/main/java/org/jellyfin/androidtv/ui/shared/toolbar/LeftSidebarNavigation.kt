@@ -120,6 +120,7 @@ fun LeftSidebarNavigation(
 	var enableMultiServer by remember { mutableStateOf(false) }
 	var syncPlayEnabled by remember { mutableStateOf(false) }
 	var jellyseerrEnabled by remember { mutableStateOf(false) }
+	var enableFolderView by remember { mutableStateOf(false) }
 	
 	LaunchedEffect(settingsClosedCounter) {
 		showShuffleButton = userPreferences[UserPreferences.showShuffleButton]
@@ -129,6 +130,7 @@ fun LeftSidebarNavigation(
 		enableMultiServer = userPreferences[UserPreferences.enableMultiServerLibraries]
 		shuffleContentType = userPreferences[UserPreferences.shuffleContentType]
 		syncPlayEnabled = userPreferences[UserPreferences.syncPlayEnabled]
+		enableFolderView = userPreferences[UserPreferences.enableFolderView]
 	}
 	
 	// Check Jellyseerr settings
@@ -187,7 +189,8 @@ fun LeftSidebarNavigation(
 		showFavoritesButton = showFavoritesButton,
 		showLibrariesInToolbar = showLibrariesInToolbar,
 		jellyseerrEnabled = jellyseerrEnabled,
-		syncPlayEnabled = syncPlayEnabled
+		syncPlayEnabled = syncPlayEnabled,
+		enableFolderView = enableFolderView
 	)
 }
 
@@ -211,7 +214,8 @@ private fun CollapsibleSidebarContent(
 	showFavoritesButton: Boolean = true,
 	showLibrariesInToolbar: Boolean = true,
 	jellyseerrEnabled: Boolean = false,
-	syncPlayEnabled: Boolean = false
+	syncPlayEnabled: Boolean = false,
+	enableFolderView: Boolean = false
 ) {
 	val context = LocalContext.current
 	val scope = rememberCoroutineScope()
@@ -454,6 +458,19 @@ private fun CollapsibleSidebarContent(
 						isExpanded = isExpanded,
 						onClick = {
 							navigationRepository.navigate(Destinations.jellyseerrDiscover)
+						}
+					)
+					Spacer(modifier = Modifier.height(2.dp))
+				}
+
+				if (enableFolderView) {
+					SidebarIconItem(
+						icon = ImageVector.vectorResource(R.drawable.ic_folder),
+						label = context.getString(R.string.lbl_folders),
+						showLabel = isExpanded,
+						isExpanded = isExpanded,
+						onClick = {
+							navigationRepository.navigate(Destinations.folderView)
 						}
 					)
 					Spacer(modifier = Modifier.height(2.dp))

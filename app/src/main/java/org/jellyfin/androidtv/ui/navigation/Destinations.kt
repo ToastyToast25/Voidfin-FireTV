@@ -10,6 +10,7 @@ import org.jellyfin.androidtv.ui.browsing.BrowseViewFragment
 import org.jellyfin.androidtv.ui.browsing.ByGenreFragment
 import org.jellyfin.androidtv.ui.browsing.ByLetterFragment
 import org.jellyfin.androidtv.ui.browsing.CollectionFragment
+import org.jellyfin.androidtv.ui.browsing.FolderViewFragment
 import org.jellyfin.androidtv.ui.browsing.GenericFolderFragment
 import org.jellyfin.androidtv.ui.browsing.SuggestedMoviesFragment
 import org.jellyfin.androidtv.ui.browsing.genre.GenreBrowseFragment
@@ -83,6 +84,9 @@ object Destinations {
 
 	// All favorites across all libraries
 	val allFavorites = fragmentDestination<AllFavoritesFragment>()
+
+	// Folder view - browse by folder structure
+	val folderView = fragmentDestination<FolderViewFragment>()
 
 	// Genres grid for a specific library
 	fun libraryGenresGrid(item: BaseItemDto, includeType: String) =

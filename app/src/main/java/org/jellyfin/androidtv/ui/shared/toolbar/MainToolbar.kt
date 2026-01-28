@@ -150,6 +150,7 @@ fun MainToolbar(
 	var syncPlayEnabled by remember { mutableStateOf(false) }
 	var enableMultiServer by remember { mutableStateOf(false) }
 	var shuffleContentType by remember { mutableStateOf("both") }
+	var enableFolderView by remember { mutableStateOf(false) }
 	LaunchedEffect(settingsClosedCounter) {
 		showShuffleButton = userPreferences[UserPreferences.showShuffleButton] ?: true
 		showGenresButton = userPreferences[UserPreferences.showGenresButton] ?: true
@@ -158,6 +159,7 @@ fun MainToolbar(
 		syncPlayEnabled = userPreferences[UserPreferences.syncPlayEnabled] ?: false
 		enableMultiServer = userPreferences[UserPreferences.enableMultiServerLibraries] ?: false
 		shuffleContentType = userPreferences[UserPreferences.shuffleContentType] ?: "both"
+		enableFolderView = userPreferences[UserPreferences.enableFolderView]
 	}
 
 	// Load user views/libraries
@@ -200,6 +202,7 @@ fun MainToolbar(
 		showLibrariesInToolbar = showLibrariesInToolbar,
 		syncPlayEnabled = syncPlayEnabled,
 		shuffleContentType = shuffleContentType,
+		enableFolderView = enableFolderView,
 	)
 }
 
@@ -219,6 +222,7 @@ private fun MainToolbar(
 	showLibrariesInToolbar: Boolean = true,
 	syncPlayEnabled: Boolean = false,
 	shuffleContentType: String = "both",
+	enableFolderView: Boolean = false,
 ) {
 	val focusRequester = remember { FocusRequester() }
 	val userSettingPreferences = koinInject<UserSettingPreferences>()
@@ -417,6 +421,17 @@ private fun MainToolbar(
 						label = "Jellyseerr",
 						onClick = {
 							navigationRepository.navigate(Destinations.jellyseerrDiscover)
+						},
+						colors = toolbarButtonColors,
+					)
+				}
+
+				if (enableFolderView) {
+					ExpandableIconButton(
+						icon = ImageVector.vectorResource(R.drawable.ic_folder),
+						label = stringResource(R.string.lbl_folders),
+						onClick = {
+							navigationRepository.navigate(Destinations.folderView)
 						},
 						colors = toolbarButtonColors,
 					)

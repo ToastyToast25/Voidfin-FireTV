@@ -910,6 +910,10 @@
     <string name="pref_confirm_exit_description">Show confirmation dialog when exiting the app</string>
     <string name="pref_multi_server_libraries">Enable Cross Server Playback</string>
     <string name="pref_multi_server_libraries_description">Display libraries and content from all logged-in servers in the home screen and toolbar</string>
+    <string name="pref_enable_folder_view">Show Folder View</string>
+    <string name="pref_enable_folder_view_description">Add a Folders entry to browse media by folder structure</string>
+    <string name="lbl_folders">Folders</string>
+    <string name="msg_no_folders">No folders found</string>
     <string name="pref_show_shuffle_button">Show Shuffle Button</string>
     <string name="pref_show_shuffle_button_description">Display shuffle button in main toolbar</string>
     <string name="pref_show_genres_button">Show Genres Button</string>
