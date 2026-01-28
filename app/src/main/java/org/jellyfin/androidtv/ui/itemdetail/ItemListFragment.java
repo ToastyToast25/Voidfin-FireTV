@@ -129,6 +129,11 @@ public class ItemListFragment extends Fragment implements View.OnKeyListener {
                     // too close to bottom - scroll down
                     mScrollView.smoothScrollBy(0, y - mBottomScrollThreshold);
                 }
+                
+                BaseItemDto selectedItem = row.getItem();
+                if (selectedItem != null) {
+                    backgroundService.getValue().setBackground(selectedItem, BlurContext.DETAILS);
+                }
             }
         });
 
@@ -545,7 +550,7 @@ public class ItemListFragment extends Fragment implements View.OnKeyListener {
         BaseItemDto item = mBaseItem;
 
         if (item.getBackdropImageTags() == null || item.getBackdropImageTags().isEmpty() && mItems != null && !mItems.isEmpty())
-            item = mItems.get(new Random().nextInt(mItems.size()));
+            item = mItems.get(0);
 
         backgroundService.getValue().setBackground(item, BlurContext.DETAILS);
     }
