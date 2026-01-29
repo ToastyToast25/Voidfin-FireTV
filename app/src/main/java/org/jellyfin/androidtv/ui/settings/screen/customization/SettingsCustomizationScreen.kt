@@ -33,6 +33,24 @@ fun SettingsCustomizationScreen() {
 			)
 		}
 
+		item { ListSection(headingContent = { Text(stringResource(R.string.pref_browsing)) }) }
+
+		item {
+			ListButton(
+				leadingContent = { Icon(painterResource(R.drawable.ic_grid), contentDescription = null) },
+				headingContent = { Text(stringResource(R.string.pref_libraries)) },
+				onClick = { router.push(Routes.LIBRARIES) }
+			)
+		}
+
+		item {
+			ListButton(
+				leadingContent = { Icon(painterResource(R.drawable.ic_house), contentDescription = null) },
+				headingContent = { Text(stringResource(R.string.home_prefs)) },
+				onClick = { router.push(Routes.HOME) }
+			)
+		}
+
 		item {
 			var appTheme by rememberPreference(userPreferences, UserPreferences.appTheme)
 
@@ -294,49 +312,6 @@ fun SettingsCustomizationScreen() {
 				headingContent = { Text(stringResource(R.string.pref_parental_controls)) },
 				captionContent = { Text(stringResource(R.string.pref_parental_controls_description)) },
 				onClick = { router.push(Routes.MOONFIN_PARENTAL_CONTROLS) }
-			)
-		}
-
-		item {
-			val userSettingPreferences = koinInject<UserSettingPreferences>()
-			val themeMusicEnabled by rememberPreference(userSettingPreferences, UserSettingPreferences.themeMusicEnabled)
-			var themeMusicOnHomeRows by rememberPreference(userSettingPreferences, UserSettingPreferences.themeMusicOnHomeRows)
-			ListButton(
-				headingContent = { Text(stringResource(R.string.pref_theme_music_on_home_rows)) },
-				captionContent = { Text(stringResource(R.string.pref_theme_music_on_home_rows_summary)) },
-				trailingContent = { Checkbox(checked = themeMusicOnHomeRows) },
-				enabled = themeMusicEnabled,
-				onClick = { themeMusicOnHomeRows = !themeMusicOnHomeRows }
-			)
-		}
-
-		item {
-			val userSettingPreferences = koinInject<UserSettingPreferences>()
-			val themeMusicEnabled by rememberPreference(userSettingPreferences, UserSettingPreferences.themeMusicEnabled)
-			val themeMusicVolume by rememberPreference(userSettingPreferences, UserSettingPreferences.themeMusicVolume)
-			ListButton(
-				headingContent = { Text(stringResource(R.string.pref_theme_music_volume)) },
-				captionContent = { Text("$themeMusicVolume%") },
-				enabled = themeMusicEnabled,
-				onClick = { router.push(Routes.MOONFIN_THEME_MUSIC_VOLUME) }
-			)
-		}
-
-		item { ListSection(headingContent = { Text(stringResource(R.string.pref_browsing)) }) }
-
-		item {
-			ListButton(
-				leadingContent = { Icon(painterResource(R.drawable.ic_grid), contentDescription = null) },
-				headingContent = { Text(stringResource(R.string.pref_libraries)) },
-				onClick = { router.push(Routes.LIBRARIES) }
-			)
-		}
-
-		item {
-			ListButton(
-				leadingContent = { Icon(painterResource(R.drawable.ic_house), contentDescription = null) },
-				headingContent = { Text(stringResource(R.string.home_prefs)) },
-				onClick = { router.push(Routes.HOME) }
 			)
 		}
 	}
