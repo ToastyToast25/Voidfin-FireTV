@@ -520,7 +520,8 @@ class MediaBarSlideshowViewModel(
 				
 				// Get logged in servers
 				val loggedInServers = multiServerRepository.getLoggedInServers()
-				val useMultiServer = loggedInServers.size > 1
+				val enableMultiServer = userPreferences[UserPreferences.enableMultiServerLibraries]
+				val useMultiServer = enableMultiServer && loggedInServers.size > 1
 				
 				// Get current user ID for single-server mode
 				val currentUserId = userRepository.currentUser.value?.id
