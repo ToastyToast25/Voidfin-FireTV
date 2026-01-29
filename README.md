@@ -25,7 +25,21 @@ Moonfin for Android TV builds on the solid foundation of Jellyfin with targeted 
 - Seamless switching between servers for content playback
 - Improved server selection logic
 
-### Jellyseerr Integration (Beta)
+### SyncPlay (Beta)
+- **Synchronized Group Playback** - Watch together with friends and family in perfect sync
+- Dynamic playback speed adjustments based on drift calculations
+- Buffering and ready state reporting for better synchronization
+- User notifications for group join/leave events
+
+### Playlist System
+- **Full Playlist Support** - Create, manage, and share playlists
+- Add to Playlist button on detail screens with modal selection
+- Create new playlists or add to existing ones
+- Public playlist support for sharing with other users
+- Remove from Playlist on long press
+- Replaced the previous local-only Watchlist feature
+
+### Jellyseerr Integration
 
 Moonfin is the first Android TV client with native Jellyseerr support.
 
@@ -37,6 +51,14 @@ Moonfin is the first Android TV client with native Jellyseerr support.
 - Authenticate using your Jellyfin login (permanent local API key saved)  
 - Global search includes Jellyseerr results  
 - Rich backdrop images for a more cinematic discovery experience  
+
+### MDBList Ratings Integration
+- **Multiple Rating Sources** - Display ratings from various platforms:
+  - AlloCine, AniList, Douban, IMDB, Kinopoisk
+  - Letterboxd, Metacritic, MyAnimeList, Roger Ebert
+  - TMDB, Trakt
+- TMDB episode ratings support with configurable settings
+- Episode ratings displayed in library views
 
 ### 🛠️ Customizable Toolbar
 - **Toggle buttons** - Show/hide Shuffle, Genres, and Favorites buttons
@@ -53,14 +75,20 @@ Moonfin is the first Android TV client with native Jellyseerr support.
 - Height and positioning tuned for viewing from the couch
 
 ### 🧭 Enhanced Navigation
+- **Left Sidebar Navigation** - New sidebar with expandable icons/text and configurable navbar position
+- **Folder View** - Browse media in folder structure for organized access
 - Quick access home button (house icon) and search (magnifying glass)
-- Shuffle button for instant random movie/TV show discovery
-- Genres menu to browse all media by genre in one place
+- Shuffle button for instant random movie/TV show discovery with genre-specific shuffle on long press
+- Genres redesigned as sortable tiles with random backdrop images
 - Dynamic library buttons automatically populate based on your Jellyfin libraries
 - One-click navigation to any library or collection directly from the toolbar
 - Cleaner icon-based design for frequently used actions
 
 ### 🎵 Playback & Media Control
+- **ASS/SSA Subtitle Support** - Direct-play and rendering support for ASS/SSA subtitle formats
+- **Subtitle Delay & Positioning** - Fine-tune subtitle sync and adjust position/size for wide aspect ratio videos
+- **Max Video Resolution** - New preference to limit video resolution
+- **Unpause Rewind** - Automatically rewinds a configurable amount when unpausing playback
 - **Theme Music Playback** - Background theme music support for TV shows and movies with volume control
 - **Pre-Playback Track Selection** - Choose your preferred audio track and subtitle before playback starts (configurable in settings)
 - **Next Episode Countdown** - Skip button shows countdown timer when next episode is available
