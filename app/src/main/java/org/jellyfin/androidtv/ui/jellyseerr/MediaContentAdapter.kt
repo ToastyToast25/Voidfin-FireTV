@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import coil3.load
 import org.jellyfin.androidtv.databinding.ItemJellyseerrContentBinding
 import org.jellyfin.androidtv.data.service.jellyseerr.JellyseerrDiscoverItemDto
+import org.jellyfin.androidtv.util.toHtmlSpanned
 
 class MediaContentAdapter(
 	private val onItemClicked: (JellyseerrDiscoverItemDto) -> Unit
@@ -42,7 +43,7 @@ class MediaContentAdapter(
 
 				typeText.text = (item.mediaType ?: "unknown").uppercase()
 
-				descriptionText.text = item.overview ?: ""
+				descriptionText.text = item.overview?.toHtmlSpanned() ?: ""
 
 				root.setOnClickListener {
 					onItemClick(item)

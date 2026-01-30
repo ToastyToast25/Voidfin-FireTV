@@ -7,6 +7,7 @@ import androidx.leanback.widget.RowPresenter
 import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.data.service.jellyseerr.JellyseerrDiscoverItemDto
 import org.jellyfin.androidtv.util.dp
+import org.jellyfin.androidtv.util.toHtmlSpanned
 
 class DetailsOverviewRowPresenter : RowPresenter() {
 	class ViewHolder(
@@ -42,7 +43,7 @@ class DetailsOverviewRowPresenter : RowPresenter() {
 
 			binding.fdTagline.isVisible = false
 
-			binding.fdSummaryText.text = item.overview ?: ""
+			binding.fdSummaryText.text = item.overview?.toHtmlSpanned() ?: ""
 
 			populateGroupedMetadata(row)
 

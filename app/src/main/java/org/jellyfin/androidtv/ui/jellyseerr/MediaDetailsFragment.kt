@@ -28,6 +28,7 @@ import coil3.toBitmap
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
+import org.jellyfin.androidtv.util.toHtmlSpanned
 import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.data.service.BackgroundService
 import org.jellyfin.androidtv.data.service.jellyseerr.JellyseerrDiscoverItemDto
@@ -920,10 +921,10 @@ class MediaDetailsFragment : Fragment() {
 		}
 		overviewTextGroup.addView(overviewHeading)
 
-		// Overview text
 		val overview = movieDetails?.overview ?: tvDetails?.overview ?: selectedItem?.overview
 		val overviewText = TextView(requireContext()).apply {
-			text = overview?.ifEmpty { "Overview unavailable." } ?: "Overview unavailable."
+			val htmlText = overview?.toHtmlSpanned()
+			text = if (htmlText?.isNotEmpty() == true) htmlText else "Overview unavailable."
 			textSize = 14f
 			setTextColor(Color.parseColor("#9CA3AF")) // gray-400
 			layoutParams = LinearLayout.LayoutParams(

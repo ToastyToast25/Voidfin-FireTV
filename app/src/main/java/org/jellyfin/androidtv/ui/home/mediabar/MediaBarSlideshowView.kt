@@ -68,6 +68,7 @@ import org.jellyfin.androidtv.ui.base.Text
 import org.jellyfin.androidtv.ui.shared.LogoView
 import org.jellyfin.androidtv.util.TimeUtils
 import org.jellyfin.androidtv.util.isImagePrimarilyDark
+import org.jellyfin.androidtv.util.toHtmlSpanned
 import org.koin.compose.koinInject
 import timber.log.Timber
 
@@ -369,7 +370,7 @@ private fun MediaInfoOverlay(
 		// Overview
 		item.overview?.let { overview ->
 			Text(
-				text = overview,
+				text = overview.toHtmlSpanned().toString(),
 				fontSize = 14.sp,
 				color = Color.White,
 				maxLines = 3,

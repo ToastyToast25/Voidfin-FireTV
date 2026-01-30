@@ -23,6 +23,7 @@ import org.jellyfin.androidtv.preference.UserPreferences
 import org.jellyfin.androidtv.preference.constant.NavbarPosition
 import org.jellyfin.androidtv.ui.shared.toolbar.LeftSidebarNavigation
 import org.jellyfin.androidtv.ui.shared.toolbar.MainToolbar
+import org.jellyfin.androidtv.util.toHtmlSpanned
 import org.jellyfin.androidtv.ui.shared.toolbar.MainToolbarActiveButton
 import org.jellyfin.androidtv.util.Debouncer
 import org.koin.android.ext.android.inject
@@ -142,9 +143,8 @@ class DiscoverFragment : Fragment() {
 		titleTextView?.text = item.title ?: item.name ?: "Unknown"
 		titleTextView?.isVisible = true
 
-		// Update description
 		if (!item.overview.isNullOrEmpty()) {
-			summaryTextView?.text = item.overview
+			summaryTextView?.text = item.overview.toHtmlSpanned()
 			summaryTextView?.isVisible = true
 		} else {
 			summaryTextView?.isVisible = false
