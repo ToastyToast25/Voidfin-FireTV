@@ -56,9 +56,13 @@
             android:id="@+id/fdTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:ellipsize="end"
+            android:ellipsize="marquee"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:scrollHorizontally="true"
+            android:singleLine="true"
             android:fontFamily="sans-serif-light"
-            android:maxLines="2"
             android:textSize="30sp"
             android:paddingStart="24dp"
             android:paddingEnd="24dp"
@@ -228,7 +232,6 @@
             app:layout_constraintEnd_toStartOf="@id/guide_right_start"
             app:layout_constraintTop_toBottomOf="@id/fdSummaryText">
 
-            <!-- Genres -->
             <!-- Genres -->
             <LinearLayout
                 android:id="@+id/fdGenresGroup"

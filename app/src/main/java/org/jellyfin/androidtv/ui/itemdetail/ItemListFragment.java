@@ -401,10 +401,7 @@ public class ItemListFragment extends Fragment implements View.OnKeyListener {
 
     private Function1<List<BaseItemDto>, Unit> itemResponse = (List<BaseItemDto> items) -> {
         mTitle.setText(mBaseItem.getName());
-        if (mBaseItem.getName().length() > 32) {
-            // scale down the title so more will fit
-            mTitle.setTextSize(32);
-        }
+        mTitle.setSelected(true);
         if (!items.isEmpty()) {
             boolean canReorder = mBaseItem.getType() == BaseItemKind.PLAYLIST
                     && mBaseItem.getCanDelete() != null && mBaseItem.getCanDelete();

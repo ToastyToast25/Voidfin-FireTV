@@ -106,6 +106,7 @@ class MyDetailsOverviewRowPresenter(
 
 		fun setTitle(title: String?) {
 			binding.fdTitle.text = title
+			binding.fdTitle.isSelected = true
 		}
 
 		fun setSummary(summary: String?) {
