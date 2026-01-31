@@ -65,6 +65,7 @@ import org.jellyfin.androidtv.ui.navigation.NavigationRepository
 import org.jellyfin.androidtv.ui.playback.MediaManager
 import org.jellyfin.androidtv.preference.UserSettingPreferences
 import org.jellyfin.androidtv.preference.UserPreferences
+import org.jellyfin.androidtv.preference.constant.ClockBehavior
 import org.jellyfin.androidtv.ui.settings.compat.SettingsViewModel
 import org.jellyfin.androidtv.ui.shuffle.ShuffleOptionsDialog
 import org.jellyfin.androidtv.ui.shuffle.executeShuffle
@@ -149,6 +150,7 @@ fun MainToolbar(
 	var enableMultiServer by remember { mutableStateOf(false) }
 	var shuffleContentType by remember { mutableStateOf("both") }
 	var enableFolderView by remember { mutableStateOf(false) }
+	var clockBehavior by remember { mutableStateOf(ClockBehavior.ALWAYS) }
 	LaunchedEffect(settingsClosedCounter) {
 		showShuffleButton = userPreferences[UserPreferences.showShuffleButton] ?: true
 		showGenresButton = userPreferences[UserPreferences.showGenresButton] ?: true
@@ -158,6 +160,7 @@ fun MainToolbar(
 		enableMultiServer = userPreferences[UserPreferences.enableMultiServerLibraries] ?: false
 		shuffleContentType = userPreferences[UserPreferences.shuffleContentType] ?: "both"
 		enableFolderView = userPreferences[UserPreferences.enableFolderView]
+		clockBehavior = userPreferences[UserPreferences.clockBehavior]
 	}
 
 	// Load user views/libraries
@@ -201,6 +204,7 @@ fun MainToolbar(
 		syncPlayEnabled = syncPlayEnabled,
 		shuffleContentType = shuffleContentType,
 		enableFolderView = enableFolderView,
+		clockBehavior = clockBehavior,
 	)
 }
 
@@ -221,6 +225,7 @@ private fun MainToolbar(
 	syncPlayEnabled: Boolean = false,
 	shuffleContentType: String = "both",
 	enableFolderView: Boolean = false,
+	clockBehavior: ClockBehavior = ClockBehavior.ALWAYS,
 ) {
 	val focusRequester = remember { FocusRequester() }
 	val userSettingPreferences = koinInject<UserSettingPreferences>()
@@ -471,8 +476,10 @@ private fun MainToolbar(
 			}
 		},
 		end = {
-			// Clock only - settings icon is already in the navbar
-			ToolbarClock()
+			// Clock
+			if (clockBehavior == ClockBehavior.ALWAYS || clockBehavior == ClockBehavior.IN_MENUS) {
+				ToolbarClock()
+			}
 		}
 	)
 

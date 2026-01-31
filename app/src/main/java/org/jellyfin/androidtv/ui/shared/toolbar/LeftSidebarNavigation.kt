@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -68,6 +69,7 @@ import org.jellyfin.androidtv.data.repository.MultiServerRepository
 import org.jellyfin.androidtv.data.repository.UserViewsRepository
 import org.jellyfin.androidtv.preference.JellyseerrPreferences
 import org.jellyfin.androidtv.preference.UserPreferences
+import org.jellyfin.androidtv.preference.constant.ClockBehavior
 import org.jellyfin.androidtv.ui.base.Icon
 import org.jellyfin.androidtv.ui.base.Text
 import org.jellyfin.androidtv.ui.itemhandling.ItemLauncher
@@ -123,6 +125,7 @@ fun LeftSidebarNavigation(
 	var syncPlayEnabled by remember { mutableStateOf(false) }
 	var jellyseerrEnabled by remember { mutableStateOf(false) }
 	var enableFolderView by remember { mutableStateOf(false) }
+	var clockBehavior by remember { mutableStateOf(ClockBehavior.ALWAYS) }
 	
 	LaunchedEffect(settingsClosedCounter) {
 		showShuffleButton = userPreferences[UserPreferences.showShuffleButton]
@@ -133,6 +136,7 @@ fun LeftSidebarNavigation(
 		shuffleContentType = userPreferences[UserPreferences.shuffleContentType]
 		syncPlayEnabled = userPreferences[UserPreferences.syncPlayEnabled]
 		enableFolderView = userPreferences[UserPreferences.enableFolderView]
+		clockBehavior = userPreferences[UserPreferences.clockBehavior]
 	}
 	
 	// Check Jellyseerr settings
@@ -193,7 +197,8 @@ fun LeftSidebarNavigation(
 		showLibrariesInToolbar = showLibrariesInToolbar,
 		jellyseerrEnabled = jellyseerrEnabled,
 		syncPlayEnabled = syncPlayEnabled,
-		enableFolderView = enableFolderView
+		enableFolderView = enableFolderView,
+		clockBehavior = clockBehavior,
 	)
 }
 
@@ -218,7 +223,8 @@ private fun CollapsibleSidebarContent(
 	showLibrariesInToolbar: Boolean = true,
 	jellyseerrEnabled: Boolean = false,
 	syncPlayEnabled: Boolean = false,
-	enableFolderView: Boolean = false
+	enableFolderView: Boolean = false,
+	clockBehavior: ClockBehavior = ClockBehavior.ALWAYS,
 ) {
 	val context = LocalContext.current
 	val scope = rememberCoroutineScope()
@@ -275,8 +281,18 @@ private fun CollapsibleSidebarContent(
 	val isHomeFragment = rootView.findViewById<android.view.View?>(R.id.rowsFragment) != null
 	val isSearchFragment = activeButton == MainToolbarActiveButton.Search
 
+	// Show clock in top right based on clockBehavior preference
+	val showClock = clockBehavior == ClockBehavior.ALWAYS || clockBehavior == ClockBehavior.IN_MENUS
+
+	// Parent Box to contain both sidebar and clock
 	Box(
 		modifier = Modifier
+			.fillMaxHeight()
+			.fillMaxWidth()
+	) {
+		// Sidebar Box
+		Box(
+			modifier = Modifier
 			.fillMaxHeight()
 			.width(sidebarWidth)
 			.then(
@@ -581,7 +597,25 @@ private fun CollapsibleSidebarContent(
 			}
 		}
 	}
-
+		
+		// Clock display in top right corner of screen
+		if (showClock) {
+			Box(
+				modifier = Modifier
+					.fillMaxWidth()
+					.padding(top = 24.dp, end = 32.dp)
+					.align(Alignment.TopEnd)
+			) {
+				Box(
+					modifier = Modifier.fillMaxWidth(),
+					contentAlignment = Alignment.TopEnd
+				) {
+					ToolbarClock()
+				}
+			}
+		}
+	} // End of parent Box
+	
 	if (showShuffleDialog) {
 		ShuffleOptionsDialog(
 			userViews = userViews,
