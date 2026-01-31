@@ -129,14 +129,12 @@ fun MainToolbar(
 
 	var jellyseerrEnabled by remember { mutableStateOf(false) }
 	LaunchedEffect(currentUser) {
-		// Check if Jellyseerr is globally enabled
-		val globalEnabled = jellyseerrPreferences[JellyseerrPreferences.enabled]
-		if (globalEnabled && currentUser != null) {
-			// Check if current user has enabled Jellyseerr in toolbar
-			val userJellyseerrPrefs = JellyseerrPreferences(context = context, userId = currentUser!!.id.toString())
+		if (currentUser != null) {
+			// All Jellyseerr settings are now per-user
+			val userJellyseerrPrefs = JellyseerrPreferences.migrateToUserPreferences(context, currentUser!!.id.toString())
+			val enabled = userJellyseerrPrefs[JellyseerrPreferences.enabled]
 			val showInToolbar = userJellyseerrPrefs[JellyseerrPreferences.showInToolbar]
-			// Show icon based purely on user preference
-			jellyseerrEnabled = showInToolbar
+			jellyseerrEnabled = enabled && showInToolbar
 		} else {
 			jellyseerrEnabled = false
 		}

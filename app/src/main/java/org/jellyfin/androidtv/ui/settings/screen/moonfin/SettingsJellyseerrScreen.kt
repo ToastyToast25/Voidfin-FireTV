@@ -40,7 +40,6 @@ import org.jellyfin.androidtv.ui.settings.composable.SettingsColumn
 import org.jellyfin.androidtv.ui.settings.compat.rememberPreference
 import org.jellyfin.sdk.api.client.ApiClient
 import org.koin.compose.koinInject
-import org.koin.core.parameter.parametersOf
 import org.koin.core.qualifier.named
 import timber.log.Timber
 
@@ -55,15 +54,15 @@ fun SettingsJellyseerrScreen() {
 	val apiClient = koinInject<ApiClient>()
 	val userRepository = koinInject<UserRepository>()
 	
-	// Get user-specific preferences
+	// Get user-specific preferences (with migration from global if needed)
 	val userId = userRepository.currentUser.value?.id?.toString()
-	val userPrefs = userId?.let { 
-		koinInject<JellyseerrPreferences>(named("user")) { parametersOf(it) }
+	val userPrefs = remember(userId) {
+		userId?.let { JellyseerrPreferences.migrateToUserPreferences(context, it) }
 	}
 	
-	// State
-	var enabled by rememberPreference(jellyseerrPreferences, JellyseerrPreferences.enabled)
-	var blockNsfw by rememberPreference(jellyseerrPreferences, JellyseerrPreferences.blockNsfw)
+	// State - all preferences are now per-user
+	var enabled by rememberPreference(userPrefs ?: jellyseerrPreferences, JellyseerrPreferences.enabled)
+	var blockNsfw by rememberPreference(userPrefs ?: jellyseerrPreferences, JellyseerrPreferences.blockNsfw)
 	
 	// Dialog states
 	var showServerUrlDialog by remember { mutableStateOf(false) }
@@ -94,7 +93,7 @@ fun SettingsJellyseerrScreen() {
 		else -> context.getString(R.string.jellyseerr_not_logged_in)
 	}
 	
-	val serverUrl = remember { jellyseerrPreferences[JellyseerrPreferences.serverUrl] }
+	val serverUrl = remember { userPrefs?.get(JellyseerrPreferences.serverUrl) ?: "" }
 
 	SettingsColumn {
 		// Server Configuration
@@ -234,7 +233,7 @@ fun SettingsJellyseerrScreen() {
 			currentUrl = serverUrl,
 			onDismiss = { showServerUrlDialog = false },
 			onSave = { url ->
-				jellyseerrPreferences[JellyseerrPreferences.serverUrl] = url
+				userPrefs?.set(JellyseerrPreferences.serverUrl, url)
 				Toast.makeText(context, "Server URL saved", Toast.LENGTH_SHORT).show()
 				showServerUrlDialog = false
 			}
@@ -243,7 +242,7 @@ fun SettingsJellyseerrScreen() {
 
 	// Jellyfin Login Dialog
 	if (showJellyfinLoginDialog) {
-		val currentServerUrl = jellyseerrPreferences[JellyseerrPreferences.serverUrl]
+		val currentServerUrl = userPrefs?.get(JellyseerrPreferences.serverUrl) ?: ""
 		if (currentServerUrl.isBlank()) {
 			Toast.makeText(context, "Please set server URL first", Toast.LENGTH_SHORT).show()
 			showJellyfinLoginDialog = false
@@ -276,7 +275,7 @@ fun SettingsJellyseerrScreen() {
 
 	// Local Login Dialog
 	if (showLocalLoginDialog) {
-		val currentServerUrl = jellyseerrPreferences[JellyseerrPreferences.serverUrl]
+		val currentServerUrl = userPrefs?.get(JellyseerrPreferences.serverUrl) ?: ""
 		if (currentServerUrl.isBlank()) {
 			Toast.makeText(context, "Please set server URL first", Toast.LENGTH_SHORT).show()
 			showLocalLoginDialog = false
@@ -302,7 +301,7 @@ fun SettingsJellyseerrScreen() {
 
 	// API Key Login Dialog
 	if (showApiKeyLoginDialog) {
-		val currentServerUrl = jellyseerrPreferences[JellyseerrPreferences.serverUrl]
+		val currentServerUrl = userPrefs?.get(JellyseerrPreferences.serverUrl) ?: ""
 		if (currentServerUrl.isBlank()) {
 			Toast.makeText(context, "Please set server URL first", Toast.LENGTH_SHORT).show()
 			showApiKeyLoginDialog = false
@@ -541,6 +540,12 @@ private suspend fun performJellyfinLogin(
 	password: String,
 	jellyfinServerUrl: String
 ) {
+	// Input validation
+	if (username.isBlank() || password.isBlank() || jellyfinServerUrl.isBlank() || jellyseerrServerUrl.isBlank()) {
+		Toast.makeText(context, "All fields are required", Toast.LENGTH_SHORT).show()
+		return
+	}
+	
 	try {
 		// Get current Jellyfin user ID and switch cookie storage
 		val currentUser = userRepository.currentUser.value
@@ -557,10 +562,6 @@ private suspend fun performJellyfinLogin(
 		result.onSuccess { user ->
 			val apiKey = user.apiKey ?: ""
 			
-			jellyseerrPreferences[JellyseerrPreferences.serverUrl] = jellyseerrServerUrl
-			jellyseerrPreferences[JellyseerrPreferences.enabled] = true
-			jellyseerrPreferences[JellyseerrPreferences.lastConnectionSuccess] = true
-			
 			val authType = if (apiKey.isNotEmpty()) {
 				"permanent API key"
 			} else {
@@ -570,7 +571,16 @@ private suspend fun performJellyfinLogin(
 			Toast.makeText(context, "Connected successfully using $authType!", Toast.LENGTH_LONG).show()
 			Timber.d("Jellyseerr: Jellyfin authentication successful")
 		}.onFailure { error ->
-			Toast.makeText(context, "Connection failed: ${error.message}", Toast.LENGTH_LONG).show()
+			val errorMessage = when {
+				error.message?.contains("configuration error") == true -> {
+					"Server Configuration Error\n\n${error.message}"
+				}
+				error.message?.contains("Authentication failed") == true -> {
+					"Authentication Failed\n\n${error.message}"
+				}
+				else -> "Connection failed: ${error.message}"
+			}
+			Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
 			Timber.e(error, "Jellyseerr: Jellyfin authentication failed")
 		}
 	} catch (e: Exception) {

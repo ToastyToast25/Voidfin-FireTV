@@ -111,40 +111,12 @@ class JellyseerrHttpClient(
 			addAuthHeader()
 		}
 
-		Timber.d("Jellyseerr: Got requests - Status: ${response.status}, URL: $url")
-		if (response.status.value !in 200..299) {
-			try {
-				val errorBody = response.body<String>()
-				Timber.e("Jellyseerr: Error response body: $errorBody")
-			} catch (e: Exception) {
-				Timber.e("Jellyseerr: Could not parse error body: ${e.message}")
-			}
-		}
-		
-		val responseBody = response.body<JellyseerrListResponse<JellyseerrRequestDto>>()
-		Timber.d("Jellyseerr: Parsed ${responseBody.results.size} requests")
-		responseBody.results.forEach { request ->
-			Timber.d("Jellyseerr: Request ${request.id} - Type: ${request.type}, Status: ${request.status}")
-			if (request.media != null) {
-				Timber.d("Jellyseerr: Media ID: ${request.media.id}, mediaType: ${request.media.mediaType}, tmdbId: ${request.media.tmdbId}")
-				Timber.d("Jellyseerr: Media title: '${request.media.title}', name: '${request.media.name}', posterPath: '${request.media.posterPath}'")
-			} else {
-				Timber.e("Jellyseerr: Request ${request.id} has NULL media object!")
-			}
-			if (request.requestedBy != null) {
-				Timber.d("Jellyseerr: RequestedBy ID: ${request.requestedBy.id}, username: ${request.requestedBy.username}")
-			} else {
-				Timber.e("Jellyseerr: Request ${request.id} has NULL requestedBy!")
-			}
-		}
-		responseBody
+		Timber.d("Jellyseerr: Got requests - Status: ${response.status}")
+		response.body<JellyseerrListResponse<JellyseerrRequestDto>>()
 	}.onFailure { error ->
 		Timber.e(error, "Jellyseerr: Failed to get requests")
 	}
 
-	/**
-	 * Get details of a specific request
-	 */
 	suspend fun getRequest(requestId: Int): Result<JellyseerrRequestDto> = runCatching {
 		val url = URLBuilder("$baseUrl/api/v1/request/$requestId").build()
 		val response = httpClient.get(url) {
@@ -156,9 +128,6 @@ class JellyseerrHttpClient(
 		Timber.e(error, "Jellyseerr: Failed to get request $requestId")
 	}
 
-	/**
-	 * Create a new request for a movie or TV show
-	 */
 	suspend fun createRequest(
 		mediaId: Int,
 		mediaType: String,
@@ -205,9 +174,6 @@ class JellyseerrHttpClient(
 		Timber.e(error, "Jellyseerr: Failed to create request for $mediaType:$mediaId")
 	}
 
-	/**
-	 * Delete an existing request
-	 */
 	suspend fun deleteRequest(requestId: Int): Result<Unit> = runCatching {
 		val url = URLBuilder("$baseUrl/api/v1/request/$requestId").build()
 		
@@ -226,11 +192,6 @@ class JellyseerrHttpClient(
 		Timber.e(error, "Jellyseerr: Failed to delete request $requestId")
 	}
 
-	// ==================== Discover Content ====================
-
-	/**
-	 * Get trending content (movies and TV combined)
-	 */
 	suspend fun getTrending(
 		limit: Int = 20,
 		offset: Int = 0,
@@ -244,16 +205,12 @@ class JellyseerrHttpClient(
 			addAuthHeader()
 		}
 		
-		val body = response.body<JellyseerrDiscoverPageDto>()
-		Timber.d("Jellyseerr: Got trending content - Status: ${response.status}, Count: ${body.results?.size ?: 0}")
-		body
+		Timber.d("Jellyseerr: Got trending content - Status: ${response.status}")
+		response.body<JellyseerrDiscoverPageDto>()
 	}.onFailure { error ->
 		Timber.e(error, "Jellyseerr: Failed to get trending content")
 	}
 
-	/**
-	 * Get trending movies
-	 */
 	suspend fun getTrendingMovies(
 		limit: Int = 20,
 		offset: Int = 0,
@@ -267,33 +224,12 @@ class JellyseerrHttpClient(
 			addAuthHeader()
 		}
 		
-		val body = response.body<JellyseerrDiscoverPageDto>()
-		Timber.d("Jellyseerr: Got trending movies - Status: ${response.status}, Count: ${body.results?.size ?: 0}")
-		if (!body.results.isNullOrEmpty()) {
-			val mediaTypes = body.results.map { it.mediaType }.distinct()
-			Timber.d("Jellyseerr: Movies endpoint returned media types: $mediaTypes")
-			body.results.take(3).forEach { item ->
-				Timber.d("Jellyseerr: Movie item - Title: ${item.title ?: item.name}, MediaType: ${item.mediaType}")
-			}
-		}
-		
-		if (response.status.value !in 200..299) {
-			try {
-				val errorBody = response.body<String>()
-				Timber.e("Jellyseerr: Error response body: $errorBody")
-			} catch (e: Exception) {
-				Timber.e("Jellyseerr: Could not parse error body: ${e.message}")
-			}
-		}
-		
-		body
+		Timber.d("Jellyseerr: Got trending movies - Status: ${response.status}")
+		response.body<JellyseerrDiscoverPageDto>()
 	}.onFailure { error ->
 		Timber.e(error, "Jellyseerr: Failed to get trending movies")
 	}
 
-	/**
-	 * Get trending TV shows
-	 */
 	suspend fun getTrendingTv(
 		limit: Int = 20,
 		offset: Int = 0,
@@ -307,33 +243,12 @@ class JellyseerrHttpClient(
 			addAuthHeader()
 		}
 		
-		val body = response.body<JellyseerrDiscoverPageDto>()
-		Timber.d("Jellyseerr: Got trending TV - Status: ${response.status}, Count: ${body.results?.size ?: 0}")
-		if (!body.results.isNullOrEmpty()) {
-			val mediaTypes = body.results.map { it.mediaType }.distinct()
-			Timber.d("Jellyseerr: TV endpoint returned media types: $mediaTypes")
-			body.results.take(3).forEach { item ->
-				Timber.d("Jellyseerr: TV item - Title: ${item.title ?: item.name}, MediaType: ${item.mediaType}")
-			}
-		}
-		
-		if (response.status.value !in 200..299) {
-			try {
-				val errorBody = response.body<String>()
-				Timber.e("Jellyseerr: Error response body: $errorBody")
-			} catch (e: Exception) {
-				Timber.e("Jellyseerr: Could not parse error body: ${e.message}")
-			}
-		}
-		
-		body
+		Timber.d("Jellyseerr: Got trending TV - Status: ${response.status}")
+		response.body<JellyseerrDiscoverPageDto>()
 	}.onFailure { error ->
 		Timber.e(error, "Jellyseerr: Failed to get trending TV shows")
 	}
 
-	/**
-	 * Get top-rated movies
-	 */
 	suspend fun getTopMovies(
 		limit: Int = 20,
 		offset: Int = 0,
@@ -989,11 +904,21 @@ class JellyseerrHttpClient(
 			throw Exception("Jellyfin login failed: ${response.status} - $errorBody")
 		}
 		
-		// 500 - Likely wrong credentials on configured server
+		// 500 - Server error, likely configuration issue
 		if (response.status.value == 500) {
 			val errorBody = response.body<String>()
-			Timber.e("Jellyseerr: Received 500 error: $errorBody")
-			throw Exception("Authentication failed. Verify your username and password are correct, and that the Jellyfin server URL in Jellyseerr settings matches: $jellyfinUrl")
+			Timber.e("Jellyseerr: Server error (500): $errorBody")
+			
+			val errorMessage = if (errorBody.contains("Something went wrong", ignoreCase = true)) {
+				"Server configuration error. Verify that:\n" +
+				"• Jellyseerr server URL is correct: $baseUrl\n" +
+				"• Jellyfin server URL in Jellyseerr settings matches: $jellyfinUrl\n" +
+				"• Username and password are correct"
+			} else {
+				"Authentication failed. Verify your username and password are correct, and that the Jellyfin server URL in Jellyseerr settings matches: $jellyfinUrl"
+			}
+			
+			throw Exception(errorMessage)
 		}
 		
 		// Other errors
@@ -1001,7 +926,14 @@ class JellyseerrHttpClient(
 		Timber.e("Jellyseerr: Unexpected status ${response.status}: $errorBody")
 		throw Exception("Jellyfin login failed: ${response.status} - $errorBody")
 	}.onFailure { error ->
-		Timber.e(error, "Jellyseerr: Failed to login with Jellyfin - ${error.message}")
+		// Error already logged above, just re-throw without redundant logging
+		if (error.message?.contains("configuration error") == true || error.message?.contains("Authentication failed") == true) {
+			// These are user-facing errors, don't log stack trace
+			Timber.w("Jellyseerr: Jellyfin login failed - ${error.message}")
+		} else {
+			// Unexpected errors should include stack trace
+			Timber.e(error, "Jellyseerr: Failed to login with Jellyfin - ${error.message}")
+		}
 	}
 
 	/**

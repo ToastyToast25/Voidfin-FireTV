@@ -9,170 +9,145 @@ import org.jellyfin.preference.booleanPreference
 import org.jellyfin.preference.enumPreference
 import org.jellyfin.preference.store.SharedPreferenceStore
 import org.jellyfin.preference.stringPreference
+import timber.log.Timber
 
 /**
- * Jellyseerr integration preferences
- * Stores Jellyseerr server configuration and user settings
+ * Jellyseerr integration preferences - ALL settings are stored per-user.
+ * Each Jellyfin user has their own Jellyseerr configuration including:
+ * - Server connection (URL, auth, API keys)
+ * - UI preferences (navigation, toolbar, NSFW filter)
+ * - Request profiles and discover rows
  * 
- * Note: Per-user auth data (API keys, passwords) is stored separately per-user.
- * Use getUserPreferences(userId) to access user-specific settings.
+ * The global preferences instance is only used during migration from older versions.
  */
 class JellyseerrPreferences(context: Context, userId: String? = null) : SharedPreferenceStore(
 	sharedPreferences = if (userId != null) {
-		// User-specific preferences (auth data, API keys, etc.)
 		context.getSharedPreferences("jellyseerr_prefs_$userId", Context.MODE_PRIVATE)
 	} else {
-		// Global preferences (server URL, UI settings, etc.)
+		// Legacy global preferences - only used for migration
 		context.getSharedPreferences("jellyseerr_prefs", Context.MODE_PRIVATE)
 	}
 ) {
 	companion object {
-		/**
-		 * Whether Jellyseerr integration is enabled
-		 */
 		val enabled = booleanPreference("jellyseerr_enabled", false)
-
-		/**
-		 * Jellyseerr server URL (e.g., https://jellyseerr.example.com)
-		 */
 		val serverUrl = stringPreference("jellyseerr_server_url", "")
-
-		/**
-		 * Jellyfin password for Jellyseerr authentication (used for auto-re-login when cookies expire)
-		 */
 		val password = stringPreference("jellyseerr_password", "")
-
-		/**
-		 * Whether to show Jellyseerr in the main navigation
-		 */
-		val showInNavigation = booleanPreference("jellyseerr_show_in_navigation", true)
-
-		/**
-		 * Whether to show Jellyseerr button in the main toolbar
-		 */
-		val showInToolbar = booleanPreference("jellyseerr_show_in_toolbar", true)
-
-		/**
-		 * Whether to show request status in item details
-		 */
-		val showRequestStatus = booleanPreference("jellyseerr_show_request_status", true)
-
-		/**
-		 * Last time Jellyseerr connection was verified (timestamp)
-		 */
-		val lastVerifiedTime = stringPreference("jellyseerr_last_verified", "")
-
-		/**
-		 * Whether the last connection test was successful
-		 */
-		val lastConnectionSuccess = booleanPreference("jellyseerr_last_connection_success", false)
-
-		/**
-		 * Number of items to fetch per request (25, 50, or 75)
-		 */
-		val fetchLimit = enumPreference("jellyseerr_fetch_limit", JellyseerrFetchLimit.MEDIUM)
-
-		/**
-		 * Whether to block NSFW (adult) content from Jellyseerr results
-		 */
-		val blockNsfw = booleanPreference("jellyseerr_block_nsfw", true)
-
-		/**
-		 * Authentication method: "jellyfin" (cookie-based) or "local" (email/password with API key)
-		 */
 		val authMethod = stringPreference("jellyseerr_auth_method", "jellyfin")
-
-		/**
-		 * Whether to automatically regenerate API key after Jellyfin login for permanent auth
-		 * If true, replaces 30-day cookie auth with permanent API key
-		 */
-		val autoGenerateApiKey = booleanPreference("jellyseerr_auto_generate_api_key", true)
-
-		/**
-		 * Email for local Jellyseerr authentication (only used if authMethod is "local")
-		 */
 		val localEmail = stringPreference("jellyseerr_local_email", "")
-
-		/**
-		 * Password for local Jellyseerr authentication (only used if authMethod is "local")
-		 */
 		val localPassword = stringPreference("jellyseerr_local_password", "")
-
-		/**
-		 * Stored API key (from local login or regenerated after Jellyfin login)
-		 */
 		val apiKey = stringPreference("jellyseerr_api_key", "")
-
-		/**
-		 * Last authenticated Jellyfin username (used to detect user changes and clear cookies)
-		 */
 		val lastJellyfinUser = stringPreference("jellyseerr_last_jellyfin_user", "")
-
-		// Custom Request Profiles
-		/**
-		 * Default profile ID for HD movie requests (uses server default if empty/null)
-		 */
-		val hdMovieProfileId = stringPreference("jellyseerr_hd_movie_profile_id", "")
-
-		/**
-		 * Default profile ID for 4K movie requests (uses server default if empty/null)
-		 */
-		val fourKMovieProfileId = stringPreference("jellyseerr_4k_movie_profile_id", "")
-
-		/**
-		 * Default profile ID for HD TV requests (uses server default if empty/null)
-		 */
-		val hdTvProfileId = stringPreference("jellyseerr_hd_tv_profile_id", "")
-
-		/**
-		 * Default profile ID for 4K TV requests (uses server default if empty/null)
-		 */
-		val fourKTvProfileId = stringPreference("jellyseerr_4k_tv_profile_id", "")
-
-		/**
-		 * Default root folder ID for HD movie requests (uses server default if empty/null)
-		 */
-		val hdMovieRootFolderId = stringPreference("jellyseerr_hd_movie_root_folder_id", "")
-
-		/**
-		 * Default root folder ID for 4K movie requests (uses server default if empty/null)
-		 */
-		val fourKMovieRootFolderId = stringPreference("jellyseerr_4k_movie_root_folder_id", "")
-
-		/**
-		 * Default root folder ID for HD TV requests (uses server default if empty/null)
-		 */
-		val hdTvRootFolderId = stringPreference("jellyseerr_hd_tv_root_folder_id", "")
-
-		/**
-		 * Default root folder ID for 4K TV requests (uses server default if empty/null)
-		 */
-		val fourKTvRootFolderId = stringPreference("jellyseerr_4k_tv_root_folder_id", "")
-
-		/**
-		 * Default server ID for HD movie requests (uses server default if empty/null)
-		 */
-		val hdMovieServerId = stringPreference("jellyseerr_hd_movie_server_id", "")
-
-		/**
-		 * Default server ID for 4K movie requests (uses server default if empty/null)
-		 */
-		val fourKMovieServerId = stringPreference("jellyseerr_4k_movie_server_id", "")
-
-		/**
-		 * Default server ID for HD TV requests (uses server default if empty/null)
-		 */
-		val hdTvServerId = stringPreference("jellyseerr_hd_tv_server_id", "")
-
-		/**
-		 * Default server ID for 4K TV requests (uses server default if empty/null)
-		 */
-		val fourKTvServerId = stringPreference("jellyseerr_4k_tv_server_id", "")
-
-		/**
-		 * Jellyseerr discover rows configuration (JSON storage)
-		 */
+		val autoGenerateApiKey = booleanPreference("jellyseerr_auto_generate_api_key", true)
+		val lastVerifiedTime = stringPreference("jellyseerr_last_verified", "")
+		val lastConnectionSuccess = booleanPreference("jellyseerr_last_connection_success", false)
+		
+		val showInNavigation = booleanPreference("jellyseerr_show_in_navigation", true)
+		val showInToolbar = booleanPreference("jellyseerr_show_in_toolbar", true)
+		val showRequestStatus = booleanPreference("jellyseerr_show_request_status", true)
+		val fetchLimit = enumPreference("jellyseerr_fetch_limit", JellyseerrFetchLimit.MEDIUM)
+		val blockNsfw = booleanPreference("jellyseerr_block_nsfw", true)
 		val rowsConfigJson = stringPreference("jellyseerr_rows_config", "")
+		val hdMovieProfileId = stringPreference("jellyseerr_hd_movie_profile_id", "")
+		val fourKMovieProfileId = stringPreference("jellyseerr_4k_movie_profile_id", "")
+		val hdTvProfileId = stringPreference("jellyseerr_hd_tv_profile_id", "")
+		val fourKTvProfileId = stringPreference("jellyseerr_4k_tv_profile_id", "")
+		val hdMovieRootFolderId = stringPreference("jellyseerr_hd_movie_root_folder_id", "")
+		val fourKMovieRootFolderId = stringPreference("jellyseerr_4k_movie_root_folder_id", "")
+		val hdTvRootFolderId = stringPreference("jellyseerr_hd_tv_root_folder_id", "")
+		val fourKTvRootFolderId = stringPreference("jellyseerr_4k_tv_root_folder_id", "")
+		val hdMovieServerId = stringPreference("jellyseerr_hd_movie_server_id", "")
+		val fourKMovieServerId = stringPreference("jellyseerr_4k_movie_server_id", "")
+		val hdTvServerId = stringPreference("jellyseerr_hd_tv_server_id", "")
+		val fourKTvServerId = stringPreference("jellyseerr_4k_tv_server_id", "")
+		
+		// Migration key to track if global->user migration has been done
+		private const val MIGRATION_DONE_KEY = "jellyseerr_migration_v1_done"
+		
+		/**
+		 * Migrate settings from global preferences to user-specific preferences.
+		 * This handles the transition where server config was stored globally but now
+		 * needs to be stored per-user.
+		 * 
+		 * @param context Application context
+		 * @param userId The user ID to migrate settings to
+		 * @return The user-specific preferences (with migrated data if applicable)
+		 */
+		fun migrateToUserPreferences(context: Context, userId: String): JellyseerrPreferences {
+			val globalPrefs = context.getSharedPreferences("jellyseerr_prefs", Context.MODE_PRIVATE)
+			val userPrefs = JellyseerrPreferences(context, userId)
+			
+			// Check if migration already done for this user
+			if (userPrefs.sharedPreferences.getBoolean(MIGRATION_DONE_KEY, false)) {
+				return userPrefs
+			}
+			
+			// Check if global prefs have data worth migrating
+			val globalServerUrl = globalPrefs.getString(serverUrl.key, "") ?: ""
+			val globalEnabled = globalPrefs.getBoolean(enabled.key, false)
+			
+			if (globalServerUrl.isEmpty() && !globalEnabled) {
+				// Nothing to migrate, mark as done
+				userPrefs.sharedPreferences.edit().putBoolean(MIGRATION_DONE_KEY, true).apply()
+				return userPrefs
+			}
+			
+			// Check if user already has their own config (don't overwrite)
+			val userServerUrl = userPrefs.get(serverUrl)
+			if (userServerUrl.isNotEmpty()) {
+				// User already has config, mark migration done and skip
+				userPrefs.sharedPreferences.edit().putBoolean(MIGRATION_DONE_KEY, true).apply()
+				return userPrefs
+			}
+			
+			Timber.i("Jellyseerr: Migrating settings from global to user $userId")
+			
+			// Migrate all settings (server config, auth data, and UI preferences)
+			userPrefs.apply {
+				// Server config and auth
+				set(enabled, globalPrefs.getBoolean(enabled.key, false))
+				set(serverUrl, globalServerUrl)
+				set(password, globalPrefs.getString(password.key, "") ?: "")
+				set(authMethod, globalPrefs.getString(authMethod.key, "jellyfin") ?: "jellyfin")
+				set(localEmail, globalPrefs.getString(localEmail.key, "") ?: "")
+				set(localPassword, globalPrefs.getString(localPassword.key, "") ?: "")
+				set(apiKey, globalPrefs.getString(apiKey.key, "") ?: "")
+				set(lastConnectionSuccess, globalPrefs.getBoolean(lastConnectionSuccess.key, false))
+				
+				// UI preferences
+				set(showInNavigation, globalPrefs.getBoolean(showInNavigation.key, true))
+				set(showInToolbar, globalPrefs.getBoolean(showInToolbar.key, true))
+				set(showRequestStatus, globalPrefs.getBoolean(showRequestStatus.key, true))
+				set(blockNsfw, globalPrefs.getBoolean(blockNsfw.key, true))
+				set(rowsConfigJson, globalPrefs.getString(rowsConfigJson.key, "") ?: "")
+				
+				// Fetch limit (enum stored as string)
+				val fetchLimitStr = globalPrefs.getString(fetchLimit.key, null)
+				if (fetchLimitStr != null) {
+					sharedPreferences.edit().putString(fetchLimit.key, fetchLimitStr).apply()
+				}
+				
+				// Profile/server IDs
+				set(hdMovieProfileId, globalPrefs.getString(hdMovieProfileId.key, "") ?: "")
+				set(fourKMovieProfileId, globalPrefs.getString(fourKMovieProfileId.key, "") ?: "")
+				set(hdTvProfileId, globalPrefs.getString(hdTvProfileId.key, "") ?: "")
+				set(fourKTvProfileId, globalPrefs.getString(fourKTvProfileId.key, "") ?: "")
+				set(hdMovieRootFolderId, globalPrefs.getString(hdMovieRootFolderId.key, "") ?: "")
+				set(fourKMovieRootFolderId, globalPrefs.getString(fourKMovieRootFolderId.key, "") ?: "")
+				set(hdTvRootFolderId, globalPrefs.getString(hdTvRootFolderId.key, "") ?: "")
+				set(fourKTvRootFolderId, globalPrefs.getString(fourKTvRootFolderId.key, "") ?: "")
+				set(hdMovieServerId, globalPrefs.getString(hdMovieServerId.key, "") ?: "")
+				set(fourKMovieServerId, globalPrefs.getString(fourKMovieServerId.key, "") ?: "")
+				set(hdTvServerId, globalPrefs.getString(hdTvServerId.key, "") ?: "")
+				set(fourKTvServerId, globalPrefs.getString(fourKTvServerId.key, "") ?: "")
+			}
+			
+			// Mark migration as done
+			userPrefs.sharedPreferences.edit().putBoolean(MIGRATION_DONE_KEY, true).apply()
+			
+			Timber.i("Jellyseerr: Migration complete for user $userId")
+			
+			return userPrefs
+		}
 	}
 
 	private val json = Json { 
@@ -180,9 +155,6 @@ class JellyseerrPreferences(context: Context, userId: String? = null) : SharedPr
 		encodeDefaults = true
 	}
 
-	/**
-	 * Get or set the Jellyseerr rows configuration.
-	 */
 	var rowsConfig: List<JellyseerrRowConfig>
 		get() {
 			val jsonString = get(rowsConfigJson)
@@ -199,9 +171,6 @@ class JellyseerrPreferences(context: Context, userId: String? = null) : SharedPr
 			set(rowsConfigJson, jsonString)
 		}
 
-	/**
-	 * Get the active Jellyseerr rows (enabled rows sorted by order).
-	 */
 	val activeRows: List<JellyseerrRowType>
 		get() = rowsConfig
 			.filter { it.enabled }

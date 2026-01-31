@@ -137,11 +137,12 @@ fun LeftSidebarNavigation(
 	
 	// Check Jellyseerr settings
 	LaunchedEffect(currentUser) {
-		val globalEnabled = jellyseerrPreferences[JellyseerrPreferences.enabled]
-		if (globalEnabled && currentUser != null) {
-			val userJellyseerrPrefs = JellyseerrPreferences(context = context, userId = currentUser!!.id.toString())
+		if (currentUser != null) {
+			// All Jellyseerr settings are now per-user
+			val userJellyseerrPrefs = JellyseerrPreferences.migrateToUserPreferences(context, currentUser!!.id.toString())
+			val enabled = userJellyseerrPrefs[JellyseerrPreferences.enabled]
 			val showInToolbar = userJellyseerrPrefs[JellyseerrPreferences.showInToolbar]
-			jellyseerrEnabled = showInToolbar
+			jellyseerrEnabled = enabled && showInToolbar
 		} else {
 			jellyseerrEnabled = false
 		}
