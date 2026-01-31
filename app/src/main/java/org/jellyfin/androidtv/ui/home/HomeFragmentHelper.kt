@@ -101,9 +101,7 @@ class HomeFragmentHelper(
 		val enableMultiServer = userPreferences[UserPreferences.enableMultiServerLibraries]
 		
 		if (enableMultiServer) {
-			// Use aggregated row that shows items from all servers
-			// Note: This combines both resume and next up automatically
-			return HomeFragmentAggregatedResumeRow(HOME_ROW_MAX_ITEMS)
+			return HomeFragmentAggregatedResumeRow(HOME_ROW_MAX_ITEMS, includeNextUp = true)
 		}
 		
 		// Use normal merged row for current server only

@@ -27,9 +27,14 @@ import timber.log.Timber
  * Home row that displays Continue Watching items aggregated from all logged-in servers.
  * Items are sorted by most recent playback date across all servers.
  * Supports pagination - loads 15 items initially, then more as the user scrolls.
+ *
+ * @param maxItems Maximum number of items to fetch
+ * @param includeNextUp When true, merges Next Up items with resume items using intelligent sorting
+ *                      where next up items inherit their series' last played date
  */
 class HomeFragmentAggregatedResumeRow(
 	private val maxItems: Int = AggregatedItemRowAdapter.MAX_ITEMS,
+	private val includeNextUp: Boolean = false,
 ) : HomeFragmentRow, KoinComponent {
 	private val multiServerRepository by inject<MultiServerRepository>()
 	private val userPreferences by inject<UserPreferences>()
@@ -46,10 +51,14 @@ class HomeFragmentAggregatedResumeRow(
 		lifecycleOwner.lifecycleScope.launch {
 			try {
 				val items = withContext(Dispatchers.IO) {
-					multiServerRepository.getAggregatedResumeItems(maxItems)
+					if (includeNextUp) {
+						multiServerRepository.getAggregatedMergedContinueWatchingItems(maxItems)
+					} else {
+						multiServerRepository.getAggregatedResumeItems(maxItems)
+					}
 				}
 
-				Timber.d("HomeFragmentAggregatedResumeRow: Loaded ${items.size} resume items from multiple servers")
+				Timber.d("HomeFragmentAggregatedResumeRow: Loaded ${items.size} items (includeNextUp=$includeNextUp)")
 
 				if (items.isEmpty()) {
 					rowsAdapter.remove(row)

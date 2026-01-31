@@ -216,16 +216,38 @@ fun ItemRowAdapter.retrieveMergedContinueWatchingItems(
 			val resumeItems = resumeDeferred.await()
 			val nextUpItems = nextUpDeferred.await()
 
-			// Combine both lists, remove duplicates, and sort by last played date (most recent first)
-			// This matches Plex's "On Deck" behavior - chronological order by access time
+			// Create a set of resume item IDs for quick lookup
+			val resumeItemIds = resumeItems.mapTo(HashSet()) { it.id }
+			
+			// Track series IDs from resume items to get their lastPlayedDate for next up matching
+			val seriesLastPlayedMap = mutableMapOf<java.util.UUID, java.time.LocalDateTime>()
+			resumeItems.forEach { item ->
+				val seriesId = item.seriesId
+				val lastPlayed = item.userData?.lastPlayedDate
+				if (seriesId != null && lastPlayed != null) {
+					val existing = seriesLastPlayedMap[seriesId]
+					if (existing == null || lastPlayed > existing) {
+						seriesLastPlayedMap[seriesId] = lastPlayed
+					}
+				}
+			}
+
 			val combinedItems = buildList {
 				addAll(resumeItems)
-				addAll(nextUpItems)
-			}.distinctBy { it.id } // Remove duplicates by ID
-				.sortedByDescending { item ->
-					// Handle null lastPlayedDate by using a very old date for sorting
-					item.userData?.lastPlayedDate ?: java.time.LocalDateTime.MIN
+				nextUpItems.filter { it.id !in resumeItemIds }.forEach { add(it) }
+			}.sortedWith { a, b ->
+				val aLastPlayed = a.userData?.lastPlayedDate
+					?: a.seriesId?.let { seriesLastPlayedMap[it] }
+				val bLastPlayed = b.userData?.lastPlayedDate
+					?: b.seriesId?.let { seriesLastPlayedMap[it] }
+
+				when {
+					aLastPlayed != null && bLastPlayed != null -> bLastPlayed.compareTo(aLastPlayed)
+					aLastPlayed != null -> -1
+					bLastPlayed != null -> 1
+					else -> 0
 				}
+			}
 
 			setItems(
 				items = combinedItems,

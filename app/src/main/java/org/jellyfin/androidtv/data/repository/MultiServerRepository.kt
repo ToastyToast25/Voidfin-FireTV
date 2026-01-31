@@ -75,6 +75,14 @@ interface MultiServerRepository {
 	 * Sorted by air date or most recent first.
 	 */
 	suspend fun getAggregatedNextUpItems(limit: Int): List<AggregatedItem>
+
+	/**
+	 * Aggregate merged continue watching (resume) and next up items from all logged-in servers.
+	 * Uses intelligent sorting: items are sorted by last played date, with next up items
+	 * inheriting their series' last played date from resume items when available.
+	 * This provides proper chronological ordering when combining both row types.
+	 */
+	suspend fun getAggregatedMergedContinueWatchingItems(limit: Int): List<AggregatedItem>
 }
 
 class MultiServerRepositoryImpl(
@@ -388,10 +396,105 @@ class MultiServerRepositoryImpl(
 			}
 		}.flatMap { it.await() }
 
-		// Sort by premiere date (most recent first) and take limit AFTER combining
-		allItems.sortedWith(
-			compareByDescending<AggregatedItem> { it.item.premiereDate }
-				.thenByDescending { it.item.dateCreated }
-		).take(limit)
+		allItems.sortedByDescending { it.item.userData?.lastPlayedDate }
+			.take(limit)
+	}
+
+	override suspend fun getAggregatedMergedContinueWatchingItems(limit: Int): List<AggregatedItem> = withContext(Dispatchers.IO) {
+		val loggedInServers = getLoggedInServers()
+		Timber.d("MultiServerRepository: Aggregating merged continue watching items from ${loggedInServers.size} servers")
+
+		// Request more items per server to ensure good coverage
+		val perServerLimit = minOf(limit * 3, 100)
+
+		// Fetch resume and next up items from all servers in parallel
+		val allResumeItems = loggedInServers.map { session ->
+			async {
+				try {
+					withTimeoutOrNull(SERVER_TIMEOUT) {
+						val query = GetResumeItemsRequest(
+							limit = perServerLimit,
+							fields = ItemRepository.itemFields,
+							imageTypeLimit = 1,
+							enableTotalRecordCount = false,
+						)
+						session.apiClient.itemsApi.getResumeItems(query).content.items.map { item ->
+							AggregatedItem(
+								item = item.withServerId(session.server.id),
+								server = session.server,
+								userId = session.userId,
+								apiClient = session.apiClient
+							)
+						}
+					} ?: emptyList()
+				} catch (e: Exception) {
+					Timber.e(e, "MultiServerRepository: Error getting resume items from ${session.server.name}")
+					emptyList()
+				}
+			}
+		}.awaitAll().flatten()
+
+		val allNextUpItems = loggedInServers.map { session ->
+			async {
+				try {
+					withTimeoutOrNull(SERVER_TIMEOUT) {
+						val query = GetNextUpRequest(
+							imageTypeLimit = 1,
+							limit = perServerLimit,
+							fields = ItemRepository.itemFields,
+						)
+						session.apiClient.tvShowsApi.getNextUp(query).content.items.map { item ->
+							AggregatedItem(
+								item = item.withServerId(session.server.id),
+								server = session.server,
+								userId = session.userId,
+								apiClient = session.apiClient
+							)
+						}
+					} ?: emptyList()
+				} catch (e: Exception) {
+					Timber.e(e, "MultiServerRepository: Error getting next up items from ${session.server.name}")
+					emptyList()
+				}
+			}
+		}.awaitAll().flatten()
+
+		Timber.d("MultiServerRepository: Loaded ${allResumeItems.size} resume items and ${allNextUpItems.size} next up items")
+
+		// Create a set of resume item IDs for quick lookup
+		val resumeItemIds = allResumeItems.mapTo(HashSet()) { it.item.id }
+
+		// Track series lastPlayedDate from resume items for next up matching
+		val seriesLastPlayedMap = mutableMapOf<UUID, java.time.LocalDateTime>()
+		allResumeItems.forEach { aggregatedItem ->
+			val seriesId = aggregatedItem.item.seriesId
+			val lastPlayed = aggregatedItem.item.userData?.lastPlayedDate
+			if (seriesId != null && lastPlayed != null) {
+				val existing = seriesLastPlayedMap[seriesId]
+				if (existing == null || lastPlayed > existing) {
+					seriesLastPlayedMap[seriesId] = lastPlayed
+				}
+			}
+		}
+
+		val combinedItems = buildList {
+			addAll(allResumeItems)
+			allNextUpItems.filter { it.item.id !in resumeItemIds }.forEach { add(it) }
+		}.sortedWith { a, b ->
+			val aLastPlayed = a.item.userData?.lastPlayedDate
+				?: a.item.seriesId?.let { seriesLastPlayedMap[it] }
+			val bLastPlayed = b.item.userData?.lastPlayedDate
+				?: b.item.seriesId?.let { seriesLastPlayedMap[it] }
+
+			when {
+				aLastPlayed != null && bLastPlayed != null -> bLastPlayed.compareTo(aLastPlayed)
+				aLastPlayed != null -> -1
+				bLastPlayed != null -> 1
+				else -> 0
+			}
+		}.take(limit)
+
+		Timber.d("MultiServerRepository: Merged result has ${combinedItems.size} items")
+		combinedItems
 	}
 }
