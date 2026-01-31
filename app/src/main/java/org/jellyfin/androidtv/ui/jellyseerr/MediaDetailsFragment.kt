@@ -959,7 +959,7 @@ class MediaDetailsFragment : Fragment() {
 				320.dp(context), // w-80 = 20rem = 320px
 				LinearLayout.LayoutParams.WRAP_CONTENT
 			).apply {
-				topMargin = (100.dp(context) * 0.05).toInt() // Lower by 5%
+				topMargin = (100.dp(context) * 0.33).toInt()
 			}
 			setBackgroundColor(Color.TRANSPARENT) // Transparent background
 			setPadding(0, 0, 0, 0)
