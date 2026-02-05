@@ -194,6 +194,9 @@
     <string name="msg_playlist_created">Playlist created</string>
     <string name="msg_failed_to_create_playlist">Failed to create playlist</string>
     <string name="msg_enter_playlist_name">Please enter a playlist name</string>
+    <string name="lbl_create">Create</string>
+    <string name="lbl_create_and_add">Create &amp; Add</string>
+    <string name="lbl_back">Back</string>
     <string name="lbl_open_artist">Open artist</string>
     <string name="lbl_open_album">Open album</string>
     <string name="lbl_shuffle_queue">Toggle shuffle</string>

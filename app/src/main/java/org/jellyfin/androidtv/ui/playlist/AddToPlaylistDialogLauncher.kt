@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.fragment.app.FragmentActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -17,7 +18,6 @@ import org.jellyfin.androidtv.preference.UserPreferences
 import org.jellyfin.androidtv.ui.base.JellyfinTheme
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.extensions.playlistsApi
-import org.jellyfin.sdk.model.api.CreatePlaylistDto
 import org.koin.compose.koinInject
 import timber.log.Timber
 import java.util.UUID
@@ -39,13 +39,12 @@ fun showAddToPlaylistDialog(
 					val multiServerRepository = koinInject<MultiServerRepository>()
 					val scope = rememberCoroutineScope()
 					var showDialog by remember { mutableStateOf(true) }
-					
-					// Check if multi-server is enabled
+					var activeApiForCreate by remember { mutableStateOf<ApiClient?>(null) }
+
 					val enableMultiServer = remember { 
-						userPreferences[UserPreferences.enableMultiServerLibraries] ?: false 
+						userPreferences[UserPreferences.enableMultiServerLibraries]
 					}
-					
-					// Load server sessions if multi-server is enabled
+
 					var serverSessions by remember { mutableStateOf<List<ServerUserSession>>(emptyList()) }
 					LaunchedEffect(enableMultiServer) {
 						if (enableMultiServer) {
@@ -55,6 +54,30 @@ fun showAddToPlaylistDialog(
 						}
 					}
 
+					LaunchedEffect(activeApiForCreate) {
+						activeApiForCreate?.let { serverApi ->
+							val activity = context as? FragmentActivity
+							if (activity != null) {
+								showDialog = false
+								dialog.hide()
+								val fragment = CreatePlaylistDialogFragment.newInstance(
+									itemId = itemId,
+									apiClient = serverApi,
+									onPlaylistCreated = {
+										dialog.dismiss()
+									},
+									onBackPressed = {
+
+										dialog.show()
+										showDialog = true
+									}
+								)
+								fragment.show(activity.supportFragmentManager, "create_playlist")
+							}
+							activeApiForCreate = null
+						}
+					}
+					
 					if (showDialog) {
 						AddToPlaylistDialog(
 							itemId = itemId,
@@ -95,38 +118,10 @@ fun showAddToPlaylistDialog(
 									dialog.dismiss()
 								}
 							},
-							onCreatePlaylist = { playlistName, isPublic, serverApi ->
-								scope.launch {
-									try {
-										withContext(Dispatchers.IO) {
-											val createRequest = CreatePlaylistDto(
-												name = playlistName,
-												ids = listOf(itemId),
-												users = emptyList(),
-												isPublic = isPublic,
-											)
-											serverApi.playlistsApi.createPlaylist(createRequest)
-										}
-										withContext(Dispatchers.Main) {
-											Toast.makeText(
-												context,
-												context.getString(R.string.msg_playlist_created),
-												Toast.LENGTH_SHORT
-											).show()
-										}
-									} catch (e: Exception) {
-										Timber.e(e, "Failed to create playlist")
-										withContext(Dispatchers.Main) {
-											Toast.makeText(
-												context,
-												context.getString(R.string.msg_failed_to_create_playlist),
-												Toast.LENGTH_SHORT
-											).show()
-										}
-									}
-									showDialog = false
-									dialog.dismiss()
-								}
+							onCreateNewPlaylist = { serverApi ->
+								// Hide compose dialog and show XML dialog
+								showDialog = false
+								activeApiForCreate = serverApi
 							}
 						)
 					}

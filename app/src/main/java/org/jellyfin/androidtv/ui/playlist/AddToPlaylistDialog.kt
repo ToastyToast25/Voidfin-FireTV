@@ -10,8 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -45,7 +44,7 @@ import timber.log.Timber
 import java.util.UUID
 
 internal enum class PlaylistDialogMode {
-	SELECT_SERVER, MAIN, SELECT_PLAYLIST, CREATE_NEW
+	SELECT_SERVER, MAIN, SELECT_PLAYLIST
 }
 
 @Composable
@@ -54,32 +53,26 @@ fun AddToPlaylistDialog(
 	api: ApiClient,
 	onDismiss: () -> Unit,
 	onAddToPlaylist: (playlistId: UUID, serverApi: ApiClient) -> Unit,
-	onCreatePlaylist: (name: String, isPublic: Boolean, serverApi: ApiClient) -> Unit,
+	onCreateNewPlaylist: (serverApi: ApiClient) -> Unit,
 	enableMultiServer: Boolean = false,
 	serverSessions: List<ServerUserSession> = emptyList(),
 ) {
-	// Start with server selection if multi-server is enabled and we have multiple servers
 	val initialMode = if (enableMultiServer && serverSessions.size > 1) {
 		PlaylistDialogMode.SELECT_SERVER
 	} else {
 		PlaylistDialogMode.MAIN
 	}
-	
+
 	var mode by remember { mutableStateOf(initialMode) }
 	var playlists by remember { mutableStateOf<List<BaseItemDto>>(emptyList()) }
 	var loadingPlaylists by remember { mutableStateOf(false) }
-	var newPlaylistName by remember { mutableStateOf("") }
-	var isPlaylistPublic by remember { mutableStateOf(false) }
-	
-	// Track selected server - default to the first session or use the main api
-	var selectedServerSession by remember { 
+	var selectedServerSession by remember {
 		mutableStateOf(serverSessions.firstOrNull())
 	}
 	val activeApi = selectedServerSession?.apiClient ?: api
 
 	LaunchedEffect(mode, selectedServerSession) {
 		if (mode == PlaylistDialogMode.SELECT_PLAYLIST) {
-			// Reset and reload playlists when entering playlist selection
 			playlists = emptyList()
 			loadingPlaylists = true
 			try {
@@ -100,20 +93,14 @@ fun AddToPlaylistDialog(
 		}
 	}
 
-	Surface(
-		modifier = Modifier,
-		color = Color.Black.copy(alpha = 0.95f),
-		shape = androidx.compose.material3.MaterialTheme.shapes.extraLarge
-	) {
-		AlertDialog(
-			onDismissRequest = onDismiss,
+	AlertDialog(
+		onDismissRequest = onDismiss,
 			title = {
 				androidx.compose.material3.Text(
 					when (mode) {
 						PlaylistDialogMode.SELECT_SERVER -> stringResource(R.string.lbl_select_server)
 						PlaylistDialogMode.MAIN -> stringResource(R.string.lbl_add_to_playlist)
 						PlaylistDialogMode.SELECT_PLAYLIST -> stringResource(R.string.lbl_select_playlist)
-						PlaylistDialogMode.CREATE_NEW -> stringResource(R.string.lbl_create_new_playlist)
 					},
 					color = Color.Gray
 				)
@@ -131,7 +118,7 @@ fun AddToPlaylistDialog(
 										},
 										modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
 										colors = ButtonDefaults.colors(
-											containerColor = JellyfinTheme.colorScheme.button,
+											containerColor = Color.Transparent,
 											contentColor = JellyfinTheme.colorScheme.onButton,
 											focusedContainerColor = JellyfinTheme.colorScheme.buttonFocused,
 											focusedContentColor = JellyfinTheme.colorScheme.onButtonFocused,
@@ -140,7 +127,6 @@ fun AddToPlaylistDialog(
 										androidx.compose.material3.Text(
 											session.server.name,
 											modifier = Modifier.fillMaxWidth(),
-											color = Color.White
 										)
 									}
 								}
@@ -151,7 +137,7 @@ fun AddToPlaylistDialog(
 								onClick = { mode = PlaylistDialogMode.SELECT_PLAYLIST },
 								modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
 								colors = ButtonDefaults.colors(
-									containerColor = JellyfinTheme.colorScheme.button,
+									containerColor = Color.Transparent,
 									contentColor = JellyfinTheme.colorScheme.onButton,
 									focusedContainerColor = JellyfinTheme.colorScheme.buttonFocused,
 									focusedContentColor = JellyfinTheme.colorScheme.onButtonFocused,
@@ -165,16 +151,17 @@ fun AddToPlaylistDialog(
 									Icon(
 										imageVector = ImageVector.vectorResource(R.drawable.ic_folder),
 										contentDescription = null,
-										modifier = Modifier.padding(end = 12.dp)
+										modifier = Modifier.padding(end = 12.dp),
+										tint = LocalContentColor.current
 									)
-									androidx.compose.material3.Text(stringResource(R.string.lbl_select_playlist), color = Color.White)
+									androidx.compose.material3.Text(stringResource(R.string.lbl_select_playlist))
 								}
 							}
 							Button(
-								onClick = { mode = PlaylistDialogMode.CREATE_NEW },
+								onClick = { onCreateNewPlaylist(activeApi) },
 								modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
 								colors = ButtonDefaults.colors(
-									containerColor = JellyfinTheme.colorScheme.button,
+									containerColor = Color.Transparent,
 									contentColor = JellyfinTheme.colorScheme.onButton,
 									focusedContainerColor = JellyfinTheme.colorScheme.buttonFocused,
 									focusedContentColor = JellyfinTheme.colorScheme.onButtonFocused,
@@ -188,9 +175,10 @@ fun AddToPlaylistDialog(
 									Icon(
 										imageVector = ImageVector.vectorResource(R.drawable.ic_add),
 										contentDescription = null,
-										modifier = Modifier.padding(end = 12.dp)
+										modifier = Modifier.padding(end = 12.dp),
+										tint = LocalContentColor.current
 									)
-									androidx.compose.material3.Text(stringResource(R.string.lbl_create_new_playlist), color = Color.White)
+									androidx.compose.material3.Text(stringResource(R.string.lbl_create_new_playlist))
 								}
 							}
 						}
@@ -217,7 +205,7 @@ fun AddToPlaylistDialog(
 											},
 											modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
 											colors = ButtonDefaults.colors(
-												containerColor = JellyfinTheme.colorScheme.button,
+												containerColor = Color.Transparent,
 												contentColor = JellyfinTheme.colorScheme.onButton,
 												focusedContainerColor = JellyfinTheme.colorScheme.buttonFocused,
 												focusedContentColor = JellyfinTheme.colorScheme.onButtonFocused,
@@ -226,34 +214,10 @@ fun AddToPlaylistDialog(
 											androidx.compose.material3.Text(
 												playlist.name ?: "Unknown",
 												modifier = Modifier.fillMaxWidth(),
-												color = Color.White
 											)
 										}
 									}
 								}
-							}
-						}
-						PlaylistDialogMode.CREATE_NEW -> {
-							OutlinedTextField(
-								value = newPlaylistName,
-								onValueChange = { newPlaylistName = it },
-								label = { androidx.compose.material3.Text(stringResource(R.string.lbl_playlist_name)) },
-								modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-								singleLine = true
-							)
-							Row(
-								modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-								verticalAlignment = Alignment.CenterVertically,
-								horizontalArrangement = Arrangement.SpaceBetween
-							) {
-								androidx.compose.material3.Text(
-									stringResource(R.string.lbl_public_playlist),
-									color = Color.Gray
-								)
-								androidx.compose.material3.Switch(
-									checked = isPlaylistPublic,
-									onCheckedChange = { isPlaylistPublic = it }
-								)
 							}
 						}
 					}
@@ -262,7 +226,7 @@ fun AddToPlaylistDialog(
 			confirmButton = {
 				when (mode) {
 					PlaylistDialogMode.SELECT_SERVER -> { }
-					PlaylistDialogMode.MAIN -> { 
+					PlaylistDialogMode.MAIN -> {
 						// Show back button to server selection if multi-server is enabled
 						if (enableMultiServer && serverSessions.size > 1) {
 							TextButton(onClick = { mode = PlaylistDialogMode.SELECT_SERVER }) {
@@ -275,23 +239,6 @@ fun AddToPlaylistDialog(
 							androidx.compose.material3.Text("Back")
 						}
 					}
-					PlaylistDialogMode.CREATE_NEW -> {
-						Row {
-							TextButton(onClick = { mode = PlaylistDialogMode.MAIN }) {
-								androidx.compose.material3.Text("Back")
-							}
-							TextButton(
-								onClick = {
-									if (newPlaylistName.isNotBlank()) {
-										onCreatePlaylist(newPlaylistName.trim(), isPlaylistPublic, activeApi)
-									}
-								},
-								enabled = newPlaylistName.isNotBlank()
-							) {
-								androidx.compose.material3.Text("Create & Add")
-							}
-						}
-					}
 				}
 			},
 			dismissButton = {
@@ -300,5 +247,5 @@ fun AddToPlaylistDialog(
 				}
 			}
 		)
-	}
 }
+

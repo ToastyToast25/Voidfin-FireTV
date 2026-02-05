@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	android:layout_width="400dp"
+	android:layout_height="wrap_content"
+	android:layout_gravity="center"
+	app:cardBackgroundColor="@color/white"
+	app:cardCornerRadius="28dp"
+	app:cardElevation="8dp">
+
+	<LinearLayout
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:orientation="vertical"
+		android:padding="24dp">
+
+		<TextView
+			android:id="@+id/dialog_title"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:text="@string/lbl_create_new_playlist"
+			android:textSize="20sp"
+			android:textStyle="bold"
+			android:textColor="@color/black"
+			android:layout_marginBottom="24dp" />
+
+		<TextView
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:text="@string/lbl_playlist_name"
+			android:textSize="12sp"
+			android:textColor="@color/grey"
+			android:layout_marginBottom="8dp" />
+
+		<EditText
+			android:id="@+id/playlist_name_input"
+			android:layout_width="match_parent"
+			android:layout_height="48dp"
+			android:hint="@string/lbl_playlist_name"
+			android:inputType="text"
+			android:textColor="@color/black"
+			android:textColorHint="@color/grey"
+			android:background="@drawable/input_rounded_background"
+			android:paddingStart="16dp"
+			android:paddingEnd="16dp"
+			android:layout_marginBottom="20dp"
+			android:nextFocusDown="@id/public_playlist_container"
+			android:imeOptions="actionNext" />
+
+		<LinearLayout
+			android:id="@+id/public_playlist_container"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:orientation="horizontal"
+			android:gravity="center_vertical"
+			android:background="@drawable/switch_background"
+			android:padding="12dp"
+			android:focusable="true"
+			android:focusableInTouchMode="false"
+			android:layout_marginBottom="28dp">
+
+			<TextView
+				android:id="@+id/public_playlist_label"
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_weight="1"
+				android:text="@string/lbl_public_playlist"
+				android:textSize="16sp"
+				android:textColor="@color/black" />
+
+			<Switch
+				android:id="@+id/public_playlist_switch"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:thumbTint="@color/white"
+				android:trackTint="@color/switch_track_color"
+				android:focusable="false"
+				android:nextFocusUp="@id/playlist_name_input"
+				android:nextFocusDown="@id/button_cancel" />
+
+		</LinearLayout>
+
+		<LinearLayout
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:orientation="horizontal"
+			android:gravity="end">
+
+			<Button
+				android:id="@+id/button_cancel"
+				android:layout_width="wrap_content"
+				android:layout_height="40dp"
+				android:text="@android:string/cancel"
+				android:textAllCaps="false"
+				android:textColor="@color/button_text_color"
+				android:background="@drawable/button_text_background"
+				android:paddingStart="16dp"
+				android:paddingEnd="16dp"
+				android:minWidth="80dp"
+				android:stateListAnimator="@null"
+				android:nextFocusUp="@id/public_playlist_container"
+				android:nextFocusRight="@id/button_back" />
+
+			<Button
+				android:id="@+id/button_back"
+				android:layout_width="wrap_content"
+				android:layout_height="40dp"
+				android:text="@string/lbl_back"
+				android:textAllCaps="false"
+				android:textColor="@color/button_text_color"
+				android:background="@drawable/button_text_background"
+				android:paddingStart="16dp"
+				android:paddingEnd="16dp"
+				android:minWidth="80dp"
+				android:layout_marginStart="8dp"
+				android:stateListAnimator="@null"
+				android:nextFocusUp="@id/public_playlist_container"
+				android:nextFocusLeft="@id/button_cancel"
+				android:nextFocusRight="@id/button_create" />
+
+			<Button
+				android:id="@+id/button_create"
+				android:layout_width="wrap_content"
+				android:layout_height="40dp"
+				android:text="@string/lbl_create_and_add"
+				android:textAllCaps="false"
+				android:textColor="@color/button_text_color"
+				android:background="@drawable/button_text_background"
+				android:paddingStart="16dp"
+				android:paddingEnd="16dp"
+				android:minWidth="100dp"
+				android:layout_marginStart="8dp"
+				android:stateListAnimator="@null"
+				android:nextFocusUp="@id/public_playlist_container" />
+
+		</LinearLayout>
+
+	</LinearLayout>
+
+</androidx.cardview.widget.CardView>
