@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.LocalContext
@@ -33,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import org.jellyfin.androidtv.R
+import org.jellyfin.androidtv.ui.base.JellyfinTheme
 import org.jellyfin.androidtv.ui.base.ProvideTextStyle
 import org.jellyfin.androidtv.ui.base.Text
 import org.jellyfin.androidtv.ui.base.button.ButtonBase
@@ -92,6 +94,7 @@ fun NowPlayingComposable(
 							.padding(3.dp)
 					) {
 						val image = item.itemImages[ImageType.PRIMARY] ?: item.albumPrimaryImage ?: item.parentImages[ImageType.PRIMARY]
+						val progressFillColor = JellyfinTheme.colorScheme.rangeControlFill
 
 						AsyncImage(
 							url = image?.getUrl(api),
@@ -104,16 +107,18 @@ fun NowPlayingComposable(
 								.drawWithContent {
 									drawContent()
 
+									val width = 3.dp.toPx()
+
 									// Background
 									drawCircle(
-										style = Stroke(width = 3.dp.toPx()),
-									color = overlayColor,
-									alpha = overlayOpacity * 0.7f,
+										style = Stroke(width),
+										color = overlayColor,
+										alpha = overlayOpacity * 0.7f,
 									)
 									// Foreground
 									drawArc(
-										style = Stroke(width = 3.dp.toPx()),
-										color = Color.White,
+										style = Stroke(width, cap = StrokeCap.Round),
+										color = progressFillColor,
 										useCenter = false,
 										startAngle = -90f,
 										sweepAngle = 360f * progress,
