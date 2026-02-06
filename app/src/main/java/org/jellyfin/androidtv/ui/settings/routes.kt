@@ -35,23 +35,23 @@ import org.jellyfin.androidtv.ui.settings.screen.license.SettingsLicensesScreen
 import org.jellyfin.androidtv.ui.settings.screen.livetv.SettingsLiveTvGuideChannelOrderScreen
 import org.jellyfin.androidtv.ui.settings.screen.livetv.SettingsLiveTvGuideFiltersScreen
 import org.jellyfin.androidtv.ui.settings.screen.livetv.SettingsLiveTvGuideOptionsScreen
-import org.jellyfin.androidtv.ui.settings.screen.voidfin.SettingsJellyseerrRowsScreen
-import org.jellyfin.androidtv.ui.settings.screen.voidfin.SettingsJellyseerrScreen
-import org.jellyfin.androidtv.ui.settings.screen.voidfin.SettingsVoidfinBrowsingBlurScreen
-import org.jellyfin.androidtv.ui.settings.screen.voidfin.SettingsVoidfinDetailsBlurScreen
-import org.jellyfin.androidtv.ui.settings.screen.voidfin.SettingsVoidfinHomeRowsImageScreen
-import org.jellyfin.androidtv.ui.settings.screen.voidfin.SettingsVoidfinMediaBarColorScreen
-import org.jellyfin.androidtv.ui.settings.screen.voidfin.SettingsVoidfinMediaBarContentTypeScreen
-import org.jellyfin.androidtv.ui.settings.screen.voidfin.SettingsVoidfinMediaBarItemCountScreen
-import org.jellyfin.androidtv.ui.settings.screen.voidfin.SettingsVoidfinMediaBarOpacityScreen
-import org.jellyfin.androidtv.ui.settings.screen.voidfin.SettingsVoidfinNavbarPositionScreen
-import org.jellyfin.androidtv.ui.settings.screen.voidfin.SettingsVoidfinMdblistApiKeyScreen
-import org.jellyfin.androidtv.ui.settings.screen.voidfin.SettingsVoidfinTmdbApiKeyScreen
-import org.jellyfin.androidtv.ui.settings.screen.voidfin.SettingsVoidfinParentalControlsScreen
-import org.jellyfin.androidtv.ui.settings.screen.voidfin.SettingsVoidfinSeasonalSurpriseScreen
-import org.jellyfin.androidtv.ui.settings.screen.voidfin.SettingsVoidfinShuffleContentTypeScreen
-import org.jellyfin.androidtv.ui.settings.screen.voidfin.SettingsVoidfinSyncPlayScreen
-import org.jellyfin.androidtv.ui.settings.screen.voidfin.SettingsVoidfinThemeMusicVolumeScreen
+import org.jellyfin.androidtv.ui.settings.screen.voidstream.SettingsJellyseerrRowsScreen
+import org.jellyfin.androidtv.ui.settings.screen.voidstream.SettingsJellyseerrScreen
+import org.jellyfin.androidtv.ui.settings.screen.voidstream.SettingsVoidStreamBrowsingBlurScreen
+import org.jellyfin.androidtv.ui.settings.screen.voidstream.SettingsVoidStreamDetailsBlurScreen
+import org.jellyfin.androidtv.ui.settings.screen.voidstream.SettingsVoidStreamHomeRowsImageScreen
+import org.jellyfin.androidtv.ui.settings.screen.voidstream.SettingsVoidStreamMediaBarColorScreen
+import org.jellyfin.androidtv.ui.settings.screen.voidstream.SettingsVoidStreamMediaBarContentTypeScreen
+import org.jellyfin.androidtv.ui.settings.screen.voidstream.SettingsVoidStreamMediaBarItemCountScreen
+import org.jellyfin.androidtv.ui.settings.screen.voidstream.SettingsVoidStreamMediaBarOpacityScreen
+import org.jellyfin.androidtv.ui.settings.screen.voidstream.SettingsVoidStreamNavbarPositionScreen
+import org.jellyfin.androidtv.ui.settings.screen.voidstream.SettingsVoidStreamMdblistApiKeyScreen
+import org.jellyfin.androidtv.ui.settings.screen.voidstream.SettingsVoidStreamTmdbApiKeyScreen
+import org.jellyfin.androidtv.ui.settings.screen.voidstream.SettingsVoidStreamParentalControlsScreen
+import org.jellyfin.androidtv.ui.settings.screen.voidstream.SettingsVoidStreamSeasonalSurpriseScreen
+import org.jellyfin.androidtv.ui.settings.screen.voidstream.SettingsVoidStreamShuffleContentTypeScreen
+import org.jellyfin.androidtv.ui.settings.screen.voidstream.SettingsVoidStreamSyncPlayScreen
+import org.jellyfin.androidtv.ui.settings.screen.voidstream.SettingsVoidStreamThemeMusicVolumeScreen
 import org.jellyfin.androidtv.ui.settings.screen.playback.SettingsPlaybackAdvancedScreen
 import org.jellyfin.androidtv.ui.settings.screen.playback.SettingsPlaybackAudioBehaviorScreen
 import org.jellyfin.androidtv.ui.settings.screen.playback.SettingsPlaybackInactivityPromptScreen
@@ -125,26 +125,26 @@ object Routes {
 	const val PLAYBACK_AUDIO_BEHAVIOR = "/playback/audio-behavior"
 	const val JELLYSEERR = "/jellyseerr"
 	const val JELLYSEERR_ROWS = "/jellyseerr/rows"
-	const val VOIDFIN_NAVBAR_POSITION = "/voidfin/navbar-position"
-	const val VOIDFIN_SHUFFLE_CONTENT_TYPE = "/voidfin/shuffle-content-type"
-	const val VOIDFIN_MEDIA_BAR_CONTENT_TYPE = "/voidfin/media-bar-content-type"
-	const val VOIDFIN_MEDIA_BAR_ITEM_COUNT = "/voidfin/media-bar-item-count"
-	const val VOIDFIN_MEDIA_BAR_OPACITY = "/voidfin/media-bar-opacity"
-	const val VOIDFIN_MEDIA_BAR_COLOR = "/voidfin/media-bar-color"
-	const val VOIDFIN_THEME_MUSIC_VOLUME = "/voidfin/theme-music-volume"
-	const val VOIDFIN_SEASONAL_SURPRISE = "/voidfin/seasonal-surprise"
-	const val VOIDFIN_HOME_ROWS_IMAGE = "/voidfin/home-rows-image"
-	const val VOIDFIN_DETAILS_BLUR = "/voidfin/details-blur"
-	const val VOIDFIN_BROWSING_BLUR = "/voidfin/browsing-blur"
-	const val VOIDFIN_MDBLIST_API_KEY = "/voidfin/mdblist-api-key"
-	const val VOIDFIN_TMDB_API_KEY = "/voidfin/tmdb-api-key"
-	const val VOIDFIN_PARENTAL_CONTROLS = "/voidfin/parental-controls"
-	const val VOIDFIN_SYNCPLAY = "/voidfin/syncplay"
-	const val VOIDFIN_SYNCPLAY_MIN_DELAY = "/voidfin/syncplay/min-delay-speed-to-sync"
-	const val VOIDFIN_SYNCPLAY_MAX_DELAY = "/voidfin/syncplay/max-delay-speed-to-sync"
-	const val VOIDFIN_SYNCPLAY_DURATION = "/voidfin/syncplay/speed-to-sync-duration"
-	const val VOIDFIN_SYNCPLAY_MIN_DELAY_SKIP = "/voidfin/syncplay/min-delay-skip-to-sync"
-	const val VOIDFIN_SYNCPLAY_EXTRA_OFFSET = "/voidfin/syncplay/extra-time-offset"
+	const val VOIDSTREAM_NAVBAR_POSITION = "/voidstream/navbar-position"
+	const val VOIDSTREAM_SHUFFLE_CONTENT_TYPE = "/voidstream/shuffle-content-type"
+	const val VOIDSTREAM_MEDIA_BAR_CONTENT_TYPE = "/voidstream/media-bar-content-type"
+	const val VOIDSTREAM_MEDIA_BAR_ITEM_COUNT = "/voidstream/media-bar-item-count"
+	const val VOIDSTREAM_MEDIA_BAR_OPACITY = "/voidstream/media-bar-opacity"
+	const val VOIDSTREAM_MEDIA_BAR_COLOR = "/voidstream/media-bar-color"
+	const val VOIDSTREAM_THEME_MUSIC_VOLUME = "/voidstream/theme-music-volume"
+	const val VOIDSTREAM_SEASONAL_SURPRISE = "/voidstream/seasonal-surprise"
+	const val VOIDSTREAM_HOME_ROWS_IMAGE = "/voidstream/home-rows-image"
+	const val VOIDSTREAM_DETAILS_BLUR = "/voidstream/details-blur"
+	const val VOIDSTREAM_BROWSING_BLUR = "/voidstream/browsing-blur"
+	const val VOIDSTREAM_MDBLIST_API_KEY = "/voidstream/mdblist-api-key"
+	const val VOIDSTREAM_TMDB_API_KEY = "/voidstream/tmdb-api-key"
+	const val VOIDSTREAM_PARENTAL_CONTROLS = "/voidstream/parental-controls"
+	const val VOIDSTREAM_SYNCPLAY = "/voidstream/syncplay"
+	const val VOIDSTREAM_SYNCPLAY_MIN_DELAY = "/voidstream/syncplay/min-delay-speed-to-sync"
+	const val VOIDSTREAM_SYNCPLAY_MAX_DELAY = "/voidstream/syncplay/max-delay-speed-to-sync"
+	const val VOIDSTREAM_SYNCPLAY_DURATION = "/voidstream/syncplay/speed-to-sync-duration"
+	const val VOIDSTREAM_SYNCPLAY_MIN_DELAY_SKIP = "/voidstream/syncplay/min-delay-skip-to-sync"
+	const val VOIDSTREAM_SYNCPLAY_EXTRA_OFFSET = "/voidstream/syncplay/extra-time-offset"
 	const val SYNCPLAY = "/syncplay"
 	const val TELEMETRY = "/telemetry"
 	const val DEVELOPER = "/developer"
@@ -365,54 +365,54 @@ val routes = mapOf<String, RouteComposable>(
 	Routes.JELLYSEERR_ROWS to {
 		SettingsJellyseerrRowsScreen()
 	},
-	Routes.VOIDFIN_NAVBAR_POSITION to {
-		SettingsVoidfinNavbarPositionScreen()
+	Routes.VOIDSTREAM_NAVBAR_POSITION to {
+		SettingsVoidStreamNavbarPositionScreen()
 	},
-	Routes.VOIDFIN_SHUFFLE_CONTENT_TYPE to {
-		SettingsVoidfinShuffleContentTypeScreen()
+	Routes.VOIDSTREAM_SHUFFLE_CONTENT_TYPE to {
+		SettingsVoidStreamShuffleContentTypeScreen()
 	},
-	Routes.VOIDFIN_MEDIA_BAR_CONTENT_TYPE to {
-		SettingsVoidfinMediaBarContentTypeScreen()
+	Routes.VOIDSTREAM_MEDIA_BAR_CONTENT_TYPE to {
+		SettingsVoidStreamMediaBarContentTypeScreen()
 	},
-	Routes.VOIDFIN_MEDIA_BAR_ITEM_COUNT to {
-		SettingsVoidfinMediaBarItemCountScreen()
+	Routes.VOIDSTREAM_MEDIA_BAR_ITEM_COUNT to {
+		SettingsVoidStreamMediaBarItemCountScreen()
 	},
-	Routes.VOIDFIN_MEDIA_BAR_OPACITY to {
-		SettingsVoidfinMediaBarOpacityScreen()
+	Routes.VOIDSTREAM_MEDIA_BAR_OPACITY to {
+		SettingsVoidStreamMediaBarOpacityScreen()
 	},
-	Routes.VOIDFIN_MEDIA_BAR_COLOR to {
-		SettingsVoidfinMediaBarColorScreen()
+	Routes.VOIDSTREAM_MEDIA_BAR_COLOR to {
+		SettingsVoidStreamMediaBarColorScreen()
 	},
-	Routes.VOIDFIN_THEME_MUSIC_VOLUME to {
-		SettingsVoidfinThemeMusicVolumeScreen()
+	Routes.VOIDSTREAM_THEME_MUSIC_VOLUME to {
+		SettingsVoidStreamThemeMusicVolumeScreen()
 	},
-	Routes.VOIDFIN_SEASONAL_SURPRISE to {
-		SettingsVoidfinSeasonalSurpriseScreen()
+	Routes.VOIDSTREAM_SEASONAL_SURPRISE to {
+		SettingsVoidStreamSeasonalSurpriseScreen()
 	},
-	Routes.VOIDFIN_HOME_ROWS_IMAGE to {
-		SettingsVoidfinHomeRowsImageScreen()
+	Routes.VOIDSTREAM_HOME_ROWS_IMAGE to {
+		SettingsVoidStreamHomeRowsImageScreen()
 	},
-	Routes.VOIDFIN_DETAILS_BLUR to {
-		SettingsVoidfinDetailsBlurScreen()
+	Routes.VOIDSTREAM_DETAILS_BLUR to {
+		SettingsVoidStreamDetailsBlurScreen()
 	},
-	Routes.VOIDFIN_BROWSING_BLUR to {
-		SettingsVoidfinBrowsingBlurScreen()
+	Routes.VOIDSTREAM_BROWSING_BLUR to {
+		SettingsVoidStreamBrowsingBlurScreen()
 	},
-	Routes.VOIDFIN_MDBLIST_API_KEY to {
-		SettingsVoidfinMdblistApiKeyScreen()
+	Routes.VOIDSTREAM_MDBLIST_API_KEY to {
+		SettingsVoidStreamMdblistApiKeyScreen()
 	},
-	Routes.VOIDFIN_TMDB_API_KEY to {
-		SettingsVoidfinTmdbApiKeyScreen()
+	Routes.VOIDSTREAM_TMDB_API_KEY to {
+		SettingsVoidStreamTmdbApiKeyScreen()
 	},
-	Routes.VOIDFIN_PARENTAL_CONTROLS to {
-		SettingsVoidfinParentalControlsScreen()
+	Routes.VOIDSTREAM_PARENTAL_CONTROLS to {
+		SettingsVoidStreamParentalControlsScreen()
 	},
-	Routes.VOIDFIN_SYNCPLAY to {
-		SettingsVoidfinSyncPlayScreen()
+	Routes.VOIDSTREAM_SYNCPLAY to {
+		SettingsVoidStreamSyncPlayScreen()
 	},
-	Routes.VOIDFIN_SYNCPLAY_MIN_DELAY to {
+	Routes.VOIDSTREAM_SYNCPLAY_MIN_DELAY to {
 		SettingsNumericScreen(
-			route = Routes.VOIDFIN_SYNCPLAY_MIN_DELAY,
+			route = Routes.VOIDSTREAM_SYNCPLAY_MIN_DELAY,
 			preference = UserPreferences.syncPlayMinDelaySpeedToSync,
 			titleRes = R.string.pref_syncplay_min_delay_speed_to_sync,
 			valueTemplate = R.string.pref_syncplay_min_delay_speed_to_sync_description,
@@ -421,9 +421,9 @@ val routes = mapOf<String, RouteComposable>(
 			stepSize = 10.0,
 		)
 	},
-	Routes.VOIDFIN_SYNCPLAY_MAX_DELAY to {
+	Routes.VOIDSTREAM_SYNCPLAY_MAX_DELAY to {
 		SettingsNumericScreen(
-			route = Routes.VOIDFIN_SYNCPLAY_MAX_DELAY,
+			route = Routes.VOIDSTREAM_SYNCPLAY_MAX_DELAY,
 			preference = UserPreferences.syncPlayMaxDelaySpeedToSync,
 			titleRes = R.string.pref_syncplay_max_delay_speed_to_sync,
 			valueTemplate = R.string.pref_syncplay_max_delay_speed_to_sync_description,
@@ -432,9 +432,9 @@ val routes = mapOf<String, RouteComposable>(
 			stepSize = 10.0,
 		)
 	},
-	Routes.VOIDFIN_SYNCPLAY_DURATION to {
+	Routes.VOIDSTREAM_SYNCPLAY_DURATION to {
 		SettingsNumericScreen(
-			route = Routes.VOIDFIN_SYNCPLAY_DURATION,
+			route = Routes.VOIDSTREAM_SYNCPLAY_DURATION,
 			preference = UserPreferences.syncPlaySpeedToSyncDuration,
 			titleRes = R.string.pref_syncplay_speed_to_sync_duration,
 			valueTemplate = R.string.pref_syncplay_speed_to_sync_duration_description,
@@ -443,9 +443,9 @@ val routes = mapOf<String, RouteComposable>(
 			stepSize = 100.0,
 		)
 	},
-	Routes.VOIDFIN_SYNCPLAY_MIN_DELAY_SKIP to {
+	Routes.VOIDSTREAM_SYNCPLAY_MIN_DELAY_SKIP to {
 		SettingsNumericScreen(
-			route = Routes.VOIDFIN_SYNCPLAY_MIN_DELAY_SKIP,
+			route = Routes.VOIDSTREAM_SYNCPLAY_MIN_DELAY_SKIP,
 			preference = UserPreferences.syncPlayMinDelaySkipToSync,
 			titleRes = R.string.pref_syncplay_min_delay_skip_to_sync,
 			valueTemplate = R.string.pref_syncplay_min_delay_skip_to_sync_description,
@@ -454,9 +454,9 @@ val routes = mapOf<String, RouteComposable>(
 			stepSize = 10.0,
 		)
 	},
-	Routes.VOIDFIN_SYNCPLAY_EXTRA_OFFSET to {
+	Routes.VOIDSTREAM_SYNCPLAY_EXTRA_OFFSET to {
 		SettingsNumericScreen(
-			route = Routes.VOIDFIN_SYNCPLAY_EXTRA_OFFSET,
+			route = Routes.VOIDSTREAM_SYNCPLAY_EXTRA_OFFSET,
 			preference = UserPreferences.syncPlayExtraTimeOffset,
 			titleRes = R.string.pref_syncplay_extra_time_offset,
 			valueTemplate = R.string.pref_syncplay_extra_time_offset_description,
@@ -466,7 +466,7 @@ val routes = mapOf<String, RouteComposable>(
 		)
 	},
 	Routes.SYNCPLAY to {
-		SettingsVoidfinSyncPlayScreen()
+		SettingsVoidStreamSyncPlayScreen()
 	},
 	Routes.TELEMETRY to {
 		SettingsTelemetryScreen()

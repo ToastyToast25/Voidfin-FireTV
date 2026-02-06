@@ -1,21 +1,21 @@
 <p align="center">
-   <img src="LOGOS/voidfin_logo.png" alt="VoidStream" width="300" />
+   <img src="LOGOS/voidstream_logo.png" alt="VoidStream" width="300" />
 </p>
 
-<h1 align="center">Voidfin for Android TV</h1>
+<h1 align="center">VoidStream for Android TV</h1>
 <h3 align="center">Enhanced Jellyfin client for Android TV, Nvidia Shield, and Amazon Fire TV devices</h3>
 
 ---
 
-[![Release](https://img.shields.io/github/release/ToastyToast25/Voidfin-FireTV.svg)](https://github.com/ToastyToast25/Voidfin-FireTV/releases)
+[![Release](https://img.shields.io/github/release/ToastyToast25/VoidStream-FireTV.svg)](https://github.com/ToastyToast25/VoidStream-FireTV/releases)
 
-> **[← Back to main Voidfin project](https://github.com/ToastyToast25)**
+> **[← Back to main VoidStream project](https://github.com/ToastyToast25)**
 
-Voidfin for Android TV is an enhanced fork of the official Jellyfin Android TV client, optimized for the viewing experience on Android TV, Nvidia Shield, and Amazon Fire TV devices.
+VoidStream for Android TV is an enhanced fork of the official Jellyfin Android TV client, optimized for the viewing experience on Android TV, Nvidia Shield, and Amazon Fire TV devices.
 
 ## Features & Enhancements
 
-Voidfin for Android TV builds on the solid foundation of Jellyfin with targeted improvements for TV viewing:
+VoidStream for Android TV builds on the solid foundation of Jellyfin with targeted improvements for TV viewing:
 
 ### Cross-Server Content Playback
 - **Unified Library Support** - Seamless playback from multiple Jellyfin servers
@@ -38,7 +38,7 @@ Voidfin for Android TV builds on the solid foundation of Jellyfin with targeted 
 
 ### Jellyseerr Integration
 
-Voidfin is the first Android TV client with native Jellyseerr support.
+VoidStream is the first Android TV client with native Jellyseerr support.
 
 - Browse trending, popular, and recommended movies/shows and filter content by Series/Movie Genres, Studio, Network, and keywords
 - Request content in HD or 4K directly from your Roku
@@ -91,7 +91,7 @@ Voidfin is the first Android TV client with native Jellyseerr support.
 - **Next Episode Countdown** - Skip button shows countdown timer when next episode is available
 - **Automatic Screensaver Dimming** - Reduces brightness after 90 seconds of playback inactivity to prevent screen burn-in with dynamic logo/clock movement
 - **Exit Confirmation Dialog** - Optional confirmation prompt when exiting the app (configurable in settings)
-- **OTA Update System** - Automatic check for new Voidfin versions with in-app update notifications
+- **OTA Update System** - Automatic check for new VoidStream versions with in-app update notifications
 
 ### Improved Details Screen
 - Metadata organized into clear sections: genres, directors, writers, studios, and runtime
@@ -124,13 +124,13 @@ https://github.com/user-attachments/assets/0414ffca-60f4-470a-94b9-6b3405b3570c
 
 ---
 
-**Disclaimer:** Screenshots shown in this documentation feature media content, artwork, and actor likenesses for demonstration purposes only. None of the media, studios, actors, or other content depicted are affiliated with, sponsored by, or endorsing the Voidfin client or the Jellyfin project. All rights to the portrayed content belong to their respective copyright holders. These screenshots are used solely to demonstrate the functionality and interface of the application.
+**Disclaimer:** Screenshots shown in this documentation feature media content, artwork, and actor likenesses for demonstration purposes only. None of the media, studios, actors, or other content depicted are affiliated with, sponsored by, or endorsing the VoidStream client or the Jellyfin project. All rights to the portrayed content belong to their respective copyright holders. These screenshots are used solely to demonstrate the functionality and interface of the application.
 
 ---
 
 ## Installation on Amazon Fire TV / Fire Stick
 
-Follow these steps to install Voidfin on your Fire TV Stick or Fire TV device:
+Follow these steps to install VoidStream on your Fire TV Stick or Fire TV device:
 
 ### Step 1: Enable Developer Options
 1. Go to **Settings** on your Fire TV
@@ -150,20 +150,20 @@ Follow these steps to install Voidfin on your Fire TV Stick or Fire TV device:
 3. Install and open the Downloader app
 4. When prompted, allow Downloader to access files
 
-### Step 4: Download and Install Voidfin
+### Step 4: Download and Install VoidStream
 1. Open the **Downloader** app
 2. In the URL field, enter the download URL for the latest release:
    ```
-   https://github.com/ToastyToast25/Voidfin-FireTV/releases/latest
+   https://github.com/ToastyToast25/VoidStream-FireTV/releases/latest
    ```
 3. Navigate to the **Assets** section and select the `.apk` file
 4. The APK will download — when finished, select **Install**
 5. Once installed, select **Done** (or **Open** to launch immediately)
 6. Go back to Downloader and select **Delete** to remove the APK file and free up space
 
-### Step 5: Launch Voidfin
-1. Go to **Settings → Applications → Manage Installed Applications** to find Voidfin
-2. Or look for **Voidfin** in your Apps & Channels row on the home screen
+### Step 5: Launch VoidStream
+1. Go to **Settings → Applications → Manage Installed Applications** to find VoidStream
+2. Or look for **VoidStream** in your Apps & Channels row on the home screen
 3. To move it to the front: long-press the app icon → select **Move to front**
 
 ### Alternative: Sideload via ADB
@@ -175,14 +175,14 @@ If you prefer using a computer:
    ```bash
    adb connect <FIRE_TV_IP>:5555
    ```
-4. Download the APK from the [Releases page](https://github.com/ToastyToast25/Voidfin-FireTV/releases)
+4. Download the APK from the [Releases page](https://github.com/ToastyToast25/VoidStream-FireTV/releases)
 5. Install via ADB:
    ```bash
-   adb install voidfin-androidtv-v*.apk
+   adb install voidstream-androidtv-v*.apk
    ```
 
-### Updating Voidfin
-Voidfin includes a built-in **OTA Update System** that automatically checks for new versions. When an update is available, you'll receive an in-app notification with the option to download and install directly — no need to repeat the sideloading steps.
+### Updating VoidStream
+VoidStream includes a built-in **OTA Update System** that automatically checks for new versions. When an update is available, you'll receive an in-app notification with the option to download and install directly — no need to repeat the sideloading steps.
 
 ## Other Supported Devices
 
@@ -194,7 +194,7 @@ Voidfin includes a built-in **OTA Update System** that automatically checks for 
 To enable media discovery and requesting:
 
 1. Install and configure Jellyseerr on your network ([jellyseerr.dev](https://jellyseerr.dev))
-2. In Voidfin, go to **Settings → Jellyseerr**
+2. In VoidStream, go to **Settings → Jellyseerr**
 3. Enter your Jellyseerr server URL (e.g., `http://192.168.1.100:5055`)
 4. Click **Connect with Jellyfin** and enter your Jellyfin password
 5. Test the connection, then start discovering!
@@ -212,8 +212,8 @@ Your session is saved securely and will reconnect automatically.
 
 1. **Clone the repository:**
 ```bash
-git clone https://github.com/ToastyToast25/Voidfin-FireTV.git
-cd Voidfin-FireTV
+git clone https://github.com/ToastyToast25/VoidStream-FireTV.git
+cd VoidStream-FireTV
 ```
 
 2. **Build debug version:**
@@ -254,7 +254,7 @@ The APK will be in `app/build/outputs/apk/release/`
 
 ## Contributing
 
-We welcome contributions to Voidfin for Android TV!
+We welcome contributions to VoidStream for Android TV!
 
 ### Guidelines
 1. **Check existing issues** - See if your idea/bug is already reported
@@ -275,22 +275,22 @@ We welcome contributions to Voidfin for Android TV!
 Translations are maintained through the Jellyfin Weblate instance:
 - [Jellyfin Android TV on Weblate](https://translate.jellyfin.org/projects/jellyfin-android/jellyfin-androidtv)
 
-Translations contributed to Voidfin that are universally applicable will be submitted upstream to benefit the entire community.
+Translations contributed to VoidStream that are universally applicable will be submitted upstream to benefit the entire community.
 
 ## Support & Community
 
-- **Issues** - [GitHub Issues](https://github.com/ToastyToast25/Voidfin-FireTV/issues) for bugs and feature requests
-- **Discussions** - [GitHub Discussions](https://github.com/ToastyToast25/Voidfin-FireTV/discussions) for questions and ideas
+- **Issues** - [GitHub Issues](https://github.com/ToastyToast25/VoidStream-FireTV/issues) for bugs and feature requests
+- **Discussions** - [GitHub Discussions](https://github.com/ToastyToast25/VoidStream-FireTV/discussions) for questions and ideas
 - **Upstream Jellyfin** - [jellyfin.org](https://jellyfin.org) for server-related questions
 
 ## Credits
 
-Voidfin for Android TV is built upon the excellent work of:
+VoidStream for Android TV is built upon the excellent work of:
 
 - **[Jellyfin Project](https://jellyfin.org)** - The foundation and upstream codebase
 - **[MakD](https://github.com/MakD)** - Original Jellyfin-Media-Bar concept that inspired our featured media bar
 - **Jellyfin Android TV Contributors** - All the developers who built the original client
-- **Voidfin Contributors** - Everyone who has contributed to this fork
+- **VoidStream Contributors** - Everyone who has contributed to this fork
 
 ## License
 
@@ -299,8 +299,8 @@ This project is proprietary software. All original additions, modifications, bra
 ---
 
 <p align="center">
-   <img src="LOGOS/voidfin_logo.png" alt="VoidStream" width="150" />
+   <img src="LOGOS/voidstream_logo.png" alt="VoidStream" width="150" />
    <br>
-   <strong>Voidfin for Android TV</strong> is an independent fork and is not affiliated with the Jellyfin project.<br>
-   <a href="https://github.com/ToastyToast25">← Back to main Voidfin project</a>
+   <strong>VoidStream for Android TV</strong> is an independent fork and is not affiliated with the Jellyfin project.<br>
+   <a href="https://github.com/ToastyToast25">← Back to main VoidStream project</a>
 </p>

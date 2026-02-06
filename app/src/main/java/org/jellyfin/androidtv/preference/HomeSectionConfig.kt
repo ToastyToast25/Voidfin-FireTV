@@ -44,7 +44,7 @@ data class HomeSectionConfig(
 	companion object {
 		/**
 		 * Default home sections configuration
-		 * Note: MEDIA_BAR is now controlled by a separate toggle in Voidfin settings
+		 * Note: MEDIA_BAR is now controlled by a separate toggle in VoidStream settings
 		 */
 		fun defaults(): List<HomeSectionConfig> = listOf(
 			HomeSectionConfig(HomeSectionType.RESUME, enabled = true, order = 0),

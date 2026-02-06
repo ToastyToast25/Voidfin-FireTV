@@ -266,7 +266,7 @@ class JellyseerrViewModel(
 			val blockNsfw = prefs?.get(JellyseerrPreferences.blockNsfw) ?: false
 			
 			// Fetch multiple pages to get more content for searching
-			// Filter out already-available content since users can watch those in the main Voidfin app
+			// Filter out already-available content since users can watch those in the main VoidStream app
 			val allTrending = mutableListOf<JellyseerrDiscoverItemDto>()
 			val allTrendingMovies = mutableListOf<JellyseerrDiscoverItemDto>()
 			val allTrendingTv = mutableListOf<JellyseerrDiscoverItemDto>()

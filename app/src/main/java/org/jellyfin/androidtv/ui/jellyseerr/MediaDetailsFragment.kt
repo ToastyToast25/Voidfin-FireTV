@@ -70,7 +70,7 @@ class MediaDetailsFragment : Fragment() {
 	private var requestButton: View? = null
 	private var cancelRequestButton: View? = null
 	private var trailerButton: View? = null
-	private var playInVoidfinButton: View? = null
+	private var playInVoidStreamButton: View? = null
 	private var castSection: View? = null
 	private var toolbarContainer: View? = null
 	private var sidebarId: Int = View.NO_ID
@@ -744,13 +744,13 @@ class MediaDetailsFragment : Fragment() {
 		}
 		container.addView(trailerButton)
 		
-		// Play in Voidfin button (only show if available in library)
+		// Play in VoidStream button (only show if available in library)
 		if (hdStatus == 5 || hdStatus == 4) {
-			playInVoidfinButton = TextUnderButton(requireContext()).apply {
-				setLabel("Play in Voidfin")
+			playInVoidStreamButton = TextUnderButton(requireContext()).apply {
+				setLabel("Play in VoidStream")
 				setIcon(R.drawable.ic_play)
 				setOnClickListener {
-					playInVoidfin()
+					playInVoidStream()
 				}
 				id = View.generateViewId()
 				nextFocusLeftId = sidebarId
@@ -761,7 +761,7 @@ class MediaDetailsFragment : Fragment() {
 					topMargin = buttonTopMargin
 				}
 			}
-			container.addView(playInVoidfinButton)
+			container.addView(playInVoidStreamButton)
 		}
 		
 		return container
@@ -2029,7 +2029,7 @@ class MediaDetailsFragment : Fragment() {
 		}
 	}
 	
-	private fun playInVoidfin() {
+	private fun playInVoidStream() {
 		lifecycleScope.launch {
 			try {
 				// Get external IDs from movie or TV details
@@ -2053,14 +2053,14 @@ class MediaDetailsFragment : Fragment() {
 				
 				if (jellyfinItem != null) {
 					Timber.d("Found item in Jellyfin library: ${jellyfinItem.name} (${jellyfinItem.id})")
-					// Navigate to Voidfin details page
+					// Navigate to VoidStream details page
 					navigationRepository.navigate(Destinations.itemDetails(jellyfinItem.id))
 				} else {
 					Timber.w("Item not found in Jellyfin library")
-					Toast.makeText(requireContext(), "Item not found in your Voidfin library", Toast.LENGTH_SHORT).show()
+					Toast.makeText(requireContext(), "Item not found in your VoidStream library", Toast.LENGTH_SHORT).show()
 				}
 			} catch (e: Exception) {
-				Timber.e(e, "Failed to search for item in Voidfin")
+				Timber.e(e, "Failed to search for item in VoidStream")
 				Toast.makeText(requireContext(), "Error searching library", Toast.LENGTH_SHORT).show()
 			}
 		}

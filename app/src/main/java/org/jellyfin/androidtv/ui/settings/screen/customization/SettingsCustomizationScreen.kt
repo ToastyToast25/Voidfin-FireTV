@@ -116,7 +116,7 @@ fun SettingsCustomizationScreen() {
 			)
 		}
 
-		// Additional Ratings (Voidfin)
+		// Additional Ratings (VoidStream)
 		item {
 			val userSettingPreferences = koinInject<UserSettingPreferences>()
 			var enableAdditionalRatings by rememberPreference(userSettingPreferences, UserSettingPreferences.enableAdditionalRatings)
@@ -136,7 +136,7 @@ fun SettingsCustomizationScreen() {
 				leadingContent = { Icon(painterResource(R.drawable.ic_key), contentDescription = null) },
 				headingContent = { Text(stringResource(R.string.pref_mdblist_api_key)) },
 				captionContent = { Text(if (mdblistApiKey.isNotEmpty()) "API Key: ${mdblistApiKey.take(8)}..." else stringResource(R.string.pref_mdblist_api_key_description)) },
-				onClick = { router.push(Routes.VOIDFIN_MDBLIST_API_KEY) }
+				onClick = { router.push(Routes.VOIDSTREAM_MDBLIST_API_KEY) }
 			)
 		}
 
@@ -162,12 +162,12 @@ fun SettingsCustomizationScreen() {
 					headingContent = { Text(stringResource(R.string.pref_tmdb_api_key)) },
 					captionContent = { Text(if (tmdbApiKey.isNotEmpty()) "API Key: ${tmdbApiKey.take(8)}..." else stringResource(R.string.pref_tmdb_api_key_description)) },
 					enabled = enableEpisodeRatings,
-					onClick = { router.push(Routes.VOIDFIN_TMDB_API_KEY) }
+					onClick = { router.push(Routes.VOIDSTREAM_TMDB_API_KEY) }
 				)
 			}
 		}
 
-		// Toolbar Customization (Voidfin)
+		// Toolbar Customization (VoidStream)
 		item { ListSection(headingContent = { Text(stringResource(R.string.pref_toolbar_customization)) }) }
 
 		item {
@@ -179,7 +179,7 @@ fun SettingsCustomizationScreen() {
 			ListButton(
 				headingContent = { Text(stringResource(R.string.pref_navbar_position)) },
 				captionContent = { Text(navbarLabel) },
-				onClick = { router.push(Routes.VOIDFIN_NAVBAR_POSITION) }
+				onClick = { router.push(Routes.VOIDSTREAM_NAVBAR_POSITION) }
 			)
 		}
 
@@ -228,11 +228,11 @@ fun SettingsCustomizationScreen() {
 			ListButton(
 				headingContent = { Text(stringResource(R.string.pref_shuffle_content_type)) },
 				captionContent = { Text(getShuffleContentTypeLabel(shuffleContentType)) },
-				onClick = { router.push(Routes.VOIDFIN_SHUFFLE_CONTENT_TYPE) }
+				onClick = { router.push(Routes.VOIDSTREAM_SHUFFLE_CONTENT_TYPE) }
 			)
 		}
 
-		// Appearance (Voidfin)
+		// Appearance (VoidStream)
 		item { ListSection(headingContent = { Text(stringResource(R.string.pref_appearance)) }) }
 
 		item {
@@ -240,7 +240,7 @@ fun SettingsCustomizationScreen() {
 			ListButton(
 				headingContent = { Text(stringResource(R.string.pref_seasonal_surprise)) },
 				captionContent = { Text(getSeasonalLabel(seasonalSurprise)) },
-				onClick = { router.push(Routes.VOIDFIN_SEASONAL_SURPRISE) }
+				onClick = { router.push(Routes.VOIDSTREAM_SEASONAL_SURPRISE) }
 			)
 		}
 
@@ -250,7 +250,7 @@ fun SettingsCustomizationScreen() {
 			ListButton(
 				headingContent = { Text(stringResource(R.string.pref_details_background_blur_amount)) },
 				captionContent = { Text(getBlurLabel(detailsBlur)) },
-				onClick = { router.push(Routes.VOIDFIN_DETAILS_BLUR) }
+				onClick = { router.push(Routes.VOIDSTREAM_DETAILS_BLUR) }
 			)
 		}
 
@@ -260,11 +260,11 @@ fun SettingsCustomizationScreen() {
 			ListButton(
 				headingContent = { Text(stringResource(R.string.pref_browsing_background_blur_amount)) },
 				captionContent = { Text(getBlurLabel(browsingBlur)) },
-				onClick = { router.push(Routes.VOIDFIN_BROWSING_BLUR) }
+				onClick = { router.push(Routes.VOIDSTREAM_BROWSING_BLUR) }
 			)
 		}
 
-		// Theme Music (Voidfin)
+		// Theme Music (VoidStream)
 		item { ListSection(headingContent = { Text(stringResource(R.string.pref_theme_music_title)) }) }
 
 		item {
@@ -299,11 +299,11 @@ fun SettingsCustomizationScreen() {
 				headingContent = { Text(stringResource(R.string.pref_theme_music_volume)) },
 				captionContent = { Text("$themeMusicVolume%") },
 				enabled = themeMusicEnabled,
-				onClick = { router.push(Routes.VOIDFIN_THEME_MUSIC_VOLUME) }
+				onClick = { router.push(Routes.VOIDSTREAM_THEME_MUSIC_VOLUME) }
 			)
 		}
 
-		// Parental Controls (Voidfin)
+		// Parental Controls (VoidStream)
 		item { ListSection(headingContent = { Text(stringResource(R.string.pref_parental_controls)) }) }
 
 		item {
@@ -311,7 +311,7 @@ fun SettingsCustomizationScreen() {
 				leadingContent = { Icon(painterResource(R.drawable.ic_lock), contentDescription = null) },
 				headingContent = { Text(stringResource(R.string.pref_parental_controls)) },
 				captionContent = { Text(stringResource(R.string.pref_parental_controls_description)) },
-				onClick = { router.push(Routes.VOIDFIN_PARENTAL_CONTROLS) }
+				onClick = { router.push(Routes.VOIDSTREAM_PARENTAL_CONTROLS) }
 			)
 		}
 	}

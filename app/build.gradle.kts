@@ -17,7 +17,7 @@ android {
 		targetSdk = libs.versions.android.targetSdk.get().toInt()
 
 		// Release version - custom applicationId to avoid conflict with official Jellyfin
-		applicationId = "org.voidfin.androidtv"
+		applicationId = "org.voidstream.androidtv"
 		versionName = project.getVersionName()
 		versionCode = getVersionCode(versionName!!)
 	}
@@ -64,7 +64,7 @@ android {
 			resValue("string", "app_search_suggest_intent_data", "content://${namespace}.content/intent")
 
 			// Set flavored application name
-			resValue("string", "app_name", "Voidfin")
+			resValue("string", "app_name", "VoidStream")
 
 			buildConfigField("boolean", "DEVELOPMENT", "false")
 		}
@@ -79,7 +79,7 @@ android {
 			resValue("string", "app_search_suggest_intent_data", "content://${namespace + applicationIdSuffix}.content/intent")
 
 			// Set flavored application name
-			resValue("string", "app_name", "Voidfin Debug")
+			resValue("string", "app_name", "VoidStream Debug")
 
 			buildConfigField("boolean", "DEVELOPMENT", (defaultConfig.versionCode!! < 100).toString())
 		}
@@ -97,7 +97,7 @@ android {
 	}
 }
 
-base.archivesName.set("voidfin-androidtv-v${project.getVersionName()}")
+base.archivesName.set("voidstream-androidtv-v${project.getVersionName()}")
 
 tasks.register("versionTxt") {
 	val path = layout.buildDirectory.asFile.get().resolve("version.txt")

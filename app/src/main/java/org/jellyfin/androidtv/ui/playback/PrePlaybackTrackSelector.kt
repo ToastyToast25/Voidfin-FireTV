@@ -12,7 +12,7 @@ import timber.log.Timber
  * Manages pre-playback audio and subtitle track selection
  */
 class PrePlaybackTrackSelector(private val context: Context) {
-	private val prefs: SharedPreferences = context.getSharedPreferences("voidfin_track_selection", Context.MODE_PRIVATE)
+	private val prefs: SharedPreferences = context.getSharedPreferences("voidstream_track_selection", Context.MODE_PRIVATE)
 	
 	companion object {
 		private const val PREF_AUDIO_STREAM_INDEX = "selected_audio_stream_index"

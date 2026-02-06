@@ -144,7 +144,7 @@ fun SettingsMainScreen() {
 					)
 				},
 				headingContent = { Text("Check for Updates") },
-				captionContent = { Text("Download latest Voidfin version") },
+				captionContent = { Text("Download latest VoidStream version") },
 				onClick = {
 					checkForUpdates(context, updateChecker)
 				}
@@ -170,7 +170,7 @@ fun SettingsMainScreen() {
 						tint = Color.Red
 					)
 				},
-				headingContent = { Text("Support Voidfin") },
+				headingContent = { Text("Support VoidStream") },
 				captionContent = { Text("Help us continue development") },
 				onClick = {
 					showDonateDialog(context)

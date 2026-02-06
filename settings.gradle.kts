@@ -1,6 +1,6 @@
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
-rootProject.name = "Voidfin-androidtv"
+rootProject.name = "VoidStream-androidtv"
 
 pluginManagement {
 	repositories {

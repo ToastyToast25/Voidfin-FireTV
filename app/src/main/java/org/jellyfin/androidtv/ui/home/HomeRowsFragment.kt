@@ -163,7 +163,7 @@ class HomeRowsFragment : RowsSupportFragment(), AudioEventListener, View.OnKeyLi
 			// Check for coroutine cancellation
 			if (!isActive) return@launch
 
-			// Add media bar row if enabled in Voidfin settings (not part of configurable sections)
+			// Add media bar row if enabled in VoidStream settings (not part of configurable sections)
 			if (userSettingPreferences[UserSettingPreferences.mediaBarEnabled]) {
 				rows.add(mediaBarRow)
 			}

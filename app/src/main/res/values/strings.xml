@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
-    <string name="app_name_release" translatable="false" tools:ignore="UnusedResources">Voidfin</string>
-    <string name="app_name_debug" translatable="false" tools:ignore="UnusedResources">Voidfin Debug</string>
+    <string name="app_name_release" translatable="false" tools:ignore="UnusedResources">VoidStream</string>
+    <string name="app_name_debug" translatable="false" tools:ignore="UnusedResources">VoidStream Debug</string>
     <string name="video_error_unknown_error">Failed to load video</string>
     <string name="loading">Loading…</string>
     <string name="btn_cancel">Cancel</string>
@@ -51,7 +51,7 @@
     <string name="lbl_play">Play</string>
     <string name="lbl_pause">Pause</string>
     <string name="lbl_exit">Exit</string>
-    <string name="exit_confirmation_title">Exit Voidfin?</string>
+    <string name="exit_confirmation_title">Exit VoidStream?</string>
     <string name="exit_confirmation_message">Are you sure you want to exit the app?</string>
     <string name="lbl_cancel">Cancel</string>
     <string name="lbl_cancel_recording">Cancel recording</string>
@@ -287,10 +287,10 @@
     <string name="pref_theme_dark">Dark (Default)</string>
     <string name="pref_theme_emerald">Classic emerald</string>
     <string name="pref_about_title">About</string>
-    <string name="pref_donate_title">Support Voidfin</string>
+    <string name="pref_donate_title">Support VoidStream</string>
     <string name="pref_donate_description">Help keep this project alive</string>
-    <string name="donate_dialog_title">Support Voidfin Development</string>
-    <string name="donate_dialog_message">Thank you for considering a donation! Your support helps keep Voidfin alive and enables continued development of new features and improvements.\n\nScan the QR code below to donate:</string>
+    <string name="donate_dialog_title">Support VoidStream Development</string>
+    <string name="donate_dialog_message">Thank you for considering a donation! Your support helps keep VoidStream alive and enables continued development of new features and improvements.\n\nScan the QR code below to donate:</string>
     <string name="donate_dialog_thanks">Every contribution makes a difference. Thank you!</string>
     <string name="pref_external_player">Use external player</string>
     <string name="pref_next_up_timeout_summary">How long to wait before playing the next item</string>
@@ -396,7 +396,7 @@
     <string name="no_network_permissions">Jellyfin requires network permissions to function</string>
     <string name="press_to_close">Press to close</string>
     <string name="saved_servers">Saved servers</string>
-    <string name="welcome_title">Welcome to Jellyfin!</string>
+    <string name="welcome_title">Welcome to VoidStream!</string>
     <string name="welcome_content">Connect to your server to get started.</string>
     <string name="no_user_warning">We couldn\'t find any accounts!\nAdd a new account by pressing the \"Add account\" button.</string>
     <string name="who_is_watching">Who\'s watching?</string>
@@ -586,7 +586,7 @@
     <string name="item_delete_confirm_message">Are you sure you want to delete this item from the server? This action cannot be undone.</string>
     <string name="pref_screensaver">Screensaver</string>
     <string name="pref_screensaver_inapp_enabled">Use in-app screensaver</string>
-    <string name="pref_screensaver_inapp_enabled_description">Show the Voidfin screensaver while the app is open</string>
+    <string name="pref_screensaver_inapp_enabled_description">Show the VoidStream screensaver while the app is open</string>
     <string name="pref_screensaver_inapp_timeout">Start screensaver after</string>
     <string name="enable_reactive_homepage">Enable reactive homepage</string>
     <string name="not_set">Not set</string>
@@ -619,7 +619,7 @@
     <string name="pref_screensaver_ageratingrequired_disabled">Showing all items</string>
     <string name="pref_screensaver_mode">Screensaver mode</string>
     <string name="pref_screensaver_mode_library">Library images</string>
-    <string name="pref_screensaver_mode_logo">Voidfin logo</string>
+    <string name="pref_screensaver_mode_logo">VoidStream logo</string>
     <string name="pref_screensaver_dimming">Screen dimming level</string>
     <string name="pref_screensaver_dimming_level_description">Adjust how much to darken the screensaver display. Logo and clock move every 60 seconds to prevent burn-in.</string>
     <string name="pref_screensaver_dimming_description">Darken the screensaver display</string>
@@ -824,10 +824,10 @@
     <string name="jellyseerr_block_nsfw">Block Adult Content</string>
     <string name="jellyseerr_block_nsfw_description">Hide content tagged as adult/NSFW from Jellyseerr results</string>
 
-    <!-- Voidfin Settings -->
-    <string name="voidfin_settings">Voidfin Settings</string>
-    <string name="voidfin_settings_description">Customize Voidfin-specific features</string>
-    <string name="voidfin_general_settings">General</string>
+    <!-- VoidStream Settings -->
+    <string name="voidstream_settings">VoidStream Settings</string>
+    <string name="voidstream_settings_description">Customize VoidStream-specific features</string>
+    <string name="voidstream_general_settings">General</string>
     <string name="settings_available_after_login">Settings available after login</string>
     
     <!-- Jellyseerr Authentication -->
@@ -915,7 +915,7 @@
     <string name="pref_enable_additional_ratings_description">Fetch ratings from MDBList API (IMDB, TMDB, Metacritic, Trakt, Letterboxd, etc.)</string>
     <string name="pref_mdblist_api_key">MDBList API Key</string>
     <string name="pref_mdblist_api_key_description">Get a free API key from mdblist.com/preferences</string>
-    <string name="pref_additional_ratings_no_api_key">Please add your MDBList API key in Voidfin Settings</string>
+    <string name="pref_additional_ratings_no_api_key">Please add your MDBList API key in VoidStream Settings</string>
     <string name="pref_rating_source_imdb">IMDB</string>
     <string name="pref_rating_source_rt_audience">Rotten Tomatoes Audience</string>
     <string name="pref_rating_source_tmdb">The Movie Database</string>

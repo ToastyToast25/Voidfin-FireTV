@@ -69,7 +69,7 @@ object TelemetryService {
 			val connection = URL(url).openConnection() as HttpURLConnection
 			// Add authorization
 			val clientName = buildString {
-				append("Voidfin Android TV")
+				append("VoidStream Android TV")
 				if (BuildConfig.DEBUG) append(" (debug)")
 			}
 			val authorization = AuthorizationHeaderBuilder.buildHeader(
@@ -97,9 +97,9 @@ object TelemetryService {
 			private fun CrashReportData.toReport(): String = buildMarkdown {
 			// Header
 			appendLine("---")
-			appendLine("client: Voidfin for Android TV")
+			appendLine("client: VoidStream for Android TV")
 			appendLine("client_version: ${BuildConfig.VERSION_NAME}")
-			appendLine("client_repository: https://github.com/ToastyToast25/Voidfin-FireTV")
+			appendLine("client_repository: https://github.com/ToastyToast25/VoidStream-FireTV")
 			appendLine("type: crash_report")
 			appendLine("format: markdown")
 			appendLine("---")

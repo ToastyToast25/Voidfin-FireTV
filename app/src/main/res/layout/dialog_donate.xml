@@ -46,7 +46,7 @@
             android:id="@+id/donate_url"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="https://buymeacoffee.com/voidfin"
+            android:text="https://buymeacoffee.com/voidstream"
             android:textSize="16sp"
             android:gravity="center"
             android:paddingTop="16dp"

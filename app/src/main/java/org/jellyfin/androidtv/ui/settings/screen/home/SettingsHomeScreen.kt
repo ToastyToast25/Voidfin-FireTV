@@ -69,7 +69,7 @@ fun SettingsHomeScreen() {
 			)
 		}
 		
-		// Home Screen Settings (Voidfin features)
+		// Home Screen Settings (VoidStream features)
 		item {
 			var mergeContinueWatchingNextUp by org.jellyfin.androidtv.ui.settings.compat.rememberPreference(userPreferences, org.jellyfin.androidtv.preference.UserPreferences.mergeContinueWatchingNextUp)
 			ListButton(
@@ -110,16 +110,16 @@ fun SettingsHomeScreen() {
 			)
 		}
 
-		// Home Rows Image Type (Voidfin)
+		// Home Rows Image Type (VoidStream)
 		item {
 			ListButton(
 				leadingContent = { Icon(painterResource(R.drawable.ic_grid), contentDescription = null) },
 				headingContent = { Text(stringResource(R.string.pref_home_rows_image_type)) },
-				onClick = { router.push(org.jellyfin.androidtv.ui.settings.Routes.VOIDFIN_HOME_ROWS_IMAGE) }
+				onClick = { router.push(org.jellyfin.androidtv.ui.settings.Routes.VOIDSTREAM_HOME_ROWS_IMAGE) }
 			)
 		}
 
-		// Media Bar Settings (Voidfin)
+		// Media Bar Settings (VoidStream)
 		item { ListSection(headingContent = { Text(stringResource(R.string.pref_media_bar_title)) }) }
 
 		item {
@@ -139,7 +139,7 @@ fun SettingsHomeScreen() {
 				headingContent = { Text(stringResource(R.string.pref_media_bar_content_type)) },
 				captionContent = { Text(org.jellyfin.androidtv.ui.settings.screen.customization.getShuffleContentTypeLabel(mediaBarContentType)) },
 				enabled = mediaBarEnabled,
-				onClick = { router.push(org.jellyfin.androidtv.ui.settings.Routes.VOIDFIN_MEDIA_BAR_CONTENT_TYPE) }
+				onClick = { router.push(org.jellyfin.androidtv.ui.settings.Routes.VOIDSTREAM_MEDIA_BAR_CONTENT_TYPE) }
 			)
 		}
 
@@ -150,7 +150,7 @@ fun SettingsHomeScreen() {
 				headingContent = { Text(stringResource(R.string.pref_media_bar_item_count)) },
 				captionContent = { Text(getMediaBarItemCountLabel(mediaBarItemCount)) },
 				enabled = mediaBarEnabled,
-				onClick = { router.push(org.jellyfin.androidtv.ui.settings.Routes.VOIDFIN_MEDIA_BAR_ITEM_COUNT) }
+				onClick = { router.push(org.jellyfin.androidtv.ui.settings.Routes.VOIDSTREAM_MEDIA_BAR_ITEM_COUNT) }
 			)
 		}
 
@@ -161,7 +161,7 @@ fun SettingsHomeScreen() {
 				headingContent = { Text(stringResource(R.string.pref_media_bar_overlay_opacity)) },
 				captionContent = { Text("$mediaBarOverlayOpacity%") },
 				enabled = mediaBarEnabled,
-				onClick = { router.push(org.jellyfin.androidtv.ui.settings.Routes.VOIDFIN_MEDIA_BAR_OPACITY) }
+				onClick = { router.push(org.jellyfin.androidtv.ui.settings.Routes.VOIDSTREAM_MEDIA_BAR_OPACITY) }
 			)
 		}
 
@@ -172,7 +172,7 @@ fun SettingsHomeScreen() {
 				headingContent = { Text(stringResource(R.string.pref_media_bar_overlay_color)) },
 				captionContent = { Text(getOverlayColorLabel(mediaBarOverlayColor)) },
 				enabled = mediaBarEnabled,
-				onClick = { router.push(org.jellyfin.androidtv.ui.settings.Routes.VOIDFIN_MEDIA_BAR_COLOR) }
+				onClick = { router.push(org.jellyfin.androidtv.ui.settings.Routes.VOIDSTREAM_MEDIA_BAR_COLOR) }
 			)
 		}
 
