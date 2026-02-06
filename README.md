@@ -7,14 +7,7 @@
 
 ---
 
-<p align="center">
-   <img width="4305" height="2659" alt="splash-background" src="https://github.com/user-attachments/assets/8618363e-d982-4828-8274-a2c3c7623ddb" />
-</p>
-
-[![License](https://img.shields.io/github/license/ToastyToast25/Voidfin-FireTV.svg)](https://github.com/ToastyToast25/Voidfin-FireTV)
 [![Release](https://img.shields.io/github/release/ToastyToast25/Voidfin-FireTV.svg)](https://github.com/ToastyToast25/Voidfin-FireTV/releases)
-
-<a href="https://www.buymeacoffee.com/voidfin" target="_blank"><img src="https://github.com/user-attachments/assets/fe26eaec-147f-496f-8e95-4ebe19f57131" alt="Buy Me A Coffee" ></a>
 
 > **[← Back to main Voidfin project](https://github.com/ToastyToast25)**
 
