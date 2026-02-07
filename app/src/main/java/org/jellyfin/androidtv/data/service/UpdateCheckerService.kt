@@ -29,6 +29,12 @@ class UpdateCheckerService(private val context: Context) {
 		.readTimeout(30, TimeUnit.SECONDS)
 		.build()
 
+	private val downloadClient = OkHttpClient.Builder()
+		.connectTimeout(30, TimeUnit.SECONDS)
+		.readTimeout(60, TimeUnit.SECONDS)
+		.followRedirects(true)
+		.build()
+
 	private val json = Json {
 		ignoreUnknownKeys = true
 		isLenient = true
@@ -216,7 +222,10 @@ class UpdateCheckerService(private val context: Context) {
 		onProgress: (downloaded: Long, total: Long) -> Unit = { _, _ -> }
 	): Result<Uri> = withContext(Dispatchers.IO) {
 		runCatching {
-			val downloadsDir = File(context.getExternalFilesDir(null), "downloads")
+			// Prefer external storage, fall back to internal if unavailable
+			val baseDir = context.getExternalFilesDir(null) ?: context.filesDir
+			Timber.d("Download base dir: ${baseDir.absolutePath} (exists=${baseDir.exists()}, free=${baseDir.freeSpace / 1024 / 1024}MB)")
+			val downloadsDir = File(baseDir, "downloads")
 			downloadsDir.mkdirs()
 			val apkFile = File(downloadsDir, "update.apk")
 
@@ -234,7 +243,7 @@ class UpdateCheckerService(private val context: Context) {
 						Timber.d("Resuming download from byte $existingBytes")
 					}
 
-					httpClient.newCall(requestBuilder.build()).execute().use { response ->
+					downloadClient.newCall(requestBuilder.build()).execute().use { response ->
 						val isResume = response.code == 206
 						if (!response.isSuccessful && !isResume) {
 							throw Exception("Failed to download update: ${response.code}")

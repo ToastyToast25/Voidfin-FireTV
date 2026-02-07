@@ -4,4 +4,8 @@
     <external-files-path
         name="downloads"
         path="downloads/" />
+    <!-- Internal files directory fallback (emulators, devices without external storage) -->
+    <files-path
+        name="internal_downloads"
+        path="downloads/" />
 </paths>
