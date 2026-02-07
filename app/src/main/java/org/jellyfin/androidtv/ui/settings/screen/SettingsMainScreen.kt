@@ -65,6 +65,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jellyfin.androidtv.BuildConfig
@@ -325,6 +326,17 @@ private fun SettingsUpdateOverlay(
 		}
 		lifecycleOwner.lifecycle.addObserver(observer)
 		onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+	}
+
+	// Timeout: if stuck in INSTALLING for 30s (system dialog didn't appear), reset
+	LaunchedEffect(dlState) {
+		if (dlState == DlState.INSTALLING) {
+			delay(30_000L)
+			if (dlState == DlState.INSTALLING) {
+				Timber.w("Install timeout — stuck in INSTALLING for 30s, resetting to FAILED")
+				dlState = DlState.FAILED
+			}
+		}
 	}
 
 	LaunchedEffect(Unit) { dlBtnFocus.requestFocus() }

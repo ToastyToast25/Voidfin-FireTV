@@ -368,8 +368,9 @@ class UpdateCheckerService(private val context: Context) {
 	}
 
 	/**
-	 * Install the downloaded APK using PackageInstaller session API.
-	 * Returns true if the install session was committed successfully, false on error.
+	 * Install the downloaded APK.
+	 * Uses intent-based install first (directly launches the visible installer UI),
+	 * falls back to PackageInstaller session API if the intent fails.
 	 */
 	fun installUpdate(apkUri: Uri): Boolean {
 		val apkFile = getApkFile()
@@ -379,14 +380,17 @@ class UpdateCheckerService(private val context: Context) {
 		}
 		Timber.d("Installing APK: ${apkFile.absolutePath} (size=${apkFile.length()} bytes)")
 
+		// Try intent-based install first — this directly launches the system installer UI
+		// which is more reliable than PackageInstaller sessions (which can silently fail
+		// to show the confirmation dialog on some devices/emulators)
 		return try {
-			installViaPackageInstaller(apkFile)
+			installViaIntent(apkUri)
 		} catch (e: Exception) {
-			Timber.e(e, "PackageInstaller failed, trying intent fallback")
+			Timber.e(e, "Intent-based install failed, trying PackageInstaller session")
 			try {
-				installViaIntent(apkUri)
+				installViaPackageInstaller(apkFile)
 			} catch (e2: Exception) {
-				Timber.e(e2, "Intent-based install also failed")
+				Timber.e(e2, "PackageInstaller also failed")
 				false
 			}
 		}

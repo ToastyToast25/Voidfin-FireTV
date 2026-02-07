@@ -75,6 +75,7 @@ import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
 import androidx.fragment.compose.content
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jellyfin.androidtv.BuildConfig
@@ -243,6 +244,17 @@ private fun ForceUpdateScreen(
 		}
 		lifecycleOwner.lifecycle.addObserver(observer)
 		onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+	}
+
+	// Timeout: if stuck in INSTALLING for 30s (system dialog didn't appear), reset
+	LaunchedEffect(state) {
+		if (state == UpdateState.INSTALLING) {
+			delay(30_000L)
+			if (state == UpdateState.INSTALLING) {
+				Timber.w("Install timeout — stuck in INSTALLING for 30s, resetting to FAILED")
+				state = UpdateState.FAILED
+			}
+		}
 	}
 
 	val sizeMB = String.format("%.1f", apkSize / (1024.0 * 1024.0))
