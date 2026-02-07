@@ -4,6 +4,10 @@ import android.media.audiofx.LoudnessEnhancer
 import timber.log.Timber
 
 class ExoPlayerAudioPipeline {
+	companion object {
+		private const val MILLIBELS_PER_DECIBEL = 100f
+	}
+
 	private var loudnessEnhancer: LoudnessEnhancer? = null
 	var normalizationGain: Float? = null
 		set(value) {
@@ -33,7 +37,7 @@ class ExoPlayerAudioPipeline {
 
 		val targetGain = normalizationGain
 			// Convert to millibels
-			?.times(100f)
+			?.times(MILLIBELS_PER_DECIBEL)
 			// Round to integer
 			?.toInt()
 

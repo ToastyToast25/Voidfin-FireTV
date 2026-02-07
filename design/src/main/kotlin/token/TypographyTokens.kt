@@ -14,13 +14,13 @@ object TypographyTokens {
   val typographyFontSizeSm = 14.00.dp
   val typographyFontSizeXl = 20.00.dp
   val typographyFontSizeXs = 12.00.dp
-  val typographyWeight100 = 100
-  val typographyWeight200 = 200
-  val typographyWeight300 = 300
-  val typographyWeight400 = 400
-  val typographyWeight500 = 500
-  val typographyWeight600 = 600
-  val typographyWeight700 = 700
-  val typographyWeight800 = 800
-  val typographyWeight900 = 900
+  const val typographyWeight100 = 100
+  const val typographyWeight200 = 200
+  const val typographyWeight300 = 300
+  const val typographyWeight400 = 400
+  const val typographyWeight500 = 500
+  const val typographyWeight600 = 600
+  const val typographyWeight700 = 700
+  const val typographyWeight800 = 800
+  const val typographyWeight900 = 900
 }

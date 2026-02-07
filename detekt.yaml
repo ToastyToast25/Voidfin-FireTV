@@ -1,18 +1,15 @@
-build:
-  maxIssues: 0
-
 comments:
   # Comments are always appreciated, even for private functions and properties
-  CommentOverPrivateFunction:
+  DocumentationOverPrivateFunction:
     active: false
-  CommentOverPrivateProperty:
+  DocumentationOverPrivateProperty:
     active: false
 
 complexity:
   # Some classes, especially repositories, can become big
   TooManyFunctions:
-    thresholdInInterfaces: 15
-    thresholdInClasses: 15
+    allowedFunctionsPerInterface: 15
+    allowedFunctionsPerClass: 15
 
 naming:
   InvalidPackageDeclaration:
@@ -24,7 +21,7 @@ naming:
 style:
   # Allow TODO and FIXME comments
   ForbiddenComment:
-    values: [ 'STOPSHIP:' ]
+    comments: [ 'STOPSHIP:' ]
   ReturnCount:
     max: 6
   MaxLineLength:

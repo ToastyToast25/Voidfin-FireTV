@@ -27,6 +27,16 @@ class AppLogCollector private constructor() {
 		private const val LOGCAT_LINES = 300
 		private const val CRASH_CONTEXT_LINES = 50
 
+		// PII sanitization patterns (compiled once)
+		private val BEARER_TOKEN = Regex("""(?i)(bearer\s+)\S+""")
+		private val PASSWORD_VALUE = Regex("""(?i)(password\s*[=:]\s*)\S+""")
+		private val COOKIE_VALUE = Regex("""(?i)((?:cookie|connect\.sid|XSRF-TOKEN|csrf)[^=]*=\s*)\S+""")
+		private val USERNAME_VALUE = Regex("""(?i)((?:username|user)\s*[=:]\s*)\S+""")
+		private val EMAIL = Regex("""\b[\w.+-]+@[\w.-]+\.\w{2,}\b""")
+		private val URL_HOST = Regex("""(https?://)([^/\s:]+)(:\d+)?""")
+		private val UUID_PATTERN = Regex("""\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b""")
+		private val IP_V4 = Regex("""\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b""")
+
 		@Volatile
 		private var _instance: AppLogCollector? = null
 
@@ -133,6 +143,25 @@ class AppLogCollector private constructor() {
 	}
 
 	/**
+	 * Sanitize PII from log text before including in GitHub issue bodies.
+	 * Order matters: tokens/passwords first, then emails, URLs, UUIDs, IPs last.
+	 */
+	private fun sanitize(text: String): String {
+		var result = text
+		result = BEARER_TOKEN.replace(result) { "${it.groupValues[1]}[REDACTED_TOKEN]" }
+		result = PASSWORD_VALUE.replace(result) { "${it.groupValues[1]}[REDACTED]" }
+		result = COOKIE_VALUE.replace(result) { "${it.groupValues[1]}[REDACTED]" }
+		result = USERNAME_VALUE.replace(result) { "${it.groupValues[1]}[REDACTED]" }
+		result = EMAIL.replace(result, "[REDACTED_EMAIL]")
+		result = URL_HOST.replace(result) {
+			"${it.groupValues[1]}[REDACTED_HOST]${it.groupValues[3].replace(Regex("\\d"), "*")}"
+		}
+		result = UUID_PATTERN.replace(result, "[REDACTED_UUID]")
+		result = IP_V4.replace(result, "[REDACTED_IP]")
+		return result
+	}
+
+	/**
 	 * Build the full log section for the GitHub issue body.
 	 * Returns a markdown string with collapsed <details> blocks, or empty string if no logs.
 	 */
@@ -149,20 +178,20 @@ class AppLogCollector private constructor() {
 
 			if (!lastCrash.isNullOrBlank()) {
 				appendDetails("Last Crash (previous session)") {
-					appendCodeBlock("", truncate(lastCrash, MAX_CRASH_CHARS))
+					appendCodeBlock("", sanitize(truncate(lastCrash, MAX_CRASH_CHARS)))
 				}
 			}
 
 			if (buffered.isNotEmpty()) {
 				appendDetails("App Logs (last ${buffered.size} entries)") {
 					val logsText = buffered.joinToString("\n")
-					appendCodeBlock("", truncate(logsText, MAX_BUFFER_CHARS))
+					appendCodeBlock("", sanitize(truncate(logsText, MAX_BUFFER_CHARS)))
 				}
 			}
 
 			if (!logcat.isNullOrBlank()) {
 				appendDetails("Logcat") {
-					appendCodeBlock("", truncate(logcat, MAX_LOGCAT_CHARS))
+					appendCodeBlock("", sanitize(truncate(logcat, MAX_LOGCAT_CHARS)))
 				}
 			}
 		}

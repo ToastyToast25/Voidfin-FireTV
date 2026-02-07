@@ -18,18 +18,18 @@ java {
 }
 
 detekt {
-	buildUponDefaultConfig = true
-	ignoreFailures = true
+	buildUponDefaultConfig.set(true)
+	ignoreFailures.set(true)
 	config.setFrom(files("$rootDir/detekt.yaml"))
-	basePath = rootDir.absolutePath
-	parallel = true
+	basePath.set(rootDir)
+	parallel.set(true)
 
 	source.setFrom(fileTree(projectDir) {
 		include("**/*.kt", "**/*.kts")
 	})
 }
 
-tasks.withType<io.gitlab.arturbosch.detekt.Detekt> {
+tasks.withType<dev.detekt.gradle.Detekt> {
 	reports {
 		sarif.required.set(true)
 	}

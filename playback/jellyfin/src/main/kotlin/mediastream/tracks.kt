@@ -38,4 +38,5 @@ private fun getVideoTrack(stream: MediaStream) = MediaStreamVideoTrack(
 )
 
 // TODO Implement Subtitle track type
+@Suppress("FunctionOnlyReturningConstant", "UnusedParameter")
 private fun getSubtitleTrack(stream: MediaStream) = null

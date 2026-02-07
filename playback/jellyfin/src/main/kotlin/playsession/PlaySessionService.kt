@@ -31,6 +31,11 @@ class PlaySessionService(
 	private val api: ApiClient,
 	private val apiClientResolver: ((UUID?) -> ApiClient?)? = null,
 ) : PlayerService() {
+	companion object {
+		private const val UUID_HEX_LENGTH = 32
+		private const val QUEUE_PEEK_SIZE = 15
+	}
+
 	override suspend fun onInitialize() {
 		state.playState.onEach { playState ->
 			when (playState) {
@@ -79,8 +84,19 @@ class PlaySessionService(
 		} catch (_: IllegalArgumentException) {}
 		
 		// If 32 chars without hyphens, add them back (8-4-4-4-12 format)
-		if (serverId.length == 32 && !serverId.contains("-")) {
-			val normalized = "${serverId.substring(0, 8)}-${serverId.substring(8, 12)}-${serverId.substring(12, 16)}-${serverId.substring(16, 20)}-${serverId.substring(20)}"
+		if (serverId.length == UUID_HEX_LENGTH && !serverId.contains("-")) {
+			@Suppress("MagicNumber")
+			val normalized = buildString {
+				append(serverId.substring(0, 8))
+				append('-')
+				append(serverId.substring(8, 12))
+				append('-')
+				append(serverId.substring(12, 16))
+				append('-')
+				append(serverId.substring(16, 20))
+				append('-')
+				append(serverId.substring(20))
+			}
 			try {
 				return UUID.fromString(normalized)
 			} catch (_: IllegalArgumentException) {}
@@ -96,7 +112,7 @@ class PlaySessionService(
 		// The queues are lazy loaded so we only load a small amount of items to set as queue on the
 		// backend.
 		return manager.queue
-			.peekNext(15)
+			.peekNext(QUEUE_PEEK_SIZE)
 			.mapNotNull { it.baseItem }
 			.map { QueueItem(id = it.id, playlistItemId = it.playlistItemId) }
 	}

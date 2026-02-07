@@ -33,7 +33,11 @@ class PlaySessionSocketService(
 	}
 
 	private fun subscribe(coroutineScope: CoroutineScope) {
-		// Player control
+		subscribePlaystateCommands(coroutineScope)
+		subscribeVolumeCommands(coroutineScope)
+	}
+
+	private fun subscribePlaystateCommands(coroutineScope: CoroutineScope) {
 		api.webSocket.subscribe<PlaystateMessage>().onEach { message ->
 			coroutineScope.launch(Dispatchers.Main) {
 				when (message.data?.command) {
@@ -60,8 +64,9 @@ class PlaySessionSocketService(
 				coroutineScope.launch { playSessionService.sendUpdateIfActive() }
 			}
 		}.launchIn(coroutineScope)
+	}
 
-		// Volume control
+	private fun subscribeVolumeCommands(coroutineScope: CoroutineScope) {
 		api.webSocket.subscribeGeneralCommand(GeneralCommandType.VOLUME_UP).onEach {
 			state.volume.increaseVolume()
 			coroutineScope.launch { playSessionService.sendUpdateIfActive() }

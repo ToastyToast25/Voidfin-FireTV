@@ -28,7 +28,7 @@ androidx-tvprovider = "1.1.0"
 androidx-window = "1.5.1"
 androidx-work = "2.11.1"
 coil = "3.3.0"
-detekt = "1.23.8"
+detekt = "2.0.0-alpha.2"
 java-jdk = "21"
 jellyfin-androidx-media = "1.9.0+1"
 jellyfin-sdk = "1.8.6"
@@ -48,7 +48,7 @@ timber = "5.0.1"
 aboutlibraries = { id = "com.mikepenz.aboutlibraries.plugin.android", version.ref = "aboutlibraries" }
 android-application = { id = "com.android.application", version.ref = "android-gradle" }
 android-library = { id = "com.android.library", version.ref = "android-gradle" }
-detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+detekt = { id = "dev.detekt", version.ref = "detekt" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 
