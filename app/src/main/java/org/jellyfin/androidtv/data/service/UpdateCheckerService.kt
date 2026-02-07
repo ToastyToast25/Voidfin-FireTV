@@ -233,6 +233,28 @@ class UpdateCheckerService(private val context: Context) {
 			downloadsDir.mkdirs()
 			val apkFile = File(downloadsDir, "update.apk")
 
+			// If a complete file already exists from a previous download, verify it
+			// and skip re-downloading if valid (handles retry after install failure)
+			if (apkFile.exists() && apkFile.length() > 0) {
+				if (expectedSha256 != null) {
+					Timber.d("Existing APK found (${apkFile.length()} bytes), verifying checksum...")
+					if (verifyChecksum(apkFile, expectedSha256)) {
+						Timber.i("Existing APK passes checksum, skipping download")
+						withContext(Dispatchers.Main) { onProgress(apkFile.length(), apkFile.length()) }
+						return@runCatching FileProvider.getUriForFile(
+							context,
+							"${context.packageName}.fileprovider",
+							apkFile
+						)
+					}
+					Timber.w("Existing APK failed checksum, re-downloading")
+					apkFile.delete()
+				} else {
+					Timber.d("Existing APK found but no checksum to verify, re-downloading fresh")
+					apkFile.delete()
+				}
+			}
+
 			var attempt = 0
 			var lastException: Exception? = null
 
@@ -248,9 +270,16 @@ class UpdateCheckerService(private val context: Context) {
 					}
 
 					downloadClient.newCall(requestBuilder.build()).execute().use { response ->
+						// Handle 416 Range Not Satisfiable — file may already be complete
+						if (response.code == 416) {
+							Timber.d("Got 416 Range Not Satisfiable, deleting partial file and retrying fresh")
+							apkFile.delete()
+							throw Exception("Range not satisfiable, retrying from start")
+						}
+
 						val isResume = response.code == 206
 						if (!response.isSuccessful && !isResume) {
-							throw Exception("Failed to download update: ${response.code}")
+							throw Exception("Failed to download update: HTTP ${response.code}")
 						}
 
 						val body = response.body ?: throw Exception("Empty response body")
@@ -285,7 +314,7 @@ class UpdateCheckerService(private val context: Context) {
 							}
 						}
 
-						Timber.d("Update downloaded to: ${apkFile.absolutePath}")
+						Timber.d("Update downloaded to: ${apkFile.absolutePath} (${apkFile.length()} bytes)")
 
 						// Verify checksum if provided
 						if (expectedSha256 != null) {
@@ -343,16 +372,23 @@ class UpdateCheckerService(private val context: Context) {
 	 * Returns true if the install session was committed successfully, false on error.
 	 */
 	fun installUpdate(apkUri: Uri): Boolean {
+		val apkFile = getApkFile()
+		if (apkFile == null || !apkFile.exists()) {
+			Timber.e("APK file not found for installation")
+			return false
+		}
+		Timber.d("Installing APK: ${apkFile.absolutePath} (size=${apkFile.length()} bytes)")
+
 		return try {
-			val apkFile = getApkFile()
-			if (apkFile == null || !apkFile.exists()) {
-				Timber.e("APK file not found for installation")
-				return false
-			}
 			installViaPackageInstaller(apkFile)
 		} catch (e: Exception) {
 			Timber.e(e, "PackageInstaller failed, trying intent fallback")
-			installViaIntent(apkUri)
+			try {
+				installViaIntent(apkUri)
+			} catch (e2: Exception) {
+				Timber.e(e2, "Intent-based install also failed")
+				false
+			}
 		}
 	}
 

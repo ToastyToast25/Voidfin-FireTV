@@ -51,6 +51,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalContext
@@ -340,6 +341,17 @@ private fun SettingsUpdateOverlay(
 			modifier = Modifier
 				.fillMaxSize()
 				.background(Color(0xDD000000))
+				.onKeyEvent { event ->
+					// Consume all directional key events in the bubble phase
+					// to prevent them from leaking to the settings list behind the dialog
+					if (event.type == KeyEventType.KeyDown) {
+						when (event.key) {
+							Key.DirectionDown, Key.DirectionUp,
+							Key.DirectionLeft, Key.DirectionRight -> true
+							else -> false
+						}
+					} else false
+				}
 				.focusable(),
 			contentAlignment = Alignment.Center,
 		) {
@@ -375,12 +387,14 @@ private fun SettingsUpdateOverlay(
 							}
 							result.fold(
 								onSuccess = { apkUri ->
+									Timber.d("Download complete, APK URI: $apkUri")
 									updateChecker.savePendingWhatsNew(info.version, info.releaseNotes)
 									val installed = updateChecker.installUpdate(apkUri)
+									Timber.d("Install result: $installed")
 									dlState = if (installed) DlState.INSTALLING else DlState.FAILED
 								},
 								onFailure = { err ->
-									Timber.e(err, "Download failed")
+									Timber.e(err, "Download failed: ${err.message}")
 									dlState = DlState.FAILED
 								}
 							)
