@@ -112,7 +112,7 @@ class SubtitleDelayAction(
 			currentDelayMs = delayMs
 		} catch (e: Exception) {
 			timber.log.Timber.e(e, "SubtitleDelayAction: Failed to apply subtitle delay")
-			Toast.makeText(context, "Failed to apply subtitle delay", Toast.LENGTH_SHORT).show()
+			Toast.makeText(context, context.getString(R.string.track_subtitle_delay_failed), Toast.LENGTH_SHORT).show()
 		}
 	}
 	

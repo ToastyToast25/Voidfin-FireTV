@@ -31,7 +31,7 @@ class ClosedCaptionsAction(
 	) {
 		if (playbackController.currentStreamInfo == null) {
 			Timber.w("StreamInfo null trying to obtain subtitles")
-			Toast.makeText(context, "Unable to obtain subtitle info", Toast.LENGTH_LONG).show()
+			Toast.makeText(context, context.getString(R.string.track_subtitle_info_error), Toast.LENGTH_LONG).show()
 			return
 		}
 

@@ -978,13 +978,7 @@
     <string name="msg_checking_for_updates">Checking for updates…</string>
     <string name="msg_update_check_failed">Failed to check for updates</string>
     <string name="msg_no_updates_available">You\'re on the latest version</string>
-    <string name="msg_update_available">Update available: v%s</string>
-    <string name="msg_update_size">Size: %s MB</string>
-    <string name="msg_release_notes">Release notes:</string>
-    <string name="title_update_available">Update Available</string>
     <string name="btn_download">Download</string>
-    <string name="btn_view_release_notes">View Release Notes</string>
-    <string name="btn_download_and_install">Download &amp; Install</string>
     <string name="btn_later">Later</string>
     <string name="settings_update_title">Update Available</string>
     <string name="settings_update_message">A new version of VoidStream is available</string>
@@ -1000,14 +994,56 @@
     <string name="settings_report_issue_description">Report bugs or suggest improvements</string>
     <string name="jellyseerr_settings_description">Jellyseerr integration settings</string>
     <string name="report_issue_cooldown">Please wait %1$dm %2$ds before submitting again.</string>
-    <string name="msg_downloading_update">Downloading update…</string>
-    <string name="msg_update_downloaded">Update downloaded. Opening installer…</string>
-    <string name="msg_download_failed">Failed to download update</string>
-    <string name="msg_install_permission_required">Install Permission Required</string>
-    <string name="msg_install_permission_required_description">To install updates, you need to allow this app to install from unknown sources. After enabling, press back to return and try again.</string>
-    <string name="btn_open_settings">Open Settings</string>
-    <string name="msg_failed_to_open_url">Failed to open URL</string>
     <string name="msg_failed_to_open_settings">Failed to open settings</string>
+
+    <!-- SyncPlay -->
+    <string name="syncplay_group_disbanded">SyncPlay group was disbanded</string>
+    <string name="syncplay_user_joined">%s joined the SyncPlay group</string>
+    <string name="syncplay_user_left">%s left the SyncPlay group</string>
+
+    <!-- Track selection -->
+    <string name="track_audio_selected">Audio: %s</string>
+    <string name="track_audio_default">Audio: Default</string>
+    <string name="track_no_audio_available">No audio tracks available</string>
+    <string name="track_subtitles_none">Subtitles: None</string>
+    <string name="track_subtitles_selected">Subtitles: %s</string>
+    <string name="track_subtitles_default">Subtitles: Default</string>
+    <string name="track_subtitle_info_error">Unable to obtain subtitle info</string>
+    <string name="track_subtitle_delay_failed">Failed to apply subtitle delay</string>
+
+    <!-- Jellyseerr settings -->
+    <string name="jellyseerr_enable_first">Please enable Jellyseerr first</string>
+    <string name="jellyseerr_server_url_saved">Server URL saved</string>
+    <string name="jellyseerr_set_url_first">Please set server URL first</string>
+    <string name="jellyseerr_all_fields_required">All fields are required</string>
+    <string name="jellyseerr_connected_auth">Connected successfully using %s!</string>
+    <string name="jellyseerr_connection_error_detail">Connection error: %s</string>
+    <string name="jellyseerr_login_failed">Login failed: %s</string>
+    <string name="jellyseerr_login_error">Login error: %s</string>
+    <string name="jellyseerr_logged_in_api_key">Logged in successfully using permanent API key!</string>
+    <string name="jellyseerr_logged_in_cookie">Logged in successfully using cookie-based auth (expires ~30 days)</string>
+    <string name="jellyseerr_auth_permanent_key">Permanent API key active</string>
+    <string name="jellyseerr_auth_cookie">Cookie-based auth (expires ~30 days)</string>
+    <string name="jellyseerr_jellyfin_connect_desc">Connecting as: %1$s\n\nEnter your Jellyfin password to authenticate with Jellyseerr</string>
+    <string name="jellyseerr_local_login_desc">Login with your Jellyseerr local account to get a permanent API key</string>
+    <string name="jellyseerr_dialog_log_out">Log Out</string>
+    <string name="jellyseerr_dialog_cancel">Cancel</string>
+    <string name="jellyseerr_dialog_save">Save</string>
+    <string name="jellyseerr_dialog_connect">Connect</string>
+    <string name="jellyseerr_dialog_login">Login</string>
+    <string name="jellyseerr_field_password">Password</string>
+    <string name="jellyseerr_field_email">Email</string>
+    <string name="jellyseerr_auth_permanent_key_type">permanent API key</string>
+    <string name="jellyseerr_auth_cookie_type">cookie-based auth (expires ~30 days)</string>
+
+    <!-- Media details -->
+    <string name="media_error_item_not_found">Error: Item data not found</string>
+    <string name="media_error_person_not_found">Error: Person ID not found</string>
+    <string name="media_failed_load_person">Failed to load person details</string>
+    <string name="media_unable_open_trailer">Unable to open trailer</string>
+    <string name="media_play_trailer">Play Trailer</string>
+    <string name="media_not_in_library">Item not found in your VoidStream library</string>
+    <string name="media_error_search_library">Error searching library</string>
     <string name="notification_channel_updates">App Updates</string>
     <string name="notification_channel_updates_description">Notifications about app updates</string>
     <string name="notification_update_available_title">Update Available</string>
@@ -1037,7 +1073,6 @@
     <string name="force_update_beta_badge">BETA</string>
     <string name="whats_new_title">What\'s New</string>
     <string name="whats_new_updated_to">Updated to Version %s</string>
-    <string name="whats_new_dismiss">Got it</string>
     <string name="whats_new_continue">Continue</string>
     <string name="pref_beta_channel">Beta updates</string>
     <string name="pref_beta_channel_description">Receive pre-release builds (may be unstable)</string>
@@ -1134,8 +1169,6 @@
     <string name="syncplay_resume_playback_description">Start playing the group\'s content</string>
     <string name="syncplay_halt_playback">Pause playback</string>
     <string name="syncplay_halt_playback_description">Stop following group playback temporarily</string>
-    <string name="syncplay_user_joined">%s joined the SyncPlay group</string>
-    <string name="syncplay_user_left">%s left the SyncPlay group</string>
     <string name="syncplay_group_default_name">%s\'s Group</string>
     
     <!-- Genres Grid -->

@@ -2,6 +2,7 @@ package org.jellyfin.androidtv.data.syncplay
 
 import android.content.Context
 import android.widget.Toast
+import org.jellyfin.androidtv.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -154,7 +155,7 @@ class SyncPlayManager(
                 Timber.w("SyncPlay: Group no longer exists on server, clearing local state")
                 _state.value = SyncPlayState()
                 scope.launch(Dispatchers.Main) {
-                    Toast.makeText(context, "SyncPlay group was disbanded", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.syncplay_group_disbanded), Toast.LENGTH_SHORT).show()
                 }
             } else {
                 Timber.e(e, "SyncPlay: Failed to refresh group info")
@@ -396,7 +397,7 @@ class SyncPlayManager(
                 Timber.w("SyncPlay: Group $groupId no longer exists")
                 _state.value = SyncPlayState()
                 scope.launch(Dispatchers.Main) {
-                    Toast.makeText(context, "SyncPlay group was disbanded", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.syncplay_group_disbanded), Toast.LENGTH_SHORT).show()
                 }
             }
             false
@@ -651,7 +652,7 @@ class SyncPlayManager(
             is org.jellyfin.sdk.model.api.SyncPlayUserJoinedUpdate -> {
                 val userName = update.data
                 scope.launch(Dispatchers.Main) {
-                    Toast.makeText(context, "$userName joined the SyncPlay group", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.syncplay_user_joined, userName), Toast.LENGTH_SHORT).show()
                 }
                 scope.launch(Dispatchers.IO) {
                     refreshGroupInfo()
@@ -660,7 +661,7 @@ class SyncPlayManager(
             is org.jellyfin.sdk.model.api.SyncPlayUserLeftUpdate -> {
                 val userName = update.data
                 scope.launch(Dispatchers.Main) {
-                    Toast.makeText(context, "$userName left the SyncPlay group", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.syncplay_user_left, userName), Toast.LENGTH_SHORT).show()
                 }
                 scope.launch(Dispatchers.IO) {
                     refreshGroupInfo()

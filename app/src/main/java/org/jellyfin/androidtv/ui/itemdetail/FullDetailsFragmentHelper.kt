@@ -438,7 +438,7 @@ fun FullDetailsFragment.showAudioTrackSelector(
 	val audioTracks = trackSelector.getAudioTracks(baseItemDto)
 	
 	if (audioTracks.isEmpty()) {
-		Toast.makeText(requireContext(), "No audio tracks available", Toast.LENGTH_SHORT).show()
+		Toast.makeText(requireContext(), getString(R.string.track_no_audio_available), Toast.LENGTH_SHORT).show()
 		return
 	}
 	
@@ -452,7 +452,7 @@ fun FullDetailsFragment.showAudioTrackSelector(
 			
 			item(label) {
 				trackSelector.setSelectedAudioTrack(baseItemDto.id.toString(), track.index)
-				Toast.makeText(requireContext(), "Audio: $displayName", Toast.LENGTH_SHORT).show()
+				Toast.makeText(requireContext(), getString(R.string.track_audio_selected, displayName), Toast.LENGTH_SHORT).show()
 			}
 		}
 		
@@ -460,7 +460,7 @@ fun FullDetailsFragment.showAudioTrackSelector(
 		val isDefault = selectedIndex == null
 		item(if (isDefault) "✓ Default" else "Default") {
 			trackSelector.setSelectedAudioTrack(baseItemDto.id.toString(), null)
-			Toast.makeText(requireContext(), "Audio: Default", Toast.LENGTH_SHORT).show()
+			Toast.makeText(requireContext(), getString(R.string.track_audio_default), Toast.LENGTH_SHORT).show()
 		}
 	}.show()
 }
@@ -479,7 +479,7 @@ fun FullDetailsFragment.showSubtitleTrackSelector(
 		val isNone = selectedIndex == -1
 		item(if (isNone) "✓ None" else "None") {
 			trackSelector.setSelectedSubtitleTrack(baseItemDto.id.toString(), -1)
-			Toast.makeText(requireContext(), "Subtitles: None", Toast.LENGTH_SHORT).show()
+			Toast.makeText(requireContext(), getString(R.string.track_subtitles_none), Toast.LENGTH_SHORT).show()
 		}
 		
 		subtitleTracks.forEach { track ->
@@ -489,7 +489,7 @@ fun FullDetailsFragment.showSubtitleTrackSelector(
 			
 			item(label) {
 				trackSelector.setSelectedSubtitleTrack(baseItemDto.id.toString(), track.index)
-				Toast.makeText(requireContext(), "Subtitles: $displayName", Toast.LENGTH_SHORT).show()
+				Toast.makeText(requireContext(), getString(R.string.track_subtitles_selected, displayName), Toast.LENGTH_SHORT).show()
 			}
 		}
 		
@@ -497,7 +497,7 @@ fun FullDetailsFragment.showSubtitleTrackSelector(
 		val isDefault = selectedIndex == null
 		item(if (isDefault) "✓ Default" else "Default") {
 			trackSelector.setSelectedSubtitleTrack(baseItemDto.id.toString(), null)
-			Toast.makeText(requireContext(), "Subtitles: Default", Toast.LENGTH_SHORT).show()
+			Toast.makeText(requireContext(), getString(R.string.track_subtitles_default), Toast.LENGTH_SHORT).show()
 		}
 	}.show()
 }

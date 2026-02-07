@@ -93,7 +93,7 @@ class MediaDetailsFragment : Fragment() {
 		
 		if (selectedItem == null) {
 			Timber.e("MediaDetailsFragment: No item data found in arguments")
-			Toast.makeText(requireContext(), "Error: Item data not found", Toast.LENGTH_SHORT).show()
+			Toast.makeText(requireContext(), getString(R.string.media_error_item_not_found), Toast.LENGTH_SHORT).show()
 			// Let navigation system handle going back
 			requireActivity().onBackPressedDispatcher.onBackPressed()
 		}
@@ -2021,11 +2021,11 @@ class MediaDetailsFragment : Fragment() {
 			)
 			
 			// Show app chooser to allow user to select their preferred app
-			val chooser = android.content.Intent.createChooser(intent, "Play Trailer")
+			val chooser = android.content.Intent.createChooser(intent, getString(R.string.media_play_trailer))
 			startActivity(chooser)
 		} catch (e: Exception) {
 			Timber.e(e, "Error opening trailer")
-			Toast.makeText(requireContext(), "Unable to open trailer", Toast.LENGTH_SHORT).show()
+			Toast.makeText(requireContext(), getString(R.string.media_unable_open_trailer), Toast.LENGTH_SHORT).show()
 		}
 	}
 	
@@ -2057,11 +2057,11 @@ class MediaDetailsFragment : Fragment() {
 					navigationRepository.navigate(Destinations.itemDetails(jellyfinItem.id))
 				} else {
 					Timber.w("Item not found in Jellyfin library")
-					Toast.makeText(requireContext(), "Item not found in your VoidStream library", Toast.LENGTH_SHORT).show()
+					Toast.makeText(requireContext(), getString(R.string.media_not_in_library), Toast.LENGTH_SHORT).show()
 				}
 			} catch (e: Exception) {
 				Timber.e(e, "Failed to search for item in VoidStream")
-				Toast.makeText(requireContext(), "Error searching library", Toast.LENGTH_SHORT).show()
+				Toast.makeText(requireContext(), getString(R.string.media_error_search_library), Toast.LENGTH_SHORT).show()
 			}
 		}
 	}

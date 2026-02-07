@@ -65,7 +65,7 @@ class PersonDetailsFragment : Fragment() {
 
 		if (personId == -1) {
 			Timber.e("PersonDetailsFragment: No person ID found in arguments")
-			Toast.makeText(requireContext(), "Error: Person ID not found", Toast.LENGTH_SHORT).show()
+			Toast.makeText(requireContext(), getString(R.string.media_error_person_not_found), Toast.LENGTH_SHORT).show()
 			requireActivity().onBackPressedDispatcher.onBackPressed()
 		}
 	}
@@ -193,7 +193,7 @@ class PersonDetailsFragment : Fragment() {
 					loadPersonCredits()
 				}.onFailure { error ->
 					Timber.e(error, "Failed to load person details")
-					Toast.makeText(requireContext(), "Failed to load person details", Toast.LENGTH_SHORT).show()
+					Toast.makeText(requireContext(), getString(R.string.media_failed_load_person), Toast.LENGTH_SHORT).show()
 				}
 			} catch (e: Exception) {
 				Timber.e(e, "Error loading person data")
