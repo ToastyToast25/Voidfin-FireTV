@@ -1,0 +1,136 @@
+name: Store Compliance
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  amazon-compliance:
+    name: Amazon Appstore Compliance
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup Java
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          distribution: temurin
+          java-version-file: .tools-versions
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
+
+      - name: Build Amazon release APK
+        run: ./gradlew assembleAmazonRelease
+
+      - name: Verify compliance
+        run: |
+          APK=$(find app/build/outputs/apk/amazon/release -name "*.apk" | head -1)
+
+          echo "=== Amazon Appstore Compliance Check ==="
+          echo "APK: $APK"
+          echo ""
+
+          # Check for REQUEST_INSTALL_PACKAGES permission (should NOT exist)
+          echo "Checking for REQUEST_INSTALL_PACKAGES permission..."
+          if aapt dump permissions "$APK" | grep -q "REQUEST_INSTALL_PACKAGES"; then
+            echo "❌ FAIL: REQUEST_INSTALL_PACKAGES found (violates Amazon policy)"
+            exit 1
+          else
+            echo "✓ PASS: No REQUEST_INSTALL_PACKAGES permission"
+          fi
+
+          # Check for FileProvider (should NOT exist)
+          echo "Checking for FileProvider..."
+          if aapt dump xmltree "$APK" AndroidManifest.xml | grep -q "FileProvider"; then
+            echo "❌ FAIL: FileProvider found (not needed for Amazon build)"
+            exit 1
+          else
+            echo "✓ PASS: No FileProvider"
+          fi
+
+          # Verify BuildConfig flags
+          echo "Checking BuildConfig flags..."
+          if unzip -p "$APK" classes.dex | strings | grep -q "IS_AMAZON_BUILD"; then
+            echo "✓ PASS: BuildConfig flags present"
+          else
+            echo "⚠ WARNING: Could not verify BuildConfig flags"
+          fi
+
+          echo ""
+          echo "=== Amazon Compliance: PASSED ==="
+
+  google-play-compliance:
+    name: Google Play Store Compliance
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup Java
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          distribution: temurin
+          java-version-file: .tools-versions
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
+
+      - name: Build Google Play release APK
+        run: ./gradlew assembleGoogleplayRelease
+
+      - name: Verify compliance
+        run: |
+          APK=$(find app/build/outputs/apk/googleplay/release -name "*.apk" | head -1)
+
+          echo "=== Google Play Store Compliance Check ==="
+          echo "APK: $APK"
+          echo ""
+
+          # Check for REQUEST_INSTALL_PACKAGES permission (should NOT exist)
+          echo "Checking for REQUEST_INSTALL_PACKAGES permission..."
+          if aapt dump permissions "$APK" | grep -q "REQUEST_INSTALL_PACKAGES"; then
+            echo "❌ FAIL: REQUEST_INSTALL_PACKAGES found (violates Google Play policy)"
+            exit 1
+          else
+            echo "✓ PASS: No REQUEST_INSTALL_PACKAGES permission"
+          fi
+
+          # Check for FileProvider (should NOT exist)
+          echo "Checking for FileProvider..."
+          if aapt dump xmltree "$APK" AndroidManifest.xml | grep -q "FileProvider"; then
+            echo "❌ FAIL: FileProvider found (not needed for Google Play build)"
+            exit 1
+          else
+            echo "✓ PASS: No FileProvider"
+          fi
+
+          # Verify BuildConfig flags
+          echo "Checking BuildConfig flags..."
+          if unzip -p "$APK" classes.dex | strings | grep -q "IS_GOOGLE_PLAY_BUILD"; then
+            echo "✓ PASS: BuildConfig flags present"
+          else
+            echo "⚠ WARNING: Could not verify BuildConfig flags"
+          fi
+
+          echo ""
+          echo "=== Google Play Compliance: PASSED ==="
+
+      - name: Build Google Play AAB
+        run: ./gradlew bundleGoogleplayRelease
+
+      - name: Verify AAB created
+        run: |
+          AAB=$(find app/build/outputs/bundle/googleplayRelease -name "*.aab" | head -1)
+          if [ -f "$AAB" ]; then
+            echo "✓ PASS: AAB bundle created at $AAB"
+          else
+            echo "❌ FAIL: AAB bundle not found"
+            exit 1
+          fi

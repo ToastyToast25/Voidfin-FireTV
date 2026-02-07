@@ -278,6 +278,19 @@ GitHub Actions workflows are in `.github/workflows/`.
 - **Commit message:** `Update README version badges [skip ci]` (uses `[skip ci]` to prevent infinite loop)
 - **How badge matching works:** Each badge URL contains a unique color code suffix (e.g., `Kotlin-{VERSION}-7F52FF`). The workflow uses `sed` to match and replace the version portion between the badge name and color code.
 
+### Store Compliance (`store-compliance.yaml`)
+- **Triggers:** Push to `master` and all pull requests
+- **What it does:** Builds Amazon and Google Play release builds, then runs automated compliance checks
+- **Jobs:**
+  - `amazon-compliance` — Builds `amazonRelease` APK and verifies Amazon Appstore policy compliance
+  - `google-play-compliance` — Builds `googleplayRelease` APK + AAB and verifies Google Play policy compliance
+- **Compliance checks:**
+  - No `REQUEST_INSTALL_PACKAGES` permission (prohibited by both stores)
+  - No `FileProvider` in manifest (not needed for store builds)
+  - BuildConfig flags are present (`IS_AMAZON_BUILD` / `IS_GOOGLE_PLAY_BUILD`)
+  - AAB bundle is created (Google Play requirement)
+- **Badge status:** Green (passing) means the build is compliant and ready for store submission
+
 ### When Bumping Versions
 - The badge workflow runs **automatically** — no manual README edits needed when updating `libs.versions.toml` or the Gradle wrapper
 - The Release badge (`img.shields.io/github/release/...`) is dynamic and always shows the latest GitHub release tag

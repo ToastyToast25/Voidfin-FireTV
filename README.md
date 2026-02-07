@@ -16,6 +16,9 @@
 ![ExoPlayer](https://img.shields.io/badge/Media3-1.9.1-4285F4?logo=google&logoColor=white)
 ![Jetpack Compose](https://img.shields.io/badge/Compose-1.10.2-4285F4?logo=jetpackcompose&logoColor=white)
 
+[![Amazon Appstore](https://github.com/ToastyToast25/VoidStream-FireTV/actions/workflows/store-compliance.yaml/badge.svg?event=push&job=amazon-compliance)](https://github.com/ToastyToast25/VoidStream-FireTV/actions/workflows/store-compliance.yaml)
+[![Google Play Store](https://github.com/ToastyToast25/VoidStream-FireTV/actions/workflows/store-compliance.yaml/badge.svg?event=push&job=google-play-compliance)](https://github.com/ToastyToast25/VoidStream-FireTV/actions/workflows/store-compliance.yaml)
+
 > **[← Back to main VoidStream project](https://github.com/ToastyToast25)**
 
 VoidStream for Android TV is an enhanced fork of the official Jellyfin Android TV client, optimized for the viewing experience on Android TV, Nvidia Shield, Amazon Fire TV, and Google TV devices.
