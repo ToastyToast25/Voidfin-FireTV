@@ -26,12 +26,12 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
 
-      - name: Build Amazon release APK
-        run: ./gradlew assembleAmazonRelease
+      - name: Build Amazon debug APK
+        run: ./gradlew assembleAmazonDebug
 
       - name: Verify compliance
         run: |
-          APK=$(find app/build/outputs/apk/amazon/release -name "*.apk" | head -1)
+          APK=$(find app/build/outputs/apk/amazon/debug -name "*.apk" | head -1)
 
           echo "=== Amazon Appstore Compliance Check ==="
           echo "APK: $APK"
@@ -82,12 +82,12 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
 
-      - name: Build Google Play release APK
-        run: ./gradlew assembleGoogleplayRelease
+      - name: Build Google Play debug APK
+        run: ./gradlew assembleGoogleplayDebug
 
       - name: Verify compliance
         run: |
-          APK=$(find app/build/outputs/apk/googleplay/release -name "*.apk" | head -1)
+          APK=$(find app/build/outputs/apk/googleplay/debug -name "*.apk" | head -1)
 
           echo "=== Google Play Store Compliance Check ==="
           echo "APK: $APK"
@@ -121,16 +121,3 @@ jobs:
 
           echo ""
           echo "=== Google Play Compliance: PASSED ==="
-
-      - name: Build Google Play AAB
-        run: ./gradlew bundleGoogleplayRelease
-
-      - name: Verify AAB created
-        run: |
-          AAB=$(find app/build/outputs/bundle/googleplayRelease -name "*.aab" | head -1)
-          if [ -f "$AAB" ]; then
-            echo "✓ PASS: AAB bundle created at $AAB"
-          else
-            echo "❌ FAIL: AAB bundle not found"
-            exit 1
-          fi

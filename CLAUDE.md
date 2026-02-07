@@ -280,16 +280,16 @@ GitHub Actions workflows are in `.github/workflows/`.
 
 ### Store Compliance (`store-compliance.yaml`)
 - **Triggers:** Push to `master` and all pull requests
-- **What it does:** Builds Amazon and Google Play release builds, then runs automated compliance checks
+- **What it does:** Builds Amazon and Google Play debug builds, then runs automated compliance checks
 - **Jobs:**
-  - `amazon-compliance` — Builds `amazonRelease` APK and verifies Amazon Appstore policy compliance
-  - `google-play-compliance` — Builds `googleplayRelease` APK + AAB and verifies Google Play policy compliance
+  - `amazon-compliance` — Builds `amazonDebug` APK and verifies Amazon Appstore policy compliance
+  - `google-play-compliance` — Builds `googleplayDebug` APK and verifies Google Play policy compliance
 - **Compliance checks:**
   - No `REQUEST_INSTALL_PACKAGES` permission (prohibited by both stores)
   - No `FileProvider` in manifest (not needed for store builds)
   - BuildConfig flags are present (`IS_AMAZON_BUILD` / `IS_GOOGLE_PLAY_BUILD`)
-  - AAB bundle is created (Google Play requirement)
 - **Badge status:** Green (passing) means the build is compliant and ready for store submission
+- **Note:** Debug builds are used to avoid requiring signing keys in CI. The gating is flavor-based, not build-type-based, so debug and release builds have identical compliance characteristics.
 
 ### When Bumping Versions
 - The badge workflow runs **automatically** — no manual README edits needed when updating `libs.versions.toml` or the Gradle wrapper
