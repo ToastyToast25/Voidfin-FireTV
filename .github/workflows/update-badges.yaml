@@ -1,0 +1,74 @@
+name: Update README Badges
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'gradle/libs.versions.toml'
+      - 'gradle/wrapper/gradle-wrapper.properties'
+
+permissions:
+  contents: write
+
+jobs:
+  update-badges:
+    name: Update version badges
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Extract versions and update README
+        run: |
+          TOML="gradle/libs.versions.toml"
+          WRAPPER="gradle/wrapper/gradle-wrapper.properties"
+
+          # Extract versions from libs.versions.toml
+          get_version() {
+            grep "^$1 " "$TOML" | head -1 | sed 's/.*= *"\(.*\)"/\1/'
+          }
+
+          KOTLIN=$(get_version "kotlin")
+          JAVA_JDK=$(get_version "java-jdk")
+          MIN_SDK=$(get_version "android-minSdk")
+          TARGET_SDK=$(get_version "android-targetSdk")
+          JELLYFIN_SDK=$(get_version "jellyfin-sdk")
+          MEDIA3=$(get_version "androidx-media3")
+          COMPOSE_UI=$(get_version "androidx-compose-ui")
+
+          # Extract Gradle version from wrapper properties
+          GRADLE=$(grep "distributionUrl" "$WRAPPER" | sed 's/.*gradle-\(.*\)-bin.zip/\1/')
+
+          # URL-encode the en-dash for SDK range
+          SDK_RANGE="${MIN_SDK}%E2%80%93${TARGET_SDK}"
+
+          echo "Kotlin=$KOTLIN Java=$JAVA_JDK SDK=$MIN_SDK-$TARGET_SDK Gradle=$GRADLE"
+          echo "Jellyfin SDK=$JELLYFIN_SDK Media3=$MEDIA3 Compose=$COMPOSE_UI"
+
+          # Update each badge in README.md using sed
+          sed -i "s|Android_SDK-[^-]*-3DDC84|Android_SDK-${SDK_RANGE}-3DDC84|" README.md
+          sed -i "s|Kotlin-[^-]*-7F52FF|Kotlin-${KOTLIN}-7F52FF|" README.md
+          sed -i "s|Java-[^-]*-ED8B00|Java-${JAVA_JDK}-ED8B00|" README.md
+          sed -i "s|Gradle-[^-]*-02303A|Gradle-${GRADLE}-02303A|" README.md
+          sed -i "s|Jellyfin_SDK-[^-]*-00A4DC|Jellyfin_SDK-${JELLYFIN_SDK}-00A4DC|" README.md
+          sed -i "s|Media3-[^-]*-4285F4|Media3-${MEDIA3}-4285F4|" README.md
+          sed -i "s|Compose-[^-]*-4285F4|Compose-${COMPOSE_UI}-4285F4|" README.md
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet README.md; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit and push
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "Update README version badges [skip ci]"
+          git push
