@@ -34,6 +34,7 @@ import org.jellyfin.androidtv.data.repository.NotificationsRepositoryImpl
 import org.jellyfin.androidtv.data.repository.UserViewsRepository
 import org.jellyfin.androidtv.data.repository.UserViewsRepositoryImpl
 import org.jellyfin.androidtv.data.service.BackgroundService
+import org.jellyfin.androidtv.data.service.IssueReporterService
 import org.jellyfin.androidtv.data.service.UpdateCheckerService
 import org.jellyfin.androidtv.preference.JellyseerrPreferences
 import org.jellyfin.androidtv.data.syncplay.SyncPlayManager
@@ -208,6 +209,7 @@ val appModule = module {
 
 	single { BackgroundService(get(), get(), get(), get(), get(), get(), get()) }
 	single { UpdateCheckerService(get()) }
+	single { IssueReporterService(androidContext()) }
 
 	single { MarkdownRenderer(get()) }
 	single { ItemLauncher() }

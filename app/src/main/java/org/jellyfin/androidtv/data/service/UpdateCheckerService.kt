@@ -35,7 +35,12 @@ class UpdateCheckerService(private val context: Context) {
 		private const val GITHUB_OWNER = "ToastyToast25"
 		private const val GITHUB_REPO = "VoidStream-FireTV"
 		private const val GITHUB_API_URL = "https://api.github.com/repos/$GITHUB_OWNER/$GITHUB_REPO/releases/latest"
+		private const val GITHUB_ALL_RELEASES_URL = "https://api.github.com/repos/$GITHUB_OWNER/$GITHUB_REPO/releases"
+		private const val CACHE_TTL_MS = 5 * 60 * 1000L // 5 minutes
 	}
+
+	private var cachedUpdateInfo: UpdateInfo? = null
+	private var cacheTimestamp: Long = 0L
 
 	@Serializable
 	data class GitHubRelease(
@@ -61,12 +66,19 @@ class UpdateCheckerService(private val context: Context) {
 		val releaseUrl: String,
 		val isNewer: Boolean,
 		val apkSize: Long,
+		val publishedAt: String,
 	)
 
 	/**
-	 * Check if an update is available
+	 * Check if an update is available (uses 5-minute in-memory cache)
 	 */
-	suspend fun checkForUpdate(): Result<UpdateInfo?> = withContext(Dispatchers.IO) {
+	suspend fun checkForUpdate(forceRefresh: Boolean = false): Result<UpdateInfo?> = withContext(Dispatchers.IO) {
+		// Return cached result if still valid
+		if (!forceRefresh && cachedUpdateInfo != null && System.currentTimeMillis() - cacheTimestamp < CACHE_TTL_MS) {
+			Timber.d("Returning cached update info (age: ${(System.currentTimeMillis() - cacheTimestamp) / 1000}s)")
+			return@withContext Result.success(cachedUpdateInfo)
+		}
+
 		runCatching {
 			val request = Request.Builder()
 				.url(GITHUB_API_URL)
@@ -101,81 +113,115 @@ class UpdateCheckerService(private val context: Context) {
 
 				Timber.d("Current version: $currentVersion, Latest version: $latestVersion, Is newer: $isNewer")
 
-				UpdateInfo(
+				val updateInfo = UpdateInfo(
 					version = latestVersion,
 					releaseNotes = release.body ?: "No release notes available",
 					downloadUrl = apkAsset.downloadUrl,
 					releaseUrl = release.htmlUrl,
 					isNewer = isNewer,
 					apkSize = apkAsset.size,
+					publishedAt = release.publishedAt,
 				)
+
+				// Cache the result
+				cachedUpdateInfo = updateInfo
+				cacheTimestamp = System.currentTimeMillis()
+
+				updateInfo
 			}
 		}
 	}
 
 	/**
-	 * Download the APK update
+	 * Download the APK update with retry and resume support.
 	 * @param downloadUrl The URL to download from
+	 * @param maxRetries Maximum number of retry attempts (default 3)
 	 * @param onProgress Callback for download progress (0-100)
 	 * @return The file URI of the downloaded APK
 	 */
 	suspend fun downloadUpdate(
 		downloadUrl: String,
+		maxRetries: Int = 3,
 		onProgress: (Int) -> Unit = {}
 	): Result<Uri> = withContext(Dispatchers.IO) {
 		runCatching {
-			val request = Request.Builder()
-				.url(downloadUrl)
-				.build()
+			val downloadsDir = File(context.getExternalFilesDir(null), "downloads")
+			downloadsDir.mkdirs()
+			val apkFile = File(downloadsDir, "update.apk")
 
-			httpClient.newCall(request).execute().use { response ->
-				if (!response.isSuccessful) {
-					throw Exception("Failed to download update: ${response.code}")
-				}
+			var attempt = 0
+			var lastException: Exception? = null
 
-				val body = response.body ?: throw Exception("Empty response body")
-				val contentLength = body.contentLength()
+			while (attempt <= maxRetries) {
+				try {
+					// Check how much we already have for resume
+					val existingBytes = if (apkFile.exists()) apkFile.length() else 0L
 
-				// Create downloads directory
-				val downloadsDir = File(context.getExternalFilesDir(null), "downloads")
-				downloadsDir.mkdirs()
+					val requestBuilder = Request.Builder().url(downloadUrl)
+					if (existingBytes > 0) {
+						requestBuilder.addHeader("Range", "bytes=$existingBytes-")
+						Timber.d("Resuming download from byte $existingBytes")
+					}
 
-				// Create APK file
-				val apkFile = File(downloadsDir, "update.apk")
-				if (apkFile.exists()) {
-					apkFile.delete()
-				}
+					httpClient.newCall(requestBuilder.build()).execute().use { response ->
+						val isResume = response.code == 206
+						if (!response.isSuccessful && !isResume) {
+							throw Exception("Failed to download update: ${response.code}")
+						}
 
-				// Download with progress
-				FileOutputStream(apkFile).use { output ->
-					val buffer = ByteArray(8192)
-					var bytesRead: Int
-					var totalBytesRead = 0L
+						val body = response.body ?: throw Exception("Empty response body")
+						val contentLength = if (isResume) {
+							existingBytes + body.contentLength()
+						} else {
+							body.contentLength()
+						}
 
-					body.byteStream().use { input ->
-						while (input.read(buffer).also { bytesRead = it } != -1) {
-							output.write(buffer, 0, bytesRead)
-							totalBytesRead += bytesRead
+						// If server doesn't support range, start fresh
+						if (!isResume && existingBytes > 0) {
+							apkFile.delete()
+						}
 
-							if (contentLength > 0) {
-								val progress = (totalBytesRead * 100 / contentLength).toInt()
-								withContext(Dispatchers.Main) {
-									onProgress(progress)
+						val append = isResume
+						FileOutputStream(apkFile, append).use { output ->
+							val buffer = ByteArray(8192)
+							var bytesRead: Int
+							var totalBytesRead = if (isResume) existingBytes else 0L
+
+							body.byteStream().use { input ->
+								while (input.read(buffer).also { bytesRead = it } != -1) {
+									output.write(buffer, 0, bytesRead)
+									totalBytesRead += bytesRead
+
+									if (contentLength > 0) {
+										val progress = (totalBytesRead * 100 / contentLength).toInt()
+										withContext(Dispatchers.Main) {
+											onProgress(progress)
+										}
+									}
 								}
 							}
 						}
+
+						Timber.d("Update downloaded to: ${apkFile.absolutePath}")
+
+						return@runCatching FileProvider.getUriForFile(
+							context,
+							"${context.packageName}.fileprovider",
+							apkFile
+						)
+					}
+				} catch (e: Exception) {
+					lastException = e
+					attempt++
+					if (attempt <= maxRetries) {
+						val delayMs = (1000L * (1 shl (attempt - 1))).coerceAtMost(8000L) // 1s, 2s, 4s, max 8s
+						Timber.w("Download attempt $attempt failed, retrying in ${delayMs}ms: ${e.message}")
+						kotlinx.coroutines.delay(delayMs)
 					}
 				}
-
-				Timber.d("Update downloaded to: ${apkFile.absolutePath}")
-
-				// Return FileProvider URI
-				FileProvider.getUriForFile(
-					context,
-					"${context.packageName}.fileprovider",
-					apkFile
-				)
 			}
+
+			throw lastException ?: Exception("Download failed after $maxRetries retries")
 		}
 	}
 
@@ -192,10 +238,57 @@ class UpdateCheckerService(private val context: Context) {
 	}
 
 	/**
+	 * Fetch combined release notes for all versions between current and latest.
+	 * Returns combined markdown string, or null if only one version ahead.
+	 */
+	suspend fun getCombinedChangelog(): String? = withContext(Dispatchers.IO) {
+		try {
+			val currentVersion = BuildConfig.VERSION_NAME
+			val request = Request.Builder()
+				.url("$GITHUB_ALL_RELEASES_URL?per_page=20")
+				.addHeader("Accept", "application/vnd.github.v3+json")
+				.build()
+
+			httpClient.newCall(request).execute().use { response ->
+				if (!response.isSuccessful) return@withContext null
+				val body = response.body?.string() ?: return@withContext null
+				val releases = json.decodeFromString<List<GitHubRelease>>(body)
+
+				// Filter to releases newer than current version
+				val newerReleases = releases.filter { release ->
+					val version = release.tagName.removePrefix("v")
+					compareVersions(version, currentVersion) > 0
+				}.sortedByDescending { release ->
+					val version = release.tagName.removePrefix("v")
+					version.split(".").map { it.toIntOrNull() ?: 0 }
+						.fold(0L) { acc, part -> acc * 1000 + part }
+				}
+
+				if (newerReleases.size <= 1) return@withContext null
+
+				buildString {
+					for (release in newerReleases) {
+						val version = release.tagName.removePrefix("v")
+						appendLine("## Version $version")
+						appendLine()
+						appendLine(release.body ?: "No release notes")
+						appendLine()
+						appendLine("---")
+						appendLine()
+					}
+				}.trimEnd()
+			}
+		} catch (e: Exception) {
+			Timber.w(e, "Failed to fetch combined changelog")
+			null
+		}
+	}
+
+	/**
 	 * Compare two semantic version strings
 	 * Returns: negative if v1 < v2, zero if v1 == v2, positive if v1 > v2
 	 */
-	private fun compareVersions(v1: String, v2: String): Int {
+	fun compareVersions(v1: String, v2: String): Int {
 		val parts1 = v1.split(".").map { it.toIntOrNull() ?: 0 }
 		val parts2 = v2.split(".").map { it.toIntOrNull() ?: 0 }
 

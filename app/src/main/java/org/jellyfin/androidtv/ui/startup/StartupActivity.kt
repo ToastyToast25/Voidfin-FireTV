@@ -105,7 +105,49 @@ class StartupActivity : FragmentActivity() {
 		applyTheme()
 	}
 
-	private fun onPermissionsGranted() = sessionRepository.state
+	private fun onPermissionsGranted() {
+		// Check for forced update immediately, before any login/server flow
+		lifecycleScope.launch {
+			val updateBlocking = checkForForcedUpdate()
+			if (updateBlocking) return@launch
+
+			// No update needed, proceed with normal session flow
+			startSessionFlow()
+		}
+	}
+
+	private suspend fun checkForForcedUpdate(): Boolean {
+		return try {
+			val updateResult = withContext(Dispatchers.IO) {
+				updateCheckerService.checkForUpdate()
+			}
+			val updateInfo = updateResult.getOrNull()
+			if (updateInfo != null && updateInfo.isNewer) {
+				Timber.i("Forced update required: current -> ${updateInfo.version}")
+
+				// Try to get combined changelog if multiple versions behind
+				val combinedNotes = try {
+					withContext(Dispatchers.IO) { updateCheckerService.getCombinedChangelog() }
+				} catch (_: Exception) { null }
+
+				val finalInfo = if (combinedNotes != null) {
+					updateInfo.copy(releaseNotes = combinedNotes)
+				} else {
+					updateInfo
+				}
+
+				showForceUpdate(finalInfo)
+				true
+			} else {
+				false
+			}
+		} catch (e: Exception) {
+			Timber.e(e, "Failed to check for updates on startup, proceeding normally")
+			false
+		}
+	}
+
+	private fun startSessionFlow() = sessionRepository.state
 		.flowWithLifecycle(lifecycle, Lifecycle.State.RESUMED)
 		.filter { it == SessionRepositoryState.READY }
 		.map { sessionRepository.currentSession.value }
@@ -143,21 +185,6 @@ class StartupActivity : FragmentActivity() {
 
 		// Start session
 		(application as? JellyfinApplication)?.onSessionStart()
-
-		// Check for forced update before proceeding
-		try {
-			val updateResult = withContext(Dispatchers.IO) {
-				updateCheckerService.checkForUpdate()
-			}
-			val updateInfo = updateResult.getOrNull()
-			if (updateInfo != null && updateInfo.isNewer) {
-				Timber.i("Forced update required: current -> ${updateInfo.version}")
-				showForceUpdate(updateInfo)
-				return
-			}
-		} catch (e: Exception) {
-			Timber.e(e, "Failed to check for updates on startup, proceeding normally")
-		}
 
 		proceedToMainActivity(itemId, itemIsUserView)
 	}

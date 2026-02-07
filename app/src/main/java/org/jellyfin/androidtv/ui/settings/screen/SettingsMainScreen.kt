@@ -180,6 +180,15 @@ fun SettingsMainScreen() {
 
 		item {
 			ListButton(
+				leadingContent = { Icon(painterResource(R.drawable.ic_error), contentDescription = null) },
+				headingContent = { Text("Report Issue") },
+				captionContent = { Text("Report bugs or suggest improvements") },
+				onClick = { router.push(Routes.REPORT_ISSUE) }
+			)
+		}
+
+		item {
+			ListButton(
 				leadingContent = { Icon(painterResource(R.drawable.ic_jellyfin), contentDescription = null) },
 				headingContent = { Text(stringResource(R.string.pref_about_title)) },
 				onClick = { router.push(Routes.ABOUT) }

@@ -1009,6 +1009,32 @@
     <string name="force_update_size">Size: %s MB</string>
     <string name="force_update_installing">Installing update…</string>
     <string name="force_update_download_failed">Download failed. Tap to retry.</string>
+    <string name="force_update_install_permission">Please grant install permission</string>
+    <string name="force_update_label_current_version">Current version</string>
+    <string name="force_update_label_new_version">New version</string>
+    <string name="force_update_label_released">Released</string>
+    <string name="force_update_label_size">Size</string>
+    <string name="force_update_version_display">Version %s</string>
+    <string name="force_update_button_close">Close</string>
+    <string name="force_update_button_report_issue">Report Issue</string>
+
+    <!-- Report Issue -->
+    <string name="report_issue_title">Report an Issue</string>
+    <string name="report_issue_subtitle">Help us improve VoidStream</string>
+    <string name="report_issue_submitted_title">Report Submitted</string>
+    <string name="report_issue_submitted_message">Issue #%d has been created.</string>
+    <string name="report_issue_thanks">Thank you for your feedback!</string>
+    <string name="report_issue_category_label">What\'s the issue?</string>
+    <string name="report_issue_details_label">Details (optional)</string>
+    <string name="report_issue_details_hint">Briefly describe the issue…</string>
+    <string name="report_issue_error_default">Failed to submit report. Please try again.</string>
+    <string name="report_issue_duplicate_warning">A similar open issue (#%d) already exists. Submit anyway?</string>
+    <string name="report_issue_device_info_note">Device info will be included automatically.</string>
+    <string name="report_issue_token_expired">Issue reporting is temporarily unavailable. The authentication token has expired.</string>
+    <string name="report_issue_button_submitting">Submitting…</string>
+    <string name="report_issue_button_submit">Submit Report</string>
+    <string name="report_issue_button_submit_another">Submit Another Report</string>
+    <string name="report_issue_button_cancel">Cancel</string>
 
     <!-- Parental Controls -->
     <string name="pref_parental_controls">Parental Controls</string>

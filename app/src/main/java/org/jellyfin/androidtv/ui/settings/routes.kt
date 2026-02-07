@@ -6,6 +6,7 @@ import org.jellyfin.androidtv.ui.navigation.RouteComposable
 import org.jellyfin.androidtv.ui.settings.composable.SettingsNumericScreen
 import org.jellyfin.androidtv.ui.settings.screen.SettingsDeveloperScreen
 import org.jellyfin.androidtv.ui.settings.screen.SettingsMainScreen
+import org.jellyfin.androidtv.ui.settings.screen.SettingsReportIssueScreen
 import org.jellyfin.androidtv.ui.settings.screen.SettingsTelemetryScreen
 import org.jellyfin.androidtv.ui.settings.screen.about.SettingsAboutScreen
 import org.jellyfin.androidtv.ui.settings.screen.authentication.SettingsAuthenticationAutoSignInScreen
@@ -148,6 +149,7 @@ object Routes {
 	const val SYNCPLAY = "/syncplay"
 	const val TELEMETRY = "/telemetry"
 	const val DEVELOPER = "/developer"
+	const val REPORT_ISSUE = "/report-issue"
 	const val ABOUT = "/about"
 	const val LICENSES = "/licenses"
 	const val LICENSE = "/license/{artifactId}"
@@ -473,6 +475,9 @@ val routes = mapOf<String, RouteComposable>(
 	},
 	Routes.DEVELOPER to {
 		SettingsDeveloperScreen()
+	},
+	Routes.REPORT_ISSUE to {
+		SettingsReportIssueScreen()
 	},
 	Routes.ABOUT to { context ->
 		SettingsAboutScreen(context.parameters["fromLogin"] == "true")

@@ -20,6 +20,15 @@ android {
 		applicationId = "org.voidstream.androidtv"
 		versionName = project.getVersionName()
 		versionCode = getVersionCode(versionName!!)
+
+		// Load GitHub issue reporter token from keystore.properties
+		val keystorePropertiesFile = rootProject.file("keystore.properties")
+		val ghToken = if (keystorePropertiesFile.exists()) {
+			val props = Properties()
+			props.load(FileInputStream(keystorePropertiesFile))
+			props.getProperty("githubIssueToken", "")
+		} else ""
+		buildConfigField("String", "GITHUB_ISSUE_TOKEN", "\"$ghToken\"")
 	}
 
 	buildFeatures {
