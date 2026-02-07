@@ -814,6 +814,7 @@ private fun ReportIssueOverlay(
 	issueReporterService: IssueReporterService,
 	onDismiss: () -> Unit,
 ) {
+	val reportContext = LocalContext.current
 	val categories = IssueReporterService.IssueCategory.entries
 	var selectedCategory by remember { mutableIntStateOf(0) }
 	var description by remember { mutableStateOf("") }
@@ -1087,7 +1088,7 @@ private fun ReportIssueOverlay(
 								val cooldown = issueReporterService.getCooldownRemaining()
 								if (cooldown > 0) {
 									withContext(Dispatchers.Main) {
-										errorMessage = "Please wait ${cooldown / 60}m ${cooldown % 60}s before submitting again."
+										errorMessage = reportContext.getString(R.string.report_issue_cooldown, cooldown / 60, cooldown % 60)
 										reportState = ReportState.ERROR
 									}
 									return@launch
