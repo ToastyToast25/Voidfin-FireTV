@@ -41,7 +41,7 @@ kotlinx-serialization = "1.10.0"
 ktor = "3.0.3"
 markwon = "4.6.2"
 mockk = "1.14.9"
-slf4j-timber = "0.0.4"
+slf4j-timber = "0.0.8"
 timber = "5.0.1"
 
 [plugins]
