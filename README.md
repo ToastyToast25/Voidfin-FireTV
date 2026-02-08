@@ -399,6 +399,20 @@ VoidStream features a **modular plugin architecture** that allows both the clien
 - **Advanced Playback Plugin** - Enhanced codecs and audio processing
 - **Smart Home Integration** - Control via Alexa, Google Assistant, Home Assistant
 
+**Pricing Models:**
+
+Plugins are offered with flexible pricing to suit different user needs:
+
+| Plugin Type | Pricing Model | Example Price | Notes |
+|-------------|---------------|---------------|-------|
+| **IPTV Plugin** | One-time purchase | $9.99 | Lifetime access, all platforms |
+| **Advanced Playback** | One-time purchase | $4.99 | Permanent unlock |
+| **Smart Home** | One-time purchase | $2.99 | Buy once, use everywhere |
+| **Premium Bundle** | Monthly subscription | $2.99/month | All current + future plugins |
+| **Premium Bundle** | Annual subscription | $24.99/year | Save 30% vs monthly |
+
+*Pricing examples are subject to change. Final pricing will be announced at launch.*
+
 [View Official Plugin Catalog →](https://github.com/ToastyToast25/VoidStream-Plugins) *(Coming soon)*
 
 #### Community Plugins
