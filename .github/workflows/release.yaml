@@ -1,0 +1,165 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'gradle.properties'
+
+permissions:
+  contents: write
+
+jobs:
+  check-version-bump:
+    name: Check Version Bump
+    runs-on: ubuntu-24.04
+    outputs:
+      should_release: ${{ steps.version.outputs.changed }}
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 2
+
+      - name: Check if version changed
+        id: version
+        run: |
+          CURRENT=$(grep "voidstream.version=" gradle.properties | cut -d'=' -f2)
+          git checkout HEAD~1 2>/dev/null || true
+          PREVIOUS=$(grep "voidstream.version=" gradle.properties | cut -d'=' -f2 || echo "0.0.0")
+          git checkout -
+
+          echo "Current version: $CURRENT"
+          echo "Previous version: $PREVIOUS"
+
+          if [ "$CURRENT" != "$PREVIOUS" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "version=$CURRENT" >> "$GITHUB_OUTPUT"
+            echo "Version changed from $PREVIOUS to $CURRENT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No version change detected"
+          fi
+
+  build-release-apks:
+    name: Build Release APKs
+    needs: check-version-bump
+    if: needs.check-version-bump.outputs.should_release == 'true'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup Android
+        uses: ./.github/actions/setup-android
+
+      - name: Decode keystore
+        run: echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 -d > release.keystore
+
+      - name: Create keystore.properties
+        run: |
+          cat > keystore.properties <<EOF
+          storeFile=release.keystore
+          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+          keyAlias=${{ secrets.KEY_ALIAS }}
+          keyPassword=${{ secrets.KEY_PASSWORD }}
+          EOF
+
+      - name: Build all release APKs
+        run: |
+          ./gradlew assembleGithubRelease --parallel --build-cache --configuration-cache
+          ./gradlew assembleAmazonRelease --parallel --build-cache --configuration-cache
+          ./gradlew assembleGoogleplayRelease --parallel --build-cache --configuration-cache
+        env:
+          GRADLE_OPTS: -Xmx4096m -XX:MaxMetaspaceSize=1g
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: release-apks
+          retention-days: 30
+          if-no-files-found: error
+          path: app/build/outputs/apk/*/release/*.apk
+
+  create-github-release:
+    name: Create GitHub Release
+    needs: [check-version-bump, build-release-apks]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Download artifacts
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v6.1.0
+        with:
+          name: release-apks
+          path: apks/
+
+      - name: Check if pre-release
+        id: prerelease
+        run: |
+          VERSION="${{ needs.check-version-bump.outputs.version }}"
+          if [[ "$VERSION" =~ -(alpha|beta|rc) ]]; then
+            echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
+            echo "Pre-release version detected: $VERSION"
+          else
+            echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
+            echo "Stable release version: $VERSION"
+          fi
+
+      - name: Generate release notes
+        id: notes
+        run: |
+          VERSION="${{ needs.check-version-bump.outputs.version }}"
+
+          # Find last tag
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+
+          if [ -n "$LAST_TAG" ]; then
+            echo "Generating changelog from $LAST_TAG to HEAD"
+            COMMITS=$(git log ${LAST_TAG}..HEAD --pretty=format:"- %s" --no-merges | grep -v "Update README version badges" | grep -v "\[skip ci\]" || echo "- Initial release")
+          else
+            echo "No previous tag found, using recent commits"
+            COMMITS=$(git log --pretty=format:"- %s" --no-merges | head -20 | grep -v "Update README version badges" | grep -v "\[skip ci\]")
+          fi
+
+          # Build release notes
+          {
+            echo "notes<<EOF"
+            echo "## Changes"
+            echo ""
+            echo "$COMMITS"
+            echo ""
+            echo "## APK Files"
+            echo ""
+            echo "- **GitHub (Sideload)**: \`voidstream-androidtv-v${VERSION}-github-release.apk\` - For direct installation with OTA updates"
+            echo "- **Amazon Appstore**: \`voidstream-androidtv-v${VERSION}-amazon-release.apk\` - For Amazon Appstore submission"
+            echo "- **Google Play Store**: \`voidstream-androidtv-v${VERSION}-googleplay-release.apk\` - For Google Play Store submission"
+            echo ""
+            echo "🤖 Generated with [Claude Code](https://claude.com/claude-code)"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ needs.check-version-bump.outputs.version }}"
+          PRERELEASE_FLAG=""
+
+          if [ "${{ steps.prerelease.outputs.is_prerelease }}" == "true" ]; then
+            PRERELEASE_FLAG="--prerelease"
+            echo "Creating pre-release v${VERSION}"
+          else
+            echo "Creating stable release v${VERSION}"
+          fi
+
+          gh release create "v${VERSION}" \
+            --title "VoidStream v${VERSION}" \
+            --notes "${{ steps.notes.outputs.notes }}" \
+            $PRERELEASE_FLAG \
+            apks/*/*.apk
