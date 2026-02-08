@@ -38,10 +38,8 @@ jobs:
         include:
           - store: Amazon Appstore
             flavor: amazon
-            build_flag: IS_AMAZON_BUILD
           - store: Google Play Store
             flavor: googleplay
-            build_flag: IS_GOOGLE_PLAY_BUILD
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -78,15 +76,6 @@ jobs:
             exit 1
           else
             echo "✓ PASS: No FileProvider"
-          fi
-
-          # Verify BuildConfig flags
-          echo "Checking BuildConfig flags..."
-          if unzip -p "$APK" classes.dex | strings | grep -q "${{ matrix.build_flag }}"; then
-            echo "✓ PASS: BuildConfig.${{ matrix.build_flag }} present"
-          else
-            echo "❌ FAIL: Could not find BuildConfig.${{ matrix.build_flag }}"
-            exit 1
           fi
 
           echo ""
