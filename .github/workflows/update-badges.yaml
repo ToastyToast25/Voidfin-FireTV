@@ -34,6 +34,7 @@ jobs:
           MIN_SDK=$(get_version "android-minSdk")
           TARGET_SDK=$(get_version "android-targetSdk")
           JELLYFIN_SDK=$(get_version "jellyfin-sdk")
+          KOIN=$(get_version "koin")
           MEDIA3=$(get_version "androidx-media3")
           COMPOSE_UI=$(get_version "androidx-compose-ui")
 
@@ -44,7 +45,7 @@ jobs:
           SDK_RANGE="${MIN_SDK}%E2%80%93${TARGET_SDK}"
 
           echo "Kotlin=$KOTLIN Java=$JAVA_JDK SDK=$MIN_SDK-$TARGET_SDK Gradle=$GRADLE"
-          echo "Jellyfin SDK=$JELLYFIN_SDK Media3=$MEDIA3 Compose=$COMPOSE_UI"
+          echo "Jellyfin SDK=$JELLYFIN_SDK Koin=$KOIN Media3=$MEDIA3 Compose=$COMPOSE_UI"
 
           # Update each badge in README.md using sed
           sed -i "s|Android_SDK-[^-]*-3DDC84|Android_SDK-${SDK_RANGE}-3DDC84|" README.md
@@ -52,6 +53,7 @@ jobs:
           sed -i "s|Java-[^-]*-ED8B00|Java-${JAVA_JDK}-ED8B00|" README.md
           sed -i "s|Gradle-[^-]*-02303A|Gradle-${GRADLE}-02303A|" README.md
           sed -i "s|Jellyfin_SDK-[^-]*-00A4DC|Jellyfin_SDK-${JELLYFIN_SDK}-00A4DC|" README.md
+          sed -i "s|Koin-[^-]*--[^-]*-B125EA|Koin-${KOIN}-B125EA|" README.md
           sed -i "s|Media3-[^-]*-4285F4|Media3-${MEDIA3}-4285F4|" README.md
           sed -i "s|Compose-[^-]*-4285F4|Compose-${COMPOSE_UI}-4285F4|" README.md
 

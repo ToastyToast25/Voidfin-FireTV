@@ -13,6 +13,7 @@
 ![Java](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)
 ![Gradle](https://img.shields.io/badge/Gradle-9.3.1-02303A?logo=gradle&logoColor=white)
 ![Jellyfin SDK](https://img.shields.io/badge/Jellyfin_SDK-1.8.6-00A4DC?logo=jellyfin&logoColor=white)
+![Koin](https://img.shields.io/badge/Koin-4.2.0--RC1-B125EA?logo=kotlin&logoColor=white)
 ![ExoPlayer](https://img.shields.io/badge/Media3-1.9.1-4285F4?logo=google&logoColor=white)
 ![Jetpack Compose](https://img.shields.io/badge/Compose-1.10.2-4285F4?logo=jetpackcompose&logoColor=white)
 
