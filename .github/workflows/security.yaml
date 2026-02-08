@@ -80,7 +80,7 @@ jobs:
           fetch-depth: ${{ github.event_name == 'pull_request' && 0 || 1 }}
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@ea9e4e37992a54ee68a9622e985e60c8e8f12d9f # v3.27.10
+        uses: github/codeql-action/init@45cbd0c69e560cd9e7cd7f8c32362050c9b7ded2 # v3.27.10
         with:
           languages: java-kotlin
 
@@ -94,6 +94,6 @@ jobs:
           ORG_GRADLE_PROJECT_kotlin.daemon.jvmargs: -Xmx3g -XX:MaxMetaspaceSize=1g
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@ea9e4e37992a54ee68a9622e985e60c8e8f12d9f # v3.27.10
+        uses: github/codeql-action/analyze@45cbd0c69e560cd9e7cd7f8c32362050c9b7ded2 # v3.27.10
         with:
           category: "/language:java-kotlin"
