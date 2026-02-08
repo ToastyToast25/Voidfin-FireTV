@@ -51,6 +51,7 @@ import org.jellyfin.androidtv.util.applyTheme
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.extensions.userLibraryApi
 import org.jellyfin.sdk.model.serializer.toUUIDOrNull
+import org.koin.android.ext.android.get
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import timber.log.Timber
@@ -70,7 +71,13 @@ class StartupActivity : FragmentActivity() {
 	private val userRepository: UserRepository by inject()
 	private val navigationRepository: NavigationRepository by inject()
 	private val itemLauncher: ItemLauncher by inject()
-	private val updateCheckerService: UpdateCheckerService by inject()
+	private val updateCheckerService: UpdateCheckerService? by lazy {
+		if (!BuildConfig.IS_AMAZON_BUILD && !BuildConfig.IS_GOOGLE_PLAY_BUILD) {
+			get<UpdateCheckerService>()
+		} else {
+			null
+		}
+	}
 	private val userPreferences: UserPreferences by inject()
 
 	private lateinit var binding: ActivityStartupBinding
@@ -128,7 +135,7 @@ class StartupActivity : FragmentActivity() {
 	}
 
 	private suspend fun showWhatsNewIfPending() {
-		val whatsNew = updateCheckerService.getPendingWhatsNew() ?: return
+		val whatsNew = updateCheckerService?.getPendingWhatsNew() ?: return
 		val (version, notes) = whatsNew
 		Timber.i("Showing What's New for version $version")
 
@@ -145,16 +152,16 @@ class StartupActivity : FragmentActivity() {
 	private suspend fun checkForForcedUpdate(): Boolean {
 		return try {
 			// Skip update check if no network
-			if (!updateCheckerService.isNetworkAvailable()) {
+			if (updateCheckerService?.isNetworkAvailable() == false) {
 				Timber.d("No network, skipping update check")
 				return false
 			}
 
 			val betaEnabled = userPreferences[UserPreferences.betaUpdatesEnabled]
 			val updateResult = withContext(Dispatchers.IO) {
-				updateCheckerService.checkForUpdate(includePrereleases = betaEnabled)
+				updateCheckerService?.checkForUpdate(includePrereleases = betaEnabled)
 			}
-			val updateInfo = updateResult.getOrNull()
+			val updateInfo = updateResult?.getOrNull()
 			if (updateInfo != null && updateInfo.isNewer) {
 				// Optional update — don't block, just log
 				if (!updateInfo.isForced) {
@@ -166,7 +173,7 @@ class StartupActivity : FragmentActivity() {
 
 				// Try to get combined changelog if multiple versions behind
 				val combinedNotes = try {
-					withContext(Dispatchers.IO) { updateCheckerService.getCombinedChangelog() }
+					withContext(Dispatchers.IO) { updateCheckerService?.getCombinedChangelog() }
 				} catch (_: Exception) { null }
 
 				val finalInfo = if (combinedNotes != null) {

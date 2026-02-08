@@ -43,13 +43,15 @@ out/
 # /google-services.json
 # /app/google-services.json
 
-# Backup logos (original Moonfin branding)
+# Logos and branding assets
+/LOGOS/
 /BACKUP-LOGOS/
 
 # Claude Code / AI assistant
 CLAUDE.md
 .claude/
 .vscode/
+.playwright-mcp/
 
 # Brand change documentation
 BRAND-CHANGE.md

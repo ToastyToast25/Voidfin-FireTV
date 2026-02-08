@@ -1,0 +1,20 @@
+build:
+  maxIssues: 0
+
+style:
+  MagicNumber:
+    active: true
+    # Ignore magic numbers in property declarations (like color tokens)
+    ignorePropertyDeclaration: true
+    # Ignore magic numbers in constant declarations
+    ignoreConstantDeclaration: true
+    # Ignore magic numbers in annotations
+    ignoreAnnotation: true
+    # Ignore magic numbers in companion object constants
+    ignoreCompanionObjectPropertyDeclaration: true
+    # Already ignored by default: -1, 0, 1, 2
+    ignoreNumbers:
+      - '-1'
+      - '0'
+      - '1'
+      - '2'
