@@ -1,0 +1,96 @@
+name: Security
+
+on:
+  push:
+    branches:
+      - master
+      - release-*
+  pull_request:
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly on Sunday at midnight UTC
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-24.04
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@72eb03d02c7872a771aacd928f3123ac62ad6d3a # v4.3.3
+        with:
+          fail-on-severity: moderate
+
+  sbom:
+    name: Generate SBOM
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup Android
+        uses: ./.github/actions/setup-android
+
+      - name: Generate dependency tree
+        run: |
+          echo "Generating dependency tree for all modules..."
+          ./gradlew app:dependencies --configuration releaseRuntimeClasspath > dependencies.txt || true
+          ./gradlew playback:dependencies --configuration releaseRuntimeClasspath >> dependencies.txt || true
+          ./gradlew preference:dependencies --configuration releaseRuntimeClasspath >> dependencies.txt || true
+        env:
+          GRADLE_OPTS: -Xmx4096m -XX:MaxMetaspaceSize=1g
+
+      - name: Upload dependency tree
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: dependency-tree
+          retention-days: 90
+          if-no-files-found: error
+          path: dependencies.txt
+
+  secret-scan:
+    name: Secret Scanning
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@cb7149e1720be898bec41a5aa63e2edcb2cbc006 # v2.3.8
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+  codeql:
+    name: CodeQL Analysis
+    runs-on: ubuntu-24.04
+    if: github.event_name != 'schedule'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@ea9e4e37992a54ee68a9622e985e60c8e8f12d9f # v3.27.10
+        with:
+          languages: java-kotlin
+
+      - name: Setup Android
+        uses: ./.github/actions/setup-android
+
+      - name: Build for CodeQL
+        run: ./gradlew assembleDebug --parallel --build-cache
+        env:
+          GRADLE_OPTS: -Xmx4096m -XX:MaxMetaspaceSize=1g
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@ea9e4e37992a54ee68a9622e985e60c8e8f12d9f # v3.27.10
+        with:
+          category: "/language:java-kotlin"
