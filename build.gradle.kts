@@ -3,15 +3,6 @@ plugins {
 	alias(libs.plugins.android.library) apply false
 	alias(libs.plugins.detekt)
 	java
-	id("com.gradle.develocity") version "3.18.2"
-}
-
-develocity {
-	buildScan {
-		termsOfUseUrl = "https://gradle.com/help/legal-terms-of-use"
-		termsOfUseAgree = "yes"
-		publishing.onlyIf { System.getenv("CI") != null }
-	}
 }
 
 buildscript {
