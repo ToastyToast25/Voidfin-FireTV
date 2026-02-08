@@ -1,9 +1,24 @@
 @echo off
 setlocal enabledelayedexpansion
 
+REM Create build-logs directory if it doesn't exist
+if not exist "build-logs\" mkdir "build-logs\"
+
+REM Generate timestamped log filename
+for /f "tokens=2-4 delims=/ " %%a in ('date /t') do (set DATE=%%c-%%a-%%b)
+for /f "tokens=1-2 delims=/: " %%a in ('time /t') do (set TIME=%%a-%%b)
+set LOGFILE=build-logs\build-%DATE%_%TIME%.log
+
+REM Initialize log file
+echo VoidStream Build Tool - Session started at %date% %time% > "%LOGFILE%"
+echo. >> "%LOGFILE%"
+
 REM ============================================
 REM   VoidStream APK Build Tool v1.0
 REM ============================================
+echo.
+echo Log file: %LOGFILE%
+echo.
 
 REM Check for ANDROID_HOME
 if not defined ANDROID_HOME (
@@ -177,8 +192,9 @@ for %%f in (%FLAVORS%) do (
     echo ----------------------------------------
     echo.
 
-    REM Run Gradle build
-    call gradlew.bat assemble%%f%BUILD_TYPE% --stacktrace
+    REM Run Gradle build with logging
+    call :LogMsg "Executing: gradlew.bat assemble%%f%BUILD_TYPE% --stacktrace"
+    call gradlew.bat assemble%%f%BUILD_TYPE% --stacktrace >> "%LOGFILE%" 2>&1
 
     if errorlevel 1 (
         echo.
@@ -186,6 +202,8 @@ for %%f in (%FLAVORS%) do (
         echo   ERROR: Build failed for %%f
         echo ========================================
         echo.
+        call :LogMsg "ERROR: Build failed for %%f"
+        call :LogMsg "Check %LOGFILE% for full details"
         echo Check the Gradle output above for details
         echo Common issues:
         echo   - Missing keystore.properties (for Release builds)
@@ -447,6 +465,9 @@ if "%OUTPUT_CHOICE%"=="1" (
     echo   %OUTPUT_DIR%\
 )
 echo.
+echo Build log saved to: %LOGFILE%
+echo You can review this log at any time.
+echo.
 echo Thanks for using VoidStream Build Tool!
 echo.
 pause
@@ -455,6 +476,12 @@ exit /b 0
 REM ============================================
 REM   Helper Functions
 REM ============================================
+
+:LogMsg
+REM Log message to both console and file
+echo %~1
+echo %~1 >> "%LOGFILE%"
+goto :eof
 
 :ToLower
 REM Convert variable to lowercase

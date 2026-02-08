@@ -175,6 +175,7 @@ class AudioDelayProcessor : AudioProcessor {
 
     override fun isEnded(): Boolean = inputEnded && outputBuffer === EMPTY_BUFFER && delayBuffer.isEmpty()
 
+    @Deprecated("Deprecated in parent class")
     override fun flush() {
         outputBuffer = EMPTY_BUFFER
         delayBuffer.clear()

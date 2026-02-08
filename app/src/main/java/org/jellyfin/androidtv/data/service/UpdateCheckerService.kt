@@ -165,6 +165,19 @@ class UpdateCheckerService(private val context: Context) {
 	}
 
 	/**
+	 * Check for updates in store mode (detect only, no download).
+	 * Used by Amazon and Google Play builds to detect updates and redirect to store.
+	 * @param forceRefresh Bypass cache
+	 */
+	suspend fun checkForStoreUpdate(
+		forceRefresh: Boolean = false,
+	): Result<UpdateInfo?> = withContext(Dispatchers.IO) {
+		// Reuse the checkForUpdate logic but skip download-specific processing
+		// Store builds never use pre-releases (always stable channel)
+		checkForUpdate(forceRefresh = forceRefresh, includePrereleases = false)
+	}
+
+	/**
 	 * Fetch the latest stable release (excludes pre-releases).
 	 */
 	private fun fetchLatestStableRelease(): GitHubRelease? {
@@ -531,6 +544,51 @@ class UpdateCheckerService(private val context: Context) {
 		} catch (e: Exception) {
 			Timber.w(e, "Failed to fetch combined changelog")
 			null
+		}
+	}
+
+	/**
+	 * Open the appropriate app store for this build flavor.
+	 * @return true if store was opened successfully, false otherwise
+	 */
+	fun openAppStore(): Boolean {
+		val packageName = context.packageName
+
+		return try {
+			val storeIntent = when {
+				BuildConfig.IS_AMAZON_BUILD -> {
+					// Try Amazon Appstore first
+					Intent(Intent.ACTION_VIEW, Uri.parse("amzn://apps/android?p=$packageName")).apply {
+						addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+						if (context.packageManager.resolveActivity(this, 0) == null) {
+							// Fallback to web if Appstore app not installed
+							data = Uri.parse("https://www.amazon.com/gp/mas/dl/android?p=$packageName")
+						}
+					}
+				}
+				BuildConfig.IS_GOOGLE_PLAY_BUILD -> {
+					// Try Google Play Store first
+					Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName")).apply {
+						addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+						if (context.packageManager.resolveActivity(this, 0) == null) {
+							// Fallback to web if Play Store not installed
+							data = Uri.parse("https://play.google.com/store/apps/details?id=$packageName")
+						}
+					}
+				}
+				else -> {
+					// GitHub builds don't use store
+					Timber.w("openAppStore called on non-store build")
+					return false
+				}
+			}
+
+			context.startActivity(storeIntent)
+			Timber.i("Opened app store for update")
+			true
+		} catch (e: Exception) {
+			Timber.e(e, "Failed to open app store")
+			false
 		}
 	}
 

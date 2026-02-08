@@ -52,8 +52,9 @@ class AppLogCollector private constructor() {
 	private var count = 0
 	private val lock = ReentrantReadWriteLock()
 
-	// Crash file directory
+	// Crash file directory and context for checking preferences
 	private var crashLogDir: File? = null
+	private var appContext: Context? = null
 
 	// Custom Timber tree that captures log lines into the ring buffer
 	val tree: Timber.Tree = object : Timber.DebugTree() {
@@ -87,6 +88,7 @@ class AppLogCollector private constructor() {
 	 * Must be called once with the Application context from LogInitializer.
 	 */
 	fun init(context: Context) {
+		appContext = context.applicationContext
 		crashLogDir = context.filesDir
 		installCrashHandler()
 	}
@@ -218,6 +220,16 @@ class AppLogCollector private constructor() {
 
 	private fun writeCrashToFile(throwable: Throwable) {
 		try {
+			// Only save crash if user has opted in to crash reporting
+			val context = appContext ?: return
+			val preferences = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context)
+			val crashReportingEnabled = preferences.getBoolean("crash_reporting_enabled", false)
+
+			if (!crashReportingEnabled) {
+				Timber.d("Crash occurred but crash reporting is disabled - not saving crash log")
+				return
+			}
+
 			val file = crashLogDir?.resolve(CRASH_LOG_FILENAME) ?: return
 			val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US)
 			val content = buildString {
@@ -230,6 +242,7 @@ class AppLogCollector private constructor() {
 				recentLogs.forEach { appendLine(it) }
 			}
 			file.writeText(content)
+			Timber.d("Crash log saved to $file")
 		} catch (_: Exception) {
 			// Best-effort: never throw from crash handler
 		}

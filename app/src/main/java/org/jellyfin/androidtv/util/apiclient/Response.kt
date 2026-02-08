@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION") // Self-referential deprecation
+
 package org.jellyfin.androidtv.util.apiclient
 
 import androidx.lifecycle.Lifecycle

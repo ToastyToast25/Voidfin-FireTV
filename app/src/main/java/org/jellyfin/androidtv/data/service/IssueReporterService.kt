@@ -25,9 +25,12 @@ class IssueReporterService(
 		private const val GITHUB_REPO = "VoidStream-FireTV"
 		private const val ISSUES_URL = "https://api.github.com/repos/$GITHUB_OWNER/$GITHUB_REPO/issues"
 		private const val SEARCH_URL = "https://api.github.com/search/issues"
-		private const val COOLDOWN_MS = 10 * 60 * 1000L // 10 minutes
+		private const val BASE_COOLDOWN_MS = 30 * 1000L // 30 seconds base
+		private const val MAX_COOLDOWN_MS = 5 * 60 * 1000L // 5 minutes max cap
+		private const val HISTORY_WINDOW_MS = 15 * 60 * 1000L // 15 minute tracking window
 		private const val PREFS_NAME = "issue_reporter"
 		private const val KEY_LAST_SUBMIT = "last_submit_time"
+		private const val KEY_SUBMISSION_HISTORY = "submission_history"
 	}
 
 	private val httpClient = OkHttpClient.Builder()
@@ -129,13 +132,76 @@ class IssueReporterService(
 	}
 
 	/**
+	 * Get submission history and clean up old entries (older than 15 minutes).
+	 * Returns list of timestamps within the tracking window.
+	 */
+	private fun getSubmissionHistory(): List<Long> {
+		val historyString = prefs.getString(KEY_SUBMISSION_HISTORY, "") ?: ""
+		if (historyString.isBlank()) return emptyList()
+
+		val currentTime = System.currentTimeMillis()
+		val cutoffTime = currentTime - HISTORY_WINDOW_MS
+
+		// Parse timestamps and filter out old ones
+		val recentSubmissions = historyString.split(",")
+			.mapNotNull { it.toLongOrNull() }
+			.filter { it > cutoffTime }
+
+		// Save cleaned history back to prefs
+		if (recentSubmissions.size != historyString.split(",").size) {
+			saveSubmissionHistory(recentSubmissions)
+		}
+
+		return recentSubmissions
+	}
+
+	/**
+	 * Save submission history to SharedPreferences.
+	 */
+	private fun saveSubmissionHistory(timestamps: List<Long>) {
+		val historyString = timestamps.joinToString(",")
+		prefs.edit().putString(KEY_SUBMISSION_HISTORY, historyString).apply()
+	}
+
+	/**
+	 * Calculate progressive cooldown based on recent submission count.
+	 * - 1st submission: 30 seconds
+	 * - 2nd within 15 min: 1 minute
+	 * - 3rd within 15 min: 2 minutes
+	 * - 4th+ within 15 min: 5 minutes (capped)
+	 */
+	private fun calculateProgressiveCooldown(submissionCount: Int): Long {
+		return when (submissionCount) {
+			0, 1 -> BASE_COOLDOWN_MS // 30 seconds
+			2 -> 60 * 1000L // 1 minute
+			3 -> 120 * 1000L // 2 minutes
+			else -> MAX_COOLDOWN_MS // 5 minutes (cap)
+		}
+	}
+
+	/**
 	 * Returns remaining cooldown in seconds, or 0 if ready to submit.
+	 * Uses progressive cooldown based on recent submission history.
 	 */
 	fun getCooldownRemaining(): Long {
 		val lastSubmit = prefs.getLong(KEY_LAST_SUBMIT, 0)
 		val elapsed = System.currentTimeMillis() - lastSubmit
-		val remaining = COOLDOWN_MS - elapsed
+
+		// Get recent submission history to determine cooldown period
+		val history = getSubmissionHistory()
+		val cooldownPeriod = calculateProgressiveCooldown(history.size)
+
+		val remaining = cooldownPeriod - elapsed
 		return if (remaining > 0) remaining / 1000 else 0
+	}
+
+	/**
+	 * Get the current progressive cooldown duration in seconds.
+	 * This is used by the UI to show the actual cooldown time.
+	 */
+	fun getProgressiveCooldownDuration(): Long {
+		val history = getSubmissionHistory()
+		return calculateProgressiveCooldown(history.size) / 1000
 	}
 
 	/**
@@ -177,7 +243,7 @@ class IssueReporterService(
 			// Check rate limit
 			val cooldown = getCooldownRemaining()
 			if (cooldown > 0) {
-				throw Exception("Please wait ${cooldown / 60}m ${cooldown % 60}s before submitting another report")
+				throw Exception("Please wait $cooldown seconds before submitting another report")
 			}
 
 			val token = BuildConfig.GITHUB_ISSUE_TOKEN
@@ -226,8 +292,14 @@ class IssueReporterService(
 				val issueResponse = json.decodeFromString<CreateIssueResponse>(responseBody)
 				Timber.i("Issue created: #${issueResponse.number} - ${issueResponse.htmlUrl}")
 
-				// Record submission time for rate limiting
-				prefs.edit().putLong(KEY_LAST_SUBMIT, System.currentTimeMillis()).apply()
+				// Record submission time for rate limiting and progressive cooldown
+				val currentTime = System.currentTimeMillis()
+				prefs.edit().putLong(KEY_LAST_SUBMIT, currentTime).apply()
+
+				// Add to submission history
+				val history = getSubmissionHistory().toMutableList()
+				history.add(currentTime)
+				saveSubmissionHistory(history)
 
 				issueResponse.number
 			}

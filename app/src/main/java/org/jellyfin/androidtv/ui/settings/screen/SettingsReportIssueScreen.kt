@@ -63,12 +63,25 @@ fun SettingsReportIssueScreen() {
 	var errorMessage by remember { mutableStateOf("") }
 	var duplicateNumber by remember { mutableIntStateOf(0) }
 	var tokenExpired by remember { mutableStateOf(false) }
+	var cooldownSeconds by remember { mutableIntStateOf(0) }
 	val scope = rememberCoroutineScope()
 
 	// Check token status on first load
 	LaunchedEffect(Unit) {
 		val status = issueReporterService.checkTokenStatus()
 		tokenExpired = status == IssueReporterService.TokenStatus.EXPIRED_OR_INVALID
+	}
+
+	// Countdown timer when in SUCCESS state
+	LaunchedEffect(reportState) {
+		if (reportState == ReportState.SUCCESS) {
+			// Get the actual progressive cooldown duration
+			cooldownSeconds = issueReporterService.getProgressiveCooldownDuration().toInt()
+			while (cooldownSeconds > 0) {
+				kotlinx.coroutines.delay(1000)
+				cooldownSeconds--
+			}
+		}
 	}
 
 	SettingsColumn {
@@ -106,6 +119,24 @@ fun SettingsReportIssueScreen() {
 						color = Color(0xFFCC3333),
 						fontSize = 14.sp,
 					)
+
+					if (cooldownSeconds > 0) {
+						Spacer(modifier = Modifier.height(16.dp))
+						val timeText = when {
+							cooldownSeconds >= 60 -> {
+								val minutes = cooldownSeconds / 60
+								val seconds = cooldownSeconds % 60
+								if (seconds > 0) "${minutes}m ${seconds}s" else "${minutes}m"
+							}
+							else -> "${cooldownSeconds}s"
+						}
+						androidx.compose.material3.Text(
+							text = "You can submit another issue in $timeText",
+							color = Color(0xFF808080),
+							fontSize = 13.sp,
+						)
+					}
+
 					Spacer(modifier = Modifier.height(24.dp))
 					var resetFocused by remember { mutableStateOf(false) }
 					Button(
@@ -116,22 +147,42 @@ fun SettingsReportIssueScreen() {
 							issueNumber = 0
 							duplicateNumber = 0
 							errorMessage = ""
+							cooldownSeconds = 0
 						},
+						enabled = cooldownSeconds == 0,
 						colors = ButtonDefaults.buttonColors(
 							containerColor = if (resetFocused) Color(0xFFE04444) else Color(0xFFCC3333),
 							contentColor = Color.White,
+							disabledContainerColor = Color(0xFF3A2020),
+							disabledContentColor = Color(0xFF808080),
 						),
 						shape = RoundedCornerShape(8.dp),
 						modifier = Modifier
 							.width(200.dp)
 							.height(44.dp)
 							.then(
-								if (resetFocused) Modifier.border(2.dp, Color.White, RoundedCornerShape(8.dp))
+								if (resetFocused && cooldownSeconds == 0) Modifier.border(2.dp, Color.White, RoundedCornerShape(8.dp))
 								else Modifier
 							)
 							.onFocusChanged { resetFocused = it.isFocused },
 					) {
-						androidx.compose.material3.Text(stringResource(R.string.report_issue_button_submit_another), fontSize = 14.sp)
+						val buttonText = if (cooldownSeconds > 0) {
+							when {
+								cooldownSeconds >= 60 -> {
+									val minutes = cooldownSeconds / 60
+									val seconds = cooldownSeconds % 60
+									if (seconds > 0) "Wait ${minutes}m ${seconds}s" else "Wait ${minutes}m"
+								}
+								else -> "Wait ${cooldownSeconds}s"
+							}
+						} else {
+							stringResource(R.string.report_issue_button_submit_another)
+						}
+
+						androidx.compose.material3.Text(
+							text = buttonText,
+							fontSize = 14.sp
+						)
 					}
 				}
 			}
@@ -273,7 +324,7 @@ fun SettingsReportIssueScreen() {
 									val cooldown = issueReporterService.getCooldownRemaining()
 									if (cooldown > 0) {
 										withContext(Dispatchers.Main) {
-											errorMessage = "Please wait ${cooldown / 60}m ${cooldown % 60}s before submitting again."
+											errorMessage = "Please wait ${cooldown} seconds before submitting again."
 											reportState = ReportState.ERROR
 										}
 										return@launch

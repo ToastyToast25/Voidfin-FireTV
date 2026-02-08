@@ -83,17 +83,13 @@ import org.jellyfin.androidtv.ui.settings.Routes
 import org.jellyfin.androidtv.ui.settings.compat.rememberPreference
 import org.jellyfin.androidtv.ui.settings.composable.SettingsColumn
 import org.koin.compose.koinInject
-import org.koin.java.KoinJavaComponent.inject
 import timber.log.Timber
 
 @Composable
 fun SettingsMainScreen() {
 	val router = LocalRouter.current
 	val context = LocalContext.current
-	val updateChecker = if (!BuildConfig.IS_AMAZON_BUILD && !BuildConfig.IS_GOOGLE_PLAY_BUILD) {
-		val service by inject<UpdateCheckerService>(UpdateCheckerService::class.java)
-		service
-	} else null
+	val updateChecker = koinInject<UpdateCheckerService>()
 	val userPreferences = koinInject<UserPreferences>()
 
 	var showUpdateOverlay by remember { mutableStateOf(false) }
@@ -265,6 +261,71 @@ fun SettingsMainScreen() {
 					}
 				)
 			}
+		}
+
+		// Store update check — only for Amazon and Google Play builds
+		if (BuildConfig.IS_AMAZON_BUILD || BuildConfig.IS_GOOGLE_PLAY_BUILD) {
+			item {
+				ListButton(
+					leadingContent = {
+						Icon(
+							painterResource(R.drawable.ic_get_app),
+							contentDescription = null
+						)
+					},
+					headingContent = { Text(stringResource(R.string.pref_check_for_updates)) },
+					captionContent = { Text(stringResource(R.string.settings_check_store_updates_caption)) },
+					onClick = {
+						CoroutineScope(Dispatchers.Main).launch {
+							Toast.makeText(context, context.getString(R.string.msg_checking_for_updates), Toast.LENGTH_SHORT).show()
+							try {
+								val result = withContext(Dispatchers.IO) {
+									updateChecker.checkForStoreUpdate(forceRefresh = true)
+								}
+								result.fold(
+									onSuccess = { info ->
+										if (info == null || !info.isNewer) {
+											Toast.makeText(context, context.getString(R.string.msg_no_updates_available), Toast.LENGTH_LONG).show()
+										} else {
+											// Update available, open store
+											val storeName = when {
+												BuildConfig.IS_AMAZON_BUILD -> "Amazon Appstore"
+												BuildConfig.IS_GOOGLE_PLAY_BUILD -> "Google Play Store"
+												else -> "App Store"
+											}
+											Toast.makeText(
+												context,
+												context.getString(R.string.store_update_version, info.version) + "\n" +
+												context.getString(R.string.store_update_optional_message, storeName),
+												Toast.LENGTH_LONG
+											).show()
+											updateChecker.openAppStore()
+										}
+									},
+									onFailure = { err ->
+										Timber.e(err, "Failed to check for store updates")
+										Toast.makeText(context, context.getString(R.string.msg_update_check_failed), Toast.LENGTH_LONG).show()
+									}
+								)
+							} catch (e: Exception) {
+								Timber.e(e, "Error checking for store updates")
+								Toast.makeText(context, context.getString(R.string.msg_update_check_failed), Toast.LENGTH_LONG).show()
+							}
+						}
+					}
+				)
+			}
+		}
+
+		item {
+			var crashReportingEnabled by rememberPreference(userPreferences, UserPreferences.crashReportingEnabled)
+			ListButton(
+				leadingContent = { Icon(painterResource(R.drawable.ic_error), contentDescription = null) },
+				headingContent = { Text(stringResource(R.string.settings_crash_reporting)) },
+				captionContent = { Text(stringResource(R.string.settings_crash_reporting_description)) },
+				trailingContent = { Checkbox(checked = crashReportingEnabled) },
+				onClick = { crashReportingEnabled = !crashReportingEnabled }
+			)
 		}
 
 		item {

@@ -42,6 +42,7 @@ import org.jellyfin.androidtv.ui.navigation.NavigationRepository
 import org.jellyfin.androidtv.ui.playback.MediaManager
 import org.jellyfin.androidtv.data.service.UpdateCheckerService
 import org.jellyfin.androidtv.ui.startup.fragment.ForceUpdateFragment
+import org.jellyfin.androidtv.ui.startup.fragment.StoreUpdateFragment
 import org.jellyfin.androidtv.ui.startup.fragment.WhatsNewFragment
 import org.jellyfin.androidtv.ui.startup.fragment.SelectServerFragment
 import org.jellyfin.androidtv.ui.startup.fragment.ServerFragment
@@ -79,6 +80,8 @@ class StartupActivity : FragmentActivity() {
 		}
 	}
 	private val userPreferences: UserPreferences by inject()
+	private val issueReporterService: org.jellyfin.androidtv.data.service.IssueReporterService by inject()
+	private val logCollector: org.jellyfin.androidtv.data.service.AppLogCollector = org.jellyfin.androidtv.data.service.AppLogCollector.instance
 
 	private lateinit var binding: ActivityStartupBinding
 
@@ -127,9 +130,20 @@ class StartupActivity : FragmentActivity() {
 
 				val updateBlocking = checkForForcedUpdate()
 				if (updateBlocking) return@launch
+			} else {
+				// Store update detection — for Amazon & Google Play builds
+				val storeUpdateBlocking = checkForStoreUpdate()
+				if (storeUpdateBlocking) return@launch
 			}
 
-			// No blocking update, proceed with normal session flow
+			// Check for pending crash report (store-compliant, opt-in only)
+			val crashReportingEnabled = userPreferences[UserPreferences.crashReportingEnabled]
+			if (crashReportingEnabled) {
+				val hasPendingCrash = checkForPendingCrashReport()
+				if (hasPendingCrash) return@launch
+			}
+
+			// No blocking update or crash, proceed with normal session flow
 			startSessionFlow()
 		}
 	}
@@ -146,6 +160,58 @@ class StartupActivity : FragmentActivity() {
 			supportFragmentManager.commit {
 				replace(R.id.content_view, WhatsNewFragment.newInstance(version, notes))
 			}
+		}
+	}
+
+	private suspend fun checkForPendingCrashReport(): Boolean {
+		return try {
+			// Check if there's a crash log from previous session
+			val crashLog = logCollector.getAndClearLastCrash()
+			if (crashLog.isNullOrBlank()) return false
+
+			Timber.i("Found pending crash report, showing dialog to user")
+
+			// Show crash report dialog and wait for user decision
+			suspendCancellableCoroutine { continuation ->
+				supportFragmentManager.setFragmentResultListener("crash_report_done", this@StartupActivity) { _, result ->
+					val sendReport = result.getBoolean("send_report", false)
+					if (sendReport) {
+						// Submit crash report via IssueReporterService
+						lifecycleScope.launch {
+							try {
+								val submitResult = issueReporterService.submitIssue(
+									category = org.jellyfin.androidtv.data.service.IssueReporterService.IssueCategory.APP_CRASH,
+									description = "",  // Crash details are in the log
+									updateVersion = BuildConfig.VERSION_NAME,
+								)
+								submitResult.fold(
+									onSuccess = { issueNumber ->
+										Timber.i("Crash report submitted successfully: #$issueNumber")
+										Toast.makeText(this@StartupActivity, getString(R.string.crash_report_submitted_success, issueNumber), Toast.LENGTH_LONG).show()
+									},
+									onFailure = { err ->
+										Timber.e(err, "Failed to submit crash report")
+										Toast.makeText(this@StartupActivity, R.string.crash_report_submitted_failure, Toast.LENGTH_LONG).show()
+									}
+								)
+							} catch (e: Exception) {
+								Timber.e(e, "Error submitting crash report")
+								Toast.makeText(this@StartupActivity, R.string.crash_report_submitted_failure, Toast.LENGTH_LONG).show()
+							}
+						}
+					} else {
+						Timber.i("User declined to send crash report")
+					}
+					continuation.resume(Unit)
+				}
+				supportFragmentManager.commit {
+					replace(R.id.content_view, org.jellyfin.androidtv.ui.startup.fragment.CrashReportFragment.newInstance())
+				}
+			}
+			true
+		} catch (e: Exception) {
+			Timber.e(e, "Failed to check for pending crash report, proceeding normally")
+			false
 		}
 	}
 
@@ -189,6 +255,82 @@ class StartupActivity : FragmentActivity() {
 			}
 		} catch (e: Exception) {
 			Timber.e(e, "Failed to check for updates on startup, proceeding normally")
+			false
+		}
+	}
+
+	private suspend fun checkForStoreUpdate(): Boolean {
+		return try {
+			// Skip update check if no network
+			if (updateCheckerService?.isNetworkAvailable() == false) {
+				Timber.d("No network, skipping store update check")
+				return false
+			}
+
+			val updateResult = withContext(Dispatchers.IO) {
+				updateCheckerService?.checkForStoreUpdate(forceRefresh = false)
+			}
+			val updateInfo = updateResult?.getOrNull()
+
+			if (updateInfo != null && updateInfo.isNewer) {
+				Timber.i("Store update available: ${updateInfo.version}")
+
+				val currentVersion = updateInfo.version
+				val lastShownVersion = userPreferences[UserPreferences.storeUpdateLastShownVersion]
+				val firstSeenTime = userPreferences[UserPreferences.storeUpdateFirstSeenTime]
+				val now = System.currentTimeMillis()
+
+				// Track first time seeing this version
+				if (lastShownVersion != currentVersion || firstSeenTime == 0L) {
+					userPreferences[UserPreferences.storeUpdateFirstSeenTime] = now
+					userPreferences[UserPreferences.storeUpdateLastShownVersion] = currentVersion
+				}
+
+				// Calculate grace period (7 days)
+				val gracePeriodMs = 7L * 24 * 60 * 60 * 1000
+				val elapsed = now - userPreferences[UserPreferences.storeUpdateFirstSeenTime]
+				val isForced = elapsed >= gracePeriodMs
+				val daysRemaining = ((gracePeriodMs - elapsed) / (24 * 60 * 60 * 1000)).toInt().coerceAtLeast(0)
+
+				Timber.i("Store update: forced=$isForced, daysRemaining=$daysRemaining")
+
+				// Determine store name
+				val storeName = when {
+					BuildConfig.IS_AMAZON_BUILD -> "Amazon Appstore"
+					BuildConfig.IS_GOOGLE_PLAY_BUILD -> "Google Play Store"
+					else -> "App Store"
+				}
+
+				// Show store update dialog
+				suspendCancellableCoroutine { continuation ->
+					supportFragmentManager.setFragmentResultListener("store_update_done", this@StartupActivity) { _, result ->
+						val updateClicked = result.getBoolean("update_clicked", false)
+						if (updateClicked) {
+							updateCheckerService?.openAppStore()
+						}
+						continuation.resume(Unit)
+					}
+					supportFragmentManager.commit {
+						replace(
+							R.id.content_view,
+							StoreUpdateFragment.newInstance(
+								version = currentVersion,
+								releaseNotes = updateInfo.releaseNotes,
+								isForced = isForced,
+								gracePeriodDays = daysRemaining,
+								storeName = storeName
+							)
+						)
+					}
+				}
+
+				// Return true if forced (blocks app), false if optional
+				isForced
+			} else {
+				false
+			}
+		} catch (e: Exception) {
+			Timber.e(e, "Failed to check for store updates, proceeding normally")
 			false
 		}
 	}

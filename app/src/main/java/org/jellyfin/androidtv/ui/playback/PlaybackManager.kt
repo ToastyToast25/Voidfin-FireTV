@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION") // Legacy Response class for Java interop
+
 package org.jellyfin.androidtv.ui.playback
 
 import androidx.lifecycle.LifecycleOwner

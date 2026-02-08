@@ -499,7 +499,15 @@ The following features are **prohibited** by Amazon Appstore policies and are re
 - **`REQUEST_INSTALL_PACKAGES`:** Removed from Amazon manifest (only needed for OTA APK installation)
 - **`RECORD_AUDIO`:** Kept but declared optional (`android.hardware.microphone` with `required="false"`). Handled gracefully if denied — voice search button is disabled, text search always available as fallback
 
-### 4. GPL v2 Compliance (Deferred)
+### 4. Architecture (Amazon)
+
+- **Policy:** Amazon Fire TV devices are 32-bit ARM only
+- **Our solution:** Amazon flavor builds only include `armeabi-v7a` ABI (32-bit ARM)
+- **Benefit:** Smaller APK size (~30-40% reduction), optimized for Fire TV hardware
+- **Configuration:** Set in `app/build.gradle.kts` via `ndk.abiFilters`
+
+### 5. GPL v2 Compliance (Amazon - Deferred)
+
 - VoidStream is a fork of Jellyfin (GPL v2). Closed-source distribution may conflict with GPL v2
 - **Status:** Deferred — needs legal review before Amazon submission
 
@@ -572,7 +580,15 @@ The following features are **prohibited** by Google Play policies and are remove
 - **`REQUEST_INSTALL_PACKAGES`:** Removed from Google Play manifest (only needed for OTA APK installation)
 - **`RECORD_AUDIO`:** Kept but declared optional (`android.hardware.microphone` with `required="false"`). Handled gracefully if denied — voice search button is disabled, text search always available as fallback
 
-### 4. GPL v2 Compliance (Deferred)
+### 4. Architecture (Google Play)
+
+- **Policy:** Google Play requires 64-bit support starting August 1, 2026 ([TV app requirements](https://developer.android.com/training/tv/publishing/distribute))
+- **Additional:** Apps must support 16 KB page sizes starting August 1, 2026
+- **Our solution:** Google Play flavor includes both `arm64-v8a` (64-bit, required) and `armeabi-v7a` (32-bit, for compatibility)
+- **Configuration:** Set in `app/build.gradle.kts` via `ndk.abiFilters`
+- **16 KB page sizes:** Android apps that follow best practices should already be compatible. Test on devices with 16 KB page sizes to verify.
+
+### 5. GPL v2 Compliance (Google Play - Deferred)
 
 - VoidStream is a fork of Jellyfin (GPL v2). Closed-source distribution may conflict with GPL v2
 - **Status:** Deferred — needs legal review before Google Play submission

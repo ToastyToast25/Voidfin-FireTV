@@ -217,6 +217,7 @@ data class JellyseerrDiscoverItemDto(
 	val adult: Boolean = false,
 	val mediaInfo: JellyseerrMediaInfoDto? = null, // Status information
 ) : Parcelable {
+	@Suppress("DEPRECATION") // Parcel.readList() deprecated but required for Parcelable
 	constructor(parcel: Parcel) : this(
 		id = parcel.readInt(),
 		mediaType = parcel.readString(),

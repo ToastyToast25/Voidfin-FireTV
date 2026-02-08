@@ -135,6 +135,30 @@ class UserPreferences(context: Context) : SharedPreferenceStore(
 		var betaUpdatesEnabled = booleanPreference("beta_updates_enabled", false)
 
 		/**
+		 * Enable automatic crash reporting (opt-in only, default: OFF)
+		 * When enabled, crash logs are saved and user is prompted to send them on next launch
+		 */
+		var crashReportingEnabled = booleanPreference("crash_reporting_enabled", false)
+
+		/**
+		 * Timestamp (ms) when user first saw a major store update
+		 * Used to track grace period before forcing update
+		 */
+		var storeUpdateFirstSeenTime = longPreference("store_update_first_seen_time", 0L)
+
+		/**
+		 * Version of the last store update that was shown to the user
+		 * Used to avoid repeatedly showing the same update dialog
+		 */
+		var storeUpdateLastShownVersion = stringPreference("store_update_last_shown_version", "")
+
+		/**
+		 * Timestamp (ms) when user last dismissed a store update dialog
+		 * Used to throttle update prompts
+		 */
+		var storeUpdateLastDismissedTime = longPreference("store_update_last_dismissed_time", 0L)
+
+		/**
 		 * Seasonal surprise effect selection (none, winter, spring, fall)
 		 */
 		var seasonalSurprise = stringPreference("seasonal_surprise", "none")

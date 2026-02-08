@@ -101,18 +101,31 @@ android {
 			dimension = "distribution"
 			buildConfigField("boolean", "IS_AMAZON_BUILD", "false")
 			buildConfigField("boolean", "IS_GOOGLE_PLAY_BUILD", "false")
+			// Universal build - include all ABIs for maximum compatibility
+			ndk {
+				abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+			}
 		}
 
 		create("amazon") {
 			dimension = "distribution"
 			buildConfigField("boolean", "IS_AMAZON_BUILD", "true")
 			buildConfigField("boolean", "IS_GOOGLE_PLAY_BUILD", "false")
+			// Amazon Fire TV devices are 32-bit ARM only
+			ndk {
+				abiFilters += listOf("armeabi-v7a")
+			}
 		}
 
 		create("googleplay") {
 			dimension = "distribution"
 			buildConfigField("boolean", "IS_AMAZON_BUILD", "false")
 			buildConfigField("boolean", "IS_GOOGLE_PLAY_BUILD", "true")
+			// Google Play requires 64-bit support (August 2026)
+			// Include both 64-bit (required) and 32-bit (for older devices)
+			ndk {
+				abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+			}
 		}
 	}
 

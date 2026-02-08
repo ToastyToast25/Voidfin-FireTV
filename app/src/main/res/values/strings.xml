@@ -1239,6 +1239,30 @@
     <string name="report_issue_button_submit_another">Submit Another Report</string>
     <string name="report_issue_button_cancel">Cancel</string>
 
+    <!-- Crash Reporting -->
+    <string name="settings_crash_reporting">Send Crash Reports</string>
+    <string name="settings_crash_reporting_description">Opt-in to send crash logs for debugging (default: OFF)</string>
+    <string name="crash_report_title">App Crashed</string>
+    <string name="crash_report_subtitle">Unexpected error occurred</string>
+    <string name="crash_report_message">VoidStream encountered an unexpected error in your previous session. Would you like to send a crash report to help us fix this issue?</string>
+    <string name="crash_report_privacy_notice">The crash report will include device information, app version, and log data. No personal information is collected.</string>
+    <string name="crash_report_send">Send Report</string>
+    <string name="crash_report_not_now">Not Now</string>
+    <string name="crash_report_submitted_success">Crash report submitted successfully (#%d). Thank you!</string>
+    <string name="crash_report_submitted_failure">Failed to submit crash report. Please try again later.</string>
+
+    <!-- Store Update Dialog -->
+    <string name="store_update_available_title">Update Available</string>
+    <string name="store_update_required_title">Update Required</string>
+    <string name="store_update_version">Version %s is now available</string>
+    <string name="store_update_optional_message">A new version of VoidStream is available on %s. Update now to get the latest features and improvements.</string>
+    <string name="store_update_forced_message">VoidStream requires an update to continue. Please update via %s to access the latest version.</string>
+    <string name="store_update_grace_period_message">A critical update is required. You have %1$d days to update via %2$s before the app stops working.</string>
+    <string name="store_update_whats_new">What\'s New:</string>
+    <string name="store_update_button">Update Now</string>
+    <string name="store_update_not_now">Not Now</string>
+    <string name="settings_check_store_updates_caption">Check for new versions</string>
+
     <!-- Parental Controls -->
     <string name="pref_parental_controls">Parental Controls</string>
     <string name="pref_parental_controls_description">Hide content based on rating</string>

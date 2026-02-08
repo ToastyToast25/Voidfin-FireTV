@@ -209,9 +209,7 @@ val appModule = module {
 	single { SyncPlayManager(androidContext(), get(), get()) }
 
 	single { BackgroundService(get(), get(), get(), get(), get(), get(), get()) }
-	if (!BuildConfig.IS_AMAZON_BUILD && !BuildConfig.IS_GOOGLE_PLAY_BUILD) {
-		single { UpdateCheckerService(get()) }
-	}
+	single { UpdateCheckerService(get()) }
 	single { AppLogCollector.instance }
 	single { IssueReporterService(androidContext(), get()) }
 
