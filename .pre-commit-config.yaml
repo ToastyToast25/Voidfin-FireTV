@@ -1,0 +1,36 @@
+# Pre-commit hooks for local validation
+# Install: pip install pre-commit && pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  - repo: local
+    hooks:
+      - id: detekt
+        name: Detekt (Kotlin Linter)
+        entry: ./gradlew detekt
+        language: system
+        pass_filenames: false
+        stages: [commit]
+
+      - id: ktlint-format
+        name: ktlint Format (Auto-fix)
+        entry: ./gradlew ktlintFormat
+        language: system
+        pass_filenames: false
+        stages: [commit]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        name: Trim Trailing Whitespace
+      - id: end-of-file-fixer
+        name: Fix End of Files
+      - id: check-yaml
+        name: Check YAML Syntax
+      - id: check-added-large-files
+        name: Check for Large Files
+        args: ['--maxkb=5000']
+      - id: mixed-line-ending
+        name: Fix Mixed Line Endings
+        args: ['--fix=lf']

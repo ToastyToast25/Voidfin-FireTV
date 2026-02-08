@@ -1,0 +1,51 @@
+name: PR Automation
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  schedule:
+    - cron: '0 0 * * *'  # Daily at midnight UTC for stale check
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  size-label:
+    name: PR Size Label
+    runs-on: ubuntu-24.04
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Add size label
+        uses: codelytv/pr-size-labeler@56f6f0fc35c7cc0f72963b8467729e1497d0ca3c # v1.10.1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          xs_label: 'size/xs'
+          xs_max_size: 10
+          s_label: 'size/s'
+          s_max_size: 100
+          m_label: 'size/m'
+          m_max_size: 500
+          l_label: 'size/l'
+          l_max_size: 1000
+          xl_label: 'size/xl'
+          fail_if_xl: false
+
+  stale:
+    name: Close Stale PRs
+    runs-on: ubuntu-24.04
+    if: github.event_name == 'schedule'
+    steps:
+      - name: Mark stale PRs
+        uses: actions/stale@28ca1036281a5e5922ead5184a1bbf96e5fc984e # v9.0.0
+        with:
+          days-before-stale: 30
+          days-before-close: 7
+          stale-pr-message: |
+            This PR has been inactive for 30 days. It will be automatically closed in 7 days if no further activity occurs.
+
+            If you're still working on this, please comment or push new commits to keep it open.
+          close-pr-message: 'Closing due to inactivity. Feel free to reopen if you want to continue working on this.'
+          stale-pr-label: 'stale'
+          exempt-pr-labels: 'keep-open,in-progress'
+          operations-per-run: 30
