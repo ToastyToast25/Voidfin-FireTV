@@ -363,7 +363,39 @@ VoidStream for Android TV is built upon the excellent work of:
 
 ## License
 
-This project is proprietary software. All original additions, modifications, branding, and enhancements are copyright ToastyToast25. Some components are derived from the Jellyfin project and remain subject to the GPL v2. See the [LICENSE](LICENSE) file for full details.
+VoidStream for Android TV is licensed under **GPL v2** (GNU General Public License version 2).
+
+This means:
+
+- ✅ **Free and Open Source** - Full source code available to all users
+- ✅ **Modify and Redistribute** - You can modify and share your changes
+- ✅ **Build from Source** - Complete build instructions provided
+- ⚠️ **Copyleft** - All modifications must remain GPL v2
+
+### Plugin Architecture
+
+VoidStream supports **separate plugin modules** that extend functionality. These plugins are:
+
+- **Not part of the GPL-licensed codebase**
+- **Distributed separately** under their own licenses
+- **Optional paid add-ons** (e.g., upcoming IPTV plugin)
+
+### Branding
+
+The "VoidStream" name, logos, and visual assets are trademarks and remain proprietary even though the code is GPL.
+
+### Coming Soon: Premium IPTV Plugin
+
+We're developing a **proprietary IPTV plugin** that will add premium features:
+
+- Live TV channel integration
+- M3U playlist support
+- EPG (Electronic Program Guide)
+- Xtream Codes and Stalker portal support
+
+This plugin will be distributed separately as a paid add-on and is not subject to GPL.
+
+See the [LICENSE](LICENSE) file for full GPL v2 terms.
 
 ---
 

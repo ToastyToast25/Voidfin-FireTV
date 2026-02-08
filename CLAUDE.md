@@ -675,11 +675,16 @@ Google Play requires Android App Bundle (AAB) format:
 
 ## Licensing
 
-- **License:** Proprietary (see `LICENSE`)
-- **Branding:** "VoidStream" is proprietary — protected names, logos, and visual assets
-- **Upstream:** Contains components from Jellyfin (GPL v2) — those components remain under GPL v2
-- **Distribution:** Closed-source; users do not receive access to the code
-- **Business model:** Monthly subscription or one-time purchase for Fire Stick users
+- **License:** GPL v2 (Open Source - see `LICENSE`)
+- **Core Client:** Free and open source under GPL v2
+- **Plugins:** Separate closed-source modules (not GPL-covered, distributed separately)
+- **Branding:** "VoidStream" trademark, logos, and visual assets remain proprietary
+- **Distribution:** Open source on GitHub, available on app stores for convenience
+- **Source Access:** Available to all users who receive the application
+- **Business model:**
+  - Free base client with core Jellyfin features
+  - Paid premium plugins (IPTV, advanced features, cloud sync)
+  - App store convenience (paid downloads for easy access)
 
 ## Project Info
 
